@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASCLEPIA — Connexion</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #0c4a6e 50%, #0ea5e9 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .auth-container {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 48px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .auth-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .auth-logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #0ea5e9, #06b6d4);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 28px;
+        }
+        
+        .auth-header h1 {
+            color: white;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .auth-header p {
+            color: rgba(255,255,255,0.6);
+            font-size: 14px;
+        }
+        
+        .auth-input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .auth-input-group i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.5);
+        }
+        
+        .auth-input-group input {
+            width: 100%;
+            padding: 14px 16px 14px 45px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .auth-input-group input:focus {
+            outline: none;
+            border-color: #0ea5e9;
+            background: rgba(255,255,255,0.15);
+        }
+        
+        .auth-input-group input::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+        
+        .btn-auth {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #0ea5e9, #06b6d4);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 8px;
+        }
+        
+        .btn-auth:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .auth-footer {
+            text-align: center;
+            margin-top: 24px;
+            color: rgba(255,255,255,0.6);
+            font-size: 14px;
+        }
+        
+        .auth-footer a {
+            color: #0ea5e9;
+            text-decoration: none;
+        }
+        
+        .demo-users {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .demo-title {
+            color: rgba(255,255,255,0.5);
+            font-size: 12px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        
+        .demo-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        
+        .demo-btn {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .demo-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-header">
+            <div class="auth-logo">⚕️</div>
+            <h1>Connexion</h1>
+            <p>Connectez-vous à votre espace</p>
+        </div>
+        
+        <form id="loginForm">
+            <div class="auth-input-group">
+                <i class="fa-solid fa-envelope"></i>
+                <input type="email" id="email" placeholder="Email" >
+            </div>
+            
+            <div class="auth-input-group">
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="password" placeholder="Mot de passe" >
+            </div>
+            
+            <button type="submit" class="btn-auth">
+                <i class="fa-solid fa-sign-in-alt"></i> Se connecter
+            </button>
+        </form>
+        
+        <div class="demo-users">
+            <div class="demo-title">⚠️ Comptes de démonstration</div>
+            <div class="demo-buttons">
+                <button class="demo-btn" onclick="fillAdmin()">Admin</button>
+                <button class="demo-btn" onclick="fillUser()">Utilisateur</button>
+            </div>
+        </div>
+        
+        <div class="auth-footer">
+            Pas encore de compte ? <a href="register.html">Créer un compte</a>
+        </div>
+    </div>
+    
+    <script>
+        // Comptes statiques
+        const users = {
+            admin: {
+                email: "admin@asclepia.tn",
+                password: "admin123",
+                role: "admin",
+                name: "Administrateur"
+            },
+            user: {
+                email: "user@asclepia.tn",
+                password: "user123",
+                role: "user",
+                name: "Utilisateur"
+            }
+        };
+        
+        function fillAdmin() {
+            document.getElementById('email').value = users.admin.email;
+            document.getElementById('password').value = users.admin.password;
+        }
+        
+        function fillUser() {
+            document.getElementById('email').value = users.user.email;
+            document.getElementById('password').value = users.user.password;
+        }
+        
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // Vérifier les identifiants
+            if (email === users.admin.email && password === users.admin.password) {
+                // Stocker dans sessionStorage (persiste le temps de l'onglet)
+                sessionStorage.setItem('user', JSON.stringify({
+                    id: 1,
+                    name: users.admin.name,
+                    email: email,
+                    role: 'admin'
+                }));
+                window.location.href = '../Backoffice/dashboard.html';
+            } 
+            else if (email === users.user.email && password === users.user.password) {
+                sessionStorage.setItem('user', JSON.stringify({
+                    id: 2,
+                    name: users.user.name,
+                    email: email,
+                    role: 'user'
+                }));
+                window.location.href = '../Frontoffice/index.html';
+            }
+            else {
+                alert('❌ Email ou mot de passe incorrect\n\nAdmin: admin@asclepia.tn / admin123\nUser: user@asclepia.tn / user123');
+            }
+        });
+    </script>
+</body>
+</html>

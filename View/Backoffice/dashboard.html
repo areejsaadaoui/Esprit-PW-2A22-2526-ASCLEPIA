@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASCLEPIA — Tableau de bord Admin</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/backoffice.css">
+    <style>
+        /* Animations supplémentaires */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+        
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
+        
+        .animate-fadeInUp {
+            animation: fadeInUp 0.6s ease forwards;
+            opacity: 0;
+        }
+        
+        .animate-fadeInLeft {
+            animation: fadeInLeft 0.6s ease forwards;
+            opacity: 0;
+        }
+        
+        .animate-fadeInRight {
+            animation: fadeInRight 0.6s ease forwards;
+            opacity: 0;
+        }
+        
+        .stat-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card:hover .stat-card-icon {
+            animation: pulse 0.5s ease;
+        }
+        
+        .btn {
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .progress-bar {
+            transition: width 1s ease-out;
+        }
+        
+        .welcome-banner {
+            background: linear-gradient(135deg, #0f172a 0%, #0ea5e9 100%);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            margin-bottom: 30px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .welcome-banner::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: shimmer 3s infinite;
+        }
+        
+        .chart-bar {
+            transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .table-row {
+            transition: all 0.3s ease;
+        }
+        
+        .table-row:hover {
+            background: rgba(14,165,233,0.05);
+            transform: translateX(5px);
+        }
+        
+        .notification-badge {
+            animation: pulse 2s infinite;
+        }
+        
+        .sidebar-nav a {
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-nav a:hover {
+            transform: translateX(5px);
+        }
+        
+        /* Loader animation */
+        .loader {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Chart container */
+        .chart-container {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .bar-item {
+            transition: all 0.3s ease;
+        }
+        
+        .bar-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .bar-item:hover .bar {
+            filter: brightness(1.1);
+        }
+        
+        /* Counter animation */
+        .counter {
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+
+<div class="admin-wrapper">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="sidebar-logo">⚕️</div>
+            <div class="sidebar-title">ASC<span>LEPIA</span></div>
+        </div>
+        
+        <div class="sidebar-user">
+            <div class="user-avatar">AD</div>
+            <div class="user-info">
+                <div class="name">Administrateur</div>
+                <div class="role">Super Admin</div>
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Menu Principal</div>
+            
+            <div class="nav-item">
+                <a href="dashboard.html" class="active">
+                    <i class="fas fa-tachometer-alt nav-icon"></i>
+                    <span>Tableau de bord</span>
+                </a>
+            </div>
+            
+            <div class="nav-item has-sub">
+                <a onclick="toggleSubMenu(this)">
+                    <i class="fas fa-comments nav-icon"></i>
+                    <span>Forum</span>
+                    <i class="fas fa-chevron-right nav-arrow"></i>
+                </a>
+                <div class="sub-menu">
+                    <a href="../Frontoffice/postList.php">Tous les posts</a>
+                    <a href="addpost.php">Ajouter un post</a>
+                    <a href="dashboard.php">gestion des posts</a>
+                </div>
+            </div>
+            
+            <div class="nav-item has-sub">
+                <a onclick="toggleSubMenu(this)">
+                    <i class="fas fa-users nav-icon"></i>
+                    <span>Utilisateurs</span>
+                    <i class="fas fa-chevron-right nav-arrow"></i>
+                </a>
+                <div class="sub-menu">
+                    <a href="users.php">Liste des utilisateurs</a>
+                    <a href="adduser.php">Ajouter un utilisateur</a>
+                </div>
+            </div>
+            
+            <div class="nav-item">
+                <a href="pharmacies.php">
+                    <i class="fas fa-pills nav-icon"></i>
+                    <span>Pharmacies</span>
+                </a>
+            </div>
+            
+            <div class="nav-item">
+                <a href="assurances.php">
+                    <i class="fas fa-shield-halved nav-icon"></i>
+                    <span>Assurances</span>
+                </a>
+            </div>
+            
+            <div class="nav-section-label">Configuration</div>
+            
+            <div class="nav-item">
+                <a href="../frontoffice/index.html">
+                    <i class="fas fa-globe nav-icon"></i>
+                    <span>Voir le site</span>
+                </a>
+            </div>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="logout.php" class="btn btn-outline-white btn-sm" style="width: 100%; justify-content: center;">
+                <i class="fas fa-sign-out-alt"></i> Déconnexion
+            </a>
+            <div class="sidebar-version">Version 1.0</div>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="topbar">
+            <div class="topbar-left">
+                <button class="sidebar-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div>
+                    <div class="page-title">Tableau de bord</div>
+                    <div class="breadcrumb">
+                        <a href="#">Accueil</a>
+                        <span>/</span>
+                        <span>Dashboard</span>
+                    </div>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <button class="topbar-btn" onclick="showNotification()">
+                    <i class="fas fa-bell"></i>
+                    <span class="topbar-notif notification-badge">3</span>
+                </button>
+                <div class="topbar-user" onclick="toggleUserMenu()">
+                    <i class="fas fa-user-circle" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <div class="name">Admin</div>
+                        <div class="role">Administrateur</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="page-content">
+            <!-- Welcome Banner -->
+            <div class="welcome-banner animate-fadeInLeft" style="animation-delay: 0.1s;">
+                <div style="position: relative; z-index: 1;">
+                    <h1 style="font-size: 1.5rem; margin-bottom: 8px;">Bonjour, Administrateur ! 👋</h1>
+                    <p style="opacity: 0.9;">Bienvenue sur votre tableau de bord. Voici les statistiques de votre plateforme.</p>
+                </div>
+                <a href="../Backoffice/addpost.php" class="btn btn-white" style="position: relative; z-index: 1; background: white; color: var(--primary); margin-top: 16px; display: inline-block;">
+                    <i class="fas fa-plus"></i> Nouveau post
+                </a>
+            </div>
+            
+            <!-- Statistics Cards -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 40px;">
+                <div class="stat-card animate-fadeInUp" style="animation-delay: 0.2s;">
+                    <div class="stat-card-body">
+                        <div class="stat-card-label">Total des posts</div>
+                        <div class="stat-card-value counter" id="totalPosts">156</div>
+                        <div class="stat-card-change up">
+                            <i class="fas fa-arrow-up"></i> +12% ce mois
+                        </div>
+                    </div>
+                    <div class="stat-card-icon blue">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                </div>
+                
+                <div class="stat-card animate-fadeInUp" style="animation-delay: 0.3s;">
+                    <div class="stat-card-body">
+                        <div class="stat-card-label">Utilisateurs</div>
+                        <div class="stat-card-value counter" id="totalUsers">2,845</div>
+                        <div class="stat-card-change up">
+                            <i class="fas fa-arrow-up"></i> +8% ce mois
+                        </div>
+                    </div>
+                    <div class="stat-card-icon green">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+                
+                <div class="stat-card animate-fadeInUp" style="animation-delay: 0.4s;">
+                    <div class="stat-card-body">
+                        <div class="stat-card-label">Pharmacies</div>
+                        <div class="stat-card-value counter" id="totalPharmacies">124</div>
+                        <div class="stat-card-change down">
+                            <i class="fas fa-arrow-down"></i> -2% ce mois
+                        </div>
+                    </div>
+                    <div class="stat-card-icon orange">
+                        <i class="fas fa-pills"></i>
+                    </div>
+                </div>
+                
+                <div class="stat-card animate-fadeInUp" style="animation-delay: 0.5s;">
+                    <div class="stat-card-body">
+                        <div class="stat-card-label">Assurances</div>
+                        <div class="stat-card-value counter" id="totalAssurances">18</div>
+                        <div class="stat-card-change up">
+                            <i class="fas fa-arrow-up"></i> +5% ce mois
+                        </div>
+                    </div>
+                    <div class="stat-card-icon purple">
+                        <i class="fas fa-shield-halved"></i>
+                    </div>
+                </div>
+            </div>
+            
+        
+            
+            <!-- Recent Posts Table -->
+            <div class="card animate-fadeInLeft" style="padding: 0; overflow: hidden; animation-delay: 0.7s;">
+                <div style="padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="font-size: 1rem;">
+                        <i class="fas fa-clock"></i> Derniers posts
+                    </h3>
+                    <a href="../Frontoffice/postList.php" class="btn btn-outline btn-sm">Voir tous</a>
+                </div>
+                
+                <div style="overflow-x: auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Contenu</th>
+                                <th>Image</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </thead>
+                            <tbody id="postsTableBody">
+                                <!-- Posts will be inserted by JavaScript -->
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Loader -->
+<div class="loader" id="loader"></div>
+
+<script>
+    // Animation counters
+    function animateCounter(element, target, duration = 2000) {
+        let start = 0;
+        const increment = target / (duration / 16);
+        const timer = setInterval(() => {
+            start += increment;
+            if (start >= target) {
+                element.textContent = target.toLocaleString();
+                clearInterval(timer);
+            } else {
+                element.textContent = Math.floor(start).toLocaleString();
+            }
+        }, 16);
+    }
+    
+    // Chart data
+    const chartData = {
+        2024: [12, 19, 25, 30, 28, 35, 42, 38, 45, 52, 48, 55],
+        2025: [15, 22, 28, 35, 32, 40, 48, 45, 50, 58, 55, 62]
+    };
+    
+    const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+    
+    // Render chart
+    function renderChart(year) {
+        const data = chartData[year];
+        const maxValue = Math.max(...data);
+        const container = document.getElementById('barChart');
+        container.innerHTML = '';
+        
+        data.forEach((value, index) => {
+            const height = (value / maxValue) * 200;
+            const barItem = document.createElement('div');
+            barItem.className = 'bar-item';
+            barItem.style.opacity = '0';
+            barItem.style.transform = 'translateY(20px)';
+            barItem.innerHTML = `
+                <div class="bar-value" style="font-size: 0.7rem; font-weight: 600; color: var(--primary);">${value}</div>
+                <div class="bar chart-bar" style="width: 100%; height: ${height}px; background: var(--gradient-primary); border-radius: 8px;"></div>
+                <div class="bar-label" style="font-size: 0.7rem; color: var(--text-muted); margin-top: 8px;">${months[index]}</div>
+            `;
+            container.appendChild(barItem);
+            
+            // Animation
+            setTimeout(() => {
+                barItem.style.transition = 'all 0.5s ease';
+                barItem.style.opacity = '1';
+                barItem.style.transform = 'translateY(0)';
+            }, index * 50);
+        });
+    }
+   
+    
+    // Render posts table
+    function renderPosts() {
+        const tbody = document.getElementById('postsTableBody');
+        tbody.innerHTML = '';
+        
+        recentPosts.forEach((post, index) => {
+            const row = tbody.insertRow();
+            row.className = 'table-row';
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(-20px)';
+            
+            row.innerHTML = `
+                <td>${post.id}</td>
+                <td style="max-width: 400px;">${post.content.substring(0, 80)}${post.content.length > 80 ? '...' : ''}</td>
+                <td style="width: 80px; text-align: center;">
+                    ${post.hasImage ? '<i class="fas fa-check-circle" style="color: var(--accent); font-size: 1.2rem;"></i>' : '<i class="fas fa-times-circle" style="color: var(--gray-light); font-size: 1.2rem;"></i>'}
+                </td>
+                <td style="white-space: nowrap;">${post.date}</td>
+                <td class="table-actions">
+                    <a href="#" class="btn btn-outline btn-sm"><i class="fas fa-eye"></i></a>
+                    <a href="#" class="btn btn-primary btn-sm"><i class="fas fa-pen"></i></a>
+                    <a href="#" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ?')"><i class="fas fa-trash"></i></a>
+                </td>
+            `;
+            
+            // Row animation
+            setTimeout(() => {
+                row.style.transition = 'all 0.3s ease';
+                row.style.opacity = '1';
+                row.style.transform = 'translateX(0)';
+            }, index * 100);
+        });
+    }
+    
+    // Update chart when year changes
+    function updateChart(year) {
+        renderChart(year);
+    }
+    
+    // Toggle sidebar on mobile
+    function toggleSidebar() {
+        document.querySelector('.sidebar').classList.toggle('open');
+    }
+    
+    // Toggle submenu
+    function toggleSubMenu(element) {
+        const parent = element.closest('.has-sub');
+        parent.classList.toggle('open');
+        const subMenu = parent.querySelector('.sub-menu');
+        if (subMenu) {
+            subMenu.classList.toggle('open');
+        }
+    }
+    
+    // Show notification
+    function showNotification() {
+        alert('📢 3 nouvelles notifications\n\n- Nouveau post publié\n- Nouvel utilisateur inscrit\n- Message reçu');
+    }
+    
+    // Toggle user menu
+    function toggleUserMenu() {
+        console.log('Menu utilisateur');
+    }
+    
+    // Initialize dashboard
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animate counters
+        animateCounter(document.getElementById('totalPosts'), 156);
+        animateCounter(document.getElementById('totalUsers'), 2845);
+        animateCounter(document.getElementById('totalPharmacies'), 124);
+        animateCounter(document.getElementById('totalAssurances'), 18);
+        
+        // Render chart
+        renderChart('2024');
+        
+        // Render posts table
+        renderPosts();
+        
+        // Add hover animation to stat cards
+        const statCards = document.querySelectorAll('.stat-card');
+        statCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px) scale(1.02)';
+            });
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+        
+        // Sidebar animation on load
+        const sidebar = document.querySelector('.sidebar');
+        sidebar.style.transform = 'translateX(0)';
+        
+        console.log('Dashboard chargé avec animations !');
+    });
+    
+    // Scroll animation for elements
+    window.addEventListener('scroll', function() {
+        const elements = document.querySelectorAll('.stat-card, .card');
+        elements.forEach(element => {
+            const position = element.getBoundingClientRect();
+            if (position.top < window.innerHeight - 100) {
+                element.style.opacity = '1';
+                element.style.transform = 'translateY(0)';
+            }
+        });
+    });
+</script>
+<script>
+    // Vérifier si l'utilisateur est admin avant d'afficher le dashboard
+    const user = JSON.parse(sessionStorage.getItem('user'));
+    
+    if (!user || user.role !== 'admin') {
+        // Rediriger vers login si non admin
+        window.location.href = '../Frontoffice/login.html';
+    }
+    
+    // Afficher le nom de l'utilisateur
+    document.getElementById('userName').textContent = user.name;
+</script>
+</body>
+</html>

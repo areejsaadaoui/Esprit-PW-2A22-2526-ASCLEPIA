@@ -31,7 +31,7 @@ if (isset($_GET['error'])) {
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>ASCLEPIA — Forum santé</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
@@ -39,6 +39,9 @@ if (isset($_GET['error'])) {
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/frontoffice.css">
     <style>
+        /* ===== STYLES RESPONSIVES ===== */
+        
+        /* Structure responsive */
         .post-image {
             width: 100%;
             height: 180px;
@@ -47,18 +50,317 @@ if (isset($_GET['error'])) {
             margin-bottom: 12px;
             cursor: pointer;
         }
+        
         .post-card {
             display: flex;
             flex-direction: column;
+            height: 100%;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
+        
+        .post-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+        
         .post-content {
             flex: 1;
         }
+        
         .post-actions {
             display: flex;
             gap: 8px;
             margin-top: 12px;
             justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+        
+        /* Grille responsive */
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -12px;
+        }
+        
+        .col-4 {
+            flex: 0 0 33.333%;
+            max-width: 33.333%;
+            padding: 0 12px;
+            margin-bottom: 24px;
+        }
+        
+        /* ===== TABLETTES (768px - 1024px) ===== */
+        @media (max-width: 1024px) {
+            .col-4 {
+                flex: 0 0 50%;
+                max-width: 50%;
+            }
+            
+            .container {
+                padding: 0 20px;
+            }
+            
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+        }
+        
+        /* ===== MOBILES (moins de 768px) ===== */
+        @media (max-width: 768px) {
+            .col-4 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+            
+            .container {
+                padding: 0 16px;
+            }
+            
+            .navbar {
+                padding: 0 16px;
+            }
+            
+            .navbar-name {
+                font-size: 1.1rem;
+            }
+            
+            .nav-links {
+                position: fixed;
+                top: 72px;
+                left: -100%;
+                width: 80%;
+                height: calc(100vh - 72px);
+                background: var(--dark);
+                flex-direction: column;
+                padding: 20px;
+                transition: left 0.3s ease;
+                z-index: 999;
+            }
+            
+            .nav-links.open {
+                left: 0;
+            }
+            
+            .nav-link {
+                width: 100%;
+                padding: 12px 16px;
+            }
+            
+            .nav-actions {
+                gap: 8px;
+            }
+            
+            .btn-sm {
+                padding: 6px 12px;
+                font-size: 0.75rem;
+            }
+            
+            .section-padding {
+                padding: 40px 0;
+            }
+            
+            .section-title {
+                font-size: 1.6rem;
+            }
+            
+            .section-desc {
+                font-size: 0.9rem;
+            }
+            
+            .hero {
+                padding: 80px 0 40px;
+                text-align: center;
+            }
+            
+            .hero-title {
+                font-size: 1.8rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 0.95rem;
+            }
+            
+            .hero-actions {
+                justify-content: center;
+            }
+            
+            .hero-stats {
+                justify-content: center;
+                gap: 20px;
+            }
+            
+            .hero-stat .number {
+                font-size: 1.4rem;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .post-card {
+                padding: 16px;
+            }
+            
+            .post-meta {
+                flex-wrap: wrap;
+            }
+            
+            .post-avatar {
+                width: 32px;
+                height: 32px;
+                font-size: 0.75rem;
+            }
+            
+            .post-author {
+                font-size: 0.85rem;
+            }
+            
+            .post-date {
+                font-size: 0.7rem;
+            }
+            
+            .post-footer {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            .post-stat {
+                font-size: 0.75rem;
+            }
+            
+            .btn-sm {
+                padding: 6px 12px;
+                font-size: 0.75rem;
+            }
+            
+            .footer {
+                padding: 40px 0 0;
+            }
+            
+            .footer .row {
+                flex-direction: column;
+                gap: 32px;
+            }
+            
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
+                gap: 8px;
+            }
+            
+            /* Bouton nouvelle discussion */
+            div[style*="text-align: right"] {
+                text-align: center !important;
+                margin-bottom: 20px !important;
+            }
+            
+            /* Actions sur les posts */
+            .post-actions {
+                justify-content: center;
+            }
+            
+            .post-actions .btn-sm {
+                padding: 6px 10px;
+                font-size: 0.7rem;
+            }
+        }
+        
+        /* ===== TRÈS PETITS MOBILES (moins de 480px) ===== */
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 12px;
+            }
+            
+            .section-title {
+                font-size: 1.4rem;
+            }
+            
+            .card {
+                padding: 16px;
+            }
+            
+            .post-image {
+                height: 140px;
+            }
+            
+            .post-content p {
+                font-size: 0.8rem;
+            }
+            
+            .btn {
+                padding: 8px 16px;
+                font-size: 0.8rem;
+            }
+            
+            .btn-lg {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+            
+            .hero-stats {
+                gap: 12px;
+            }
+            
+            .hero-stat .number {
+                font-size: 1.2rem;
+            }
+            
+            .hero-stat .label {
+                font-size: 0.7rem;
+            }
+        }
+        
+        /* ===== AJUSTEMENTS SUPPLÉMENTAIRES ===== */
+        
+        /* Navigation mobile - hamburger visible */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+        }
+        
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background: white;
+            border-radius: 3px;
+            transition: 0.3s;
+        }
+        
+        @media (max-width: 768px) {
+            .hamburger {
+                display: flex;
+            }
+            
+            .nav-links {
+                display: flex;
+            }
+        }
+        
+        /* Scroll fluide */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Amélioration du touch sur mobile */
+        @media (max-width: 768px) {
+            .btn, 
+            .nav-link,
+            .post-actions a,
+            .post-footer a {
+                cursor: pointer;
+                -webkit-tap-highlight-color: transparent;
+            }
+            
+            .btn:active,
+            .nav-link:active {
+                transform: scale(0.98);
+            }
         }
     </style>
 </head>
@@ -165,23 +467,23 @@ if (isset($_GET['error'])) {
                                     <i class="fa-regular fa-comment"></i> 
                                     <?php echo rand(0, 20); ?> Réponses
                                 </div>
-                                <a href="../Backoffice/showpost.php?id=<?php echo $post->getIdPost(); ?>"  class="btn btn-outline btn-sm">
+                                <a href="../Backoffice/showpost.php?id=<?php echo $post->getIdPost(); ?>" class="btn btn-outline btn-sm">
                                     Lire la suite
                                 </a> 
                             </div>
                             
-                            <!-- Bouton Supprimer (visible uniquement pour l'auteur ou l'admin) -->
+                            <!-- Boutons Modifier/Supprimer (visibles uniquement pour l'auteur ou l'admin) -->
                             <?php if (isset($_SESSION['user_id']) && ($post->getIdUtilisateur() == $_SESSION['user_id'] || ($_SESSION['role'] ?? '') === 'admin')): ?>
                             <div class="post-actions">
+                                <a href="../Backoffice/updatepost.php?id=<?php echo $post->getIdPost(); ?>" 
+                                   class="btn btn-primary btn-sm">
+                                    <i class="fa-solid fa-pen"></i> Modifier
+                                </a>
                                 <a href="../Backoffice/deletepost.php?id=<?php echo $post->getIdPost(); ?>" 
                                    class="btn btn-danger btn-sm" 
                                    onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce post ?')">
                                     <i class="fa-solid fa-trash"></i> Supprimer
                                 </a>
-                                <a href="../Backoffice/updatepost.php?id=<?php echo $post->getIdPost(); ?>" 
-   class="btn btn-primary btn-sm">
-    <i class="fa-solid fa-pen"></i> Modifier
-</a>
                             </div>
                             <?php endif; ?>
                         </div>
@@ -245,8 +547,16 @@ if (isset($_GET['error'])) {
     });
 
     function toggleMenu() {
-        document.getElementById('navLinks').classList.toggle('open');
+        const navLinks = document.getElementById('navLinks');
+        navLinks.classList.toggle('open');
     }
+    
+    // Fermer le menu mobile quand on clique sur un lien
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', () => {
+            document.getElementById('navLinks').classList.remove('open');
+        });
+    });
 </script>
 
 </body>
