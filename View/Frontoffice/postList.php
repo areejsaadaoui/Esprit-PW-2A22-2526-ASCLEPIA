@@ -376,8 +376,8 @@ if (isset($_GET['error'])) {
         <a href="index.html#services" class="nav-link">Services</a>
         <a href="index.html#pharmacies" class="nav-link">Pharmacies</a>
         <a href="index.html#assurances" class="nav-link">Assurances</a>
-        <a href="forum.php" class="nav-link active">Forum</a>
-        <a href="index.html#avis" class="nav-link">Avis</a>
+        <a href="postList.php" class="nav-link active">Communauté</a>
+        <a href="index.html#avis" class="nav-link">Plus</a>
     </div>
     <div class="nav-actions">
         <a href="login.html" class="btn btn-outline-white btn-sm">Se connecter</a>

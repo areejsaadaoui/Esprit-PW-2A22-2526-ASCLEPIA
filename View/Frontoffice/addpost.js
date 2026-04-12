@@ -1,4 +1,4 @@
-// addpost.js - Fonctionne pour addpost.php et updatepost.php
+// addpost.js addpost.php et updatepost.php
 document.addEventListener('DOMContentLoaded', function() {
     
     // ============================================
@@ -35,10 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
-    // ============================================
     // APERÇU DE L'IMAGE (pour updatepost.php)
-    // ============================================
     const imageInput = document.getElementById('imageUpload');
     const previewContainer = document.getElementById('imagePreviewContainer');
     
@@ -84,9 +81,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (previewContainer) previewContainer.innerHTML = '';
     };
     
-    // ============================================
+
     // VALIDATION AVANT ENVOI
-    // ============================================
+
     const postForm = document.getElementById('postForm');
     
     if (postForm) {
@@ -111,9 +108,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // ============================================
+
     // BOUTON RESET (pour addpost.php)
-    // ============================================
+
     const resetBtn = document.getElementById('resetBtn');
     if (resetBtn) {
         resetBtn.addEventListener('click', function() {
@@ -133,21 +130,47 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // ============================================
+    // teba3 addpost.php
+      function removeImage() {
+        imageInput.value = '';
+        previewContainer.innerHTML = '';
+        currentImageData = null;
+    }
+    // teba3 showpost.php
+    // addpost.js - Fonctionne pour addpost.php et updatepost.php
+
+document.addEventListener('DOMContentLoaded', function() {
+  
     // NAVBAR SCROLL EFFECT
-    // ============================================
     const navbar = document.getElementById('navbar');
     if (navbar) {
         window.addEventListener('scroll', () => {
             navbar.classList.toggle('scrolled', window.scrollY > 30);
         });
     }
-    
-    // ============================================
     // MOBILE MENU
-    // ============================================
     window.toggleMenu = function() {
         const navLinks = document.getElementById('navLinks');
         if (navLinks) navLinks.classList.toggle('open');
     };
+    // dashboard 
+     function toggleSidebar() {
+        document.querySelector('.sidebar').classList.toggle('open');
+    }
+    
+    // Animation des barres
+    document.addEventListener('DOMContentLoaded', function() {
+        const bars = document.querySelectorAll('.bar');
+        bars.forEach(bar => {
+            const height = bar.style.height;
+            bar.style.height = '0px';
+            setTimeout(() => {
+                bar.style.height = height;
+            }, 100);
+        });
+    });
+
+    
+  
+});
 });

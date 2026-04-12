@@ -1,0 +1,156 @@
+/* ============================================
+   ASCLEPIA - Medical Platform Global Styles
+   ============================================ */
+
+/* Variables & Reset (garde ce que tu as déjà) */
+:root {
+    --primary: #0ea5e9;
+    --primary-dark: #0284c7;
+    --secondary: #06b6d4;
+    --accent: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --dark: #0f172a;
+    --gray: #64748b;
+    --gray-light: #94a3b8;
+    --border: #e2e8f0;
+    --bg: #f0f9ff;
+    --white: #ffffff;
+    --text-muted: #64748b;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, #0ea5e9, #06b6d4);
+    
+    /* Shadows */
+    --shadow: 0 4px 16px rgba(14,165,233,0.12);
+    --shadow-lg: 0 10px 40px rgba(14,165,233,0.15);
+    
+    /* Borders */
+    --radius: 12px;
+    --radius-lg: 20px;
+    
+    /* Transitions */
+    --transition: all 0.3s ease;
+}
+
+/* ... garde tes styles existants (boutons, cards, etc.) ... */
+
+/* ============================================
+   STYLES DASHBOARD (AJOUTE À LA FIN)
+   ============================================ */
+
+/* Cartes statistiques */
+.stat-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    border: 1px solid var(--border);
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-info h3 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--dark);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+}
+
+.stat-icon.blue { background: #eff6ff; color: #2563eb; }
+.stat-icon.green { background: #f0fdf4; color: #16a34a; }
+.stat-icon.orange { background: #fff7ed; color: #ea580c; }
+.stat-icon.purple { background: #faf5ff; color: #9333ea; }
+
+/* Bannière de bienvenue */
+.welcome-banner {
+    background: var(--gradient-primary);
+    border-radius: var(--radius-lg);
+    padding: 24px 32px;
+    margin-bottom: 30px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.welcome-banner h1 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.welcome-banner p {
+    opacity: 0.9;
+}
+
+.welcome-banner .btn-white {
+    background: white;
+    color: var(--primary);
+    border: none;
+}
+
+/* Graphique à barres */
+.bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    height: 200px;
+    margin-top: 20px;
+}
+
+.bar-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.bar {
+    width: 100%;
+    background: var(--gradient-primary);
+    border-radius: 8px;
+    transition: height 0.5s ease;
+    min-height: 4px;
+}
+
+/* Actions tableau */
+.table-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .stat-card { padding: 16px; }
+    .stat-number { font-size: 1.8rem; }
+    .stat-icon { width: 45px; height: 45px; font-size: 1.3rem; }
+    .welcome-banner { flex-direction: column; text-align: center; gap: 16px; padding: 20px; }
+    .bar-chart { height: 150px; gap: 8px; }
+    .table-actions { flex-direction: column; gap: 4px; }
+}

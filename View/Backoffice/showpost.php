@@ -6,13 +6,12 @@ session_start();
 $postC = new PostController();
 $post = null;
 
-// Récupérer l'ID du post depuis l'URL
 if (isset($_GET['id']) && !empty($_GET['id'])) {
     $id_post = (int)$_GET['id'];
     $post = $postC->getPostById($id_post);
 }
 
-// Si le post n'existe pas, rediriger
+// Si le post n'existe pas
 if (!$post) {
     header('Location: postList.php');
     exit;
@@ -30,40 +29,6 @@ if (!$post) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/frontoffice.css">
-    <style>
-        .detail-image {
-            max-width: 100%;
-            max-height: 400px;
-            border-radius: var(--radius-lg);
-            margin: 20px 0;
-            box-shadow: var(--shadow);
-        }
-        .post-content-full {
-            font-size: 1.05rem;
-            line-height: 1.8;
-            color: var(--text);
-            margin: 24px 0;
-        }
-        .comment-section {
-            margin-top: 48px;
-            padding-top: 32px;
-            border-top: 1px solid var(--border);
-        }
-        .comment-card {
-            padding: 20px;
-            margin-bottom: 16px;
-            background: var(--bg);
-            border-radius: var(--radius);
-        }
-        .action-buttons {
-            display: flex;
-            gap: 12px;
-            margin-top: 24px;
-            padding-top: 16px;
-            border-top: 1px solid var(--border);
-            flex-wrap: wrap;
-        }
-    </style>
 </head>
 <body>
 
@@ -77,8 +42,8 @@ if (!$post) {
         <a href="index.html#services" class="nav-link">Services</a>
         <a href="index.html#pharmacies" class="nav-link">Pharmacies</a>
         <a href="index.html#assurances" class="nav-link">Assurances</a>
-        <a href="forum.php" class="nav-link active">Forum</a>
-        <a href="index.html#avis" class="nav-link">Avis</a>
+        <a href="../Frontoffice/postList.php" class="nav-link active">Communauté</a>
+        <a href="../Frontoffice/index.html#avis" class="nav-link">Avis</a>
     </div>
     <div class="nav-actions">
         <a href="login.html" class="btn btn-outline-white btn-sm">Se connecter</a>
@@ -131,13 +96,13 @@ if (!$post) {
                     
                     <!-- Boutons d'action -->
                     <div class="action-buttons">
-                        <button class="btn btn-outline" onclick="alert('Fonctionnalité à venir')">
+                        <button class="btn btn-outline" >
                             <i class="fa-regular fa-heart"></i> J'aime
                         </button>
-                        <button class="btn btn-outline" onclick="alert('Fonctionnalité à venir')">
+                        <button class="btn btn-outline" >
                             <i class="fa-regular fa-comment"></i> Commenter
                         </button>
-                        <button class="btn btn-outline" onclick="alert('Fonctionnalité à venir')">
+                        <button class="btn btn-outline" >
                             <i class="fa-regular fa-share-from-square"></i> Partager
                         </button>
                         
@@ -154,21 +119,21 @@ if (!$post) {
                     <!-- Section commentaires -->
                     <div class="comment-section">
                         <h3 style="margin-bottom: 24px;">
-                            <i class="fa-regular fa-comments"></i> Commentaires (0)
+                            <i class="fa-regular fa-comments"></i> Commentaires
                         </h3>
                         
                         <div class="card" style="padding: 20px; margin-bottom: 24px; background: var(--bg);">
-                            <textarea class="form-control" rows="3" placeholder="Écrire un commentaire..." style="margin-bottom: 12px;"></textarea>
+                            <textarea class="form-control"  style="margin-bottom: 12px;"></textarea>
                             <div style="text-align: right;">
-                                <button class="btn btn-primary btn-sm" onclick="alert('Connexion requise pour commenter')">
+                                <button class="btn btn-primary btn-sm" >
                                     <i class="fa-regular fa-paper-plane"></i> Publier
                                 </button>
                             </div>
                         </div>
                         
-                        <p style="text-align: center; color: var(--text-muted); padding: 40px;">
+                        <p style="text-align: center; color: var(--text-muted); padding: 20px;">
                             <i class="fa-regular fa-comment-dots" style="font-size: 2rem; margin-bottom: 12px; display: block;"></i>
-                            Soyez le premier à commenter ce post !
+                            Laissez un commentaire !
                         </p>
                     </div>
                     
@@ -230,16 +195,7 @@ if (!$post) {
     </div>
 </footer>
 
-<script>
-    const navbar = document.getElementById('navbar');
-    window.addEventListener('scroll', () => {
-        navbar.classList.toggle('scrolled', window.scrollY > 30);
-    });
-
-    function toggleMenu() {
-        document.getElementById('navLinks').classList.toggle('open');
-    }
-</script>
+<script src="../Frontoffice/addpost.js"></script>
 
 </body>
 </html>

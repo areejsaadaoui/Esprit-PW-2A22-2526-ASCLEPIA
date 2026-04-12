@@ -71,92 +71,7 @@ $maxValue = max($statsData) ?: 1;
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/backoffice.css">
-    <style>
-        .stat-card {
-            background: var(--white);
-            border-radius: var(--radius-lg);
-            padding: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: var(--shadow);
-            transition: var(--transition);
-            border: 1px solid var(--border);
-        }
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-lg);
-        }
-        .stat-info h3 {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: var(--dark);
-        }
-        .stat-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: var(--radius);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-        }
-        .stat-icon.blue { background: #eff6ff; color: #2563eb; }
-        .stat-icon.green { background: #f0fdf4; color: #16a34a; }
-        .stat-icon.orange { background: #fff7ed; color: #ea580c; }
-        .stat-icon.purple { background: #faf5ff; color: #9333ea; }
-        
-        .bar-chart {
-            display: flex;
-            align-items: flex-end;
-            gap: 12px;
-            height: 200px;
-            margin-top: 20px;
-        }
-        .bar-item {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-        }
-        .bar {
-            width: 100%;
-            background: var(--gradient-primary);
-            border-radius: 8px;
-            transition: height 0.5s ease;
-            min-height: 4px;
-        }
-        .table-actions {
-            display: flex;
-            gap: 8px;
-        }
-        .welcome-banner {
-            background: var(--gradient-primary);
-            border-radius: var(--radius-lg);
-            padding: 24px 32px;
-            margin-bottom: 30px;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .welcome-banner h1 {
-            font-size: 1.5rem;
-            margin-bottom: 8px;
-        }
-        .welcome-banner p {
-            opacity: 0.9;
-        }
-    </style>
+    <link rel="stylesheet" href="../assets/css/stat.css">
 </head>
 <body>
 
@@ -384,24 +299,7 @@ $maxValue = max($statsData) ?: 1;
         </div>
     </main>
 </div>
-
-<script>
-    function toggleSidebar() {
-        document.querySelector('.sidebar').classList.toggle('open');
-    }
-    
-    // Animation des barres
-    document.addEventListener('DOMContentLoaded', function() {
-        const bars = document.querySelectorAll('.bar');
-        bars.forEach(bar => {
-            const height = bar.style.height;
-            bar.style.height = '0px';
-            setTimeout(() => {
-                bar.style.height = height;
-            }, 100);
-        });
-    });
-</script>
+<script src="../Frontoffice/addpost.js"></script>
 
 </body>
 </html>
