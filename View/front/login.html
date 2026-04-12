@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion — ASCLEPIA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <style>
+    body { background: var(--dark); min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+
+    .auth-bg {
+      position: fixed; inset: 0;
+      background: var(--gradient-hero);
+      z-index: 0;
+    }
+
+    .auth-bg::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%230ea5e9' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .auth-glow {
+      position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.25;
+    }
+    .glow-1 { width: 500px; height: 500px; background: var(--primary); top: -200px; right: -100px; }
+    .glow-2 { width: 400px; height: 400px; background: var(--accent); bottom: -150px; left: -100px; }
+
+    .auth-container {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 460px;
+      padding: 24px;
+    }
+
+    .auth-card {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(40px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 28px;
+      padding: 44px 40px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.4);
+    }
+
+    .auth-logo {
+      display: flex; align-items: center; gap: 12px;
+      justify-content: center;
+      margin-bottom: 32px;
+      text-decoration: none;
+    }
+
+    .auth-logo-icon {
+      width: 48px; height: 48px;
+      background: var(--gradient-primary);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 8px 24px rgba(14,165,233,0.4);
+    }
+
+    .auth-logo-name {
+      font-size: 1.6rem; font-weight: 800; color: var(--white);
+    }
+    .auth-logo-name span { background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+    .auth-title {
+      text-align: center; color: var(--white);
+      font-size: 1.5rem; font-weight: 700; margin-bottom: 6px;
+    }
+
+    .auth-subtitle {
+      text-align: center; color: rgba(255,255,255,0.45);
+      font-size: 0.88rem; margin-bottom: 32px;
+    }
+
+    /* Glass inputs */
+    .glass-input-wrap { position: relative; margin-bottom: 16px; }
+
+    .glass-input-wrap .input-icon {
+      position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+      color: rgba(255,255,255,0.35); font-size: 0.95rem;
+    }
+
+    .glass-input {
+      width: 100%;
+      padding: 14px 16px 14px 44px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius);
+      color: var(--white);
+      font-size: 0.95rem;
+      font-family: var(--font-main);
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .glass-input::placeholder { color: rgba(255,255,255,0.3); }
+
+    .glass-input:focus {
+      border-color: var(--primary);
+      background: rgba(14,165,233,0.1);
+      box-shadow: 0 0 0 4px rgba(14,165,233,0.15);
+    }
+
+    .glass-label {
+      display: block; font-size: 0.82rem; font-weight: 600;
+      color: rgba(255,255,255,0.6); margin-bottom: 8px;
+    }
+
+    .eye-toggle {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      color: rgba(255,255,255,0.3); cursor: pointer; background: none; border: none; font-size: 0.9rem;
+      transition: var(--transition-fast);
+    }
+    .eye-toggle:hover { color: var(--primary); }
+
+    .auth-options {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .checkbox-wrap {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.84rem; color: rgba(255,255,255,0.55); cursor: pointer;
+    }
+
+    .checkbox-wrap input[type="checkbox"] {
+      width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer;
+    }
+
+    .forgot-link { font-size: 0.84rem; color: var(--primary); }
+    .forgot-link:hover { color: #38bdf8; }
+
+    .auth-footer {
+      text-align: center; margin-top: 24px;
+      font-size: 0.86rem; color: rgba(255,255,255,0.4);
+    }
+
+    .auth-footer a { color: var(--primary); font-weight: 600; }
+    .auth-footer a:hover { color: #38bdf8; }
+
+    .btn-auth {
+      width: 100%;
+      padding: 14px;
+      background: var(--gradient-primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 0.98rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: var(--font-main);
+      box-shadow: 0 4px 20px rgba(14,165,233,0.4);
+      transition: var(--transition);
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+
+    .btn-auth:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(14,165,233,0.5);
+    }
+
+    .error-msg {
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+      color: #fca5a5; padding: 12px 16px; border-radius: var(--radius);
+      font-size: 0.84rem; margin-bottom: 20px; display: none;
+      align-items: center; gap: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="auth-bg">
+  <div class="auth-glow glow-1"></div>
+  <div class="auth-glow glow-2"></div>
+</div>
+
+<div class="auth-container">
+  <a href="index.html" class="auth-logo">
+    <div class="auth-logo-icon">⚕️</div>
+    <div class="auth-logo-name">ASC<span>LEPIA</span></div>
+  </a>
+
+  <div class="auth-card">
+    <h1 class="auth-title">Bon retour 👋</h1>
+    <p class="auth-subtitle">Connectez-vous à votre espace personnel</p>
+
+    <!-- Error message -->
+    <div class="error-msg" id="errorMsg">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      <span id="errorText">Email ou mot de passe incorrect.</span>
+    </div>
+
+    <!-- Modifié pour être une simple page html (temporairement) en enlevant action php -->
+    <form id="loginForm" method="GET" action="index.html" novalidate>
+      <input type="hidden" name="action" value="login">
+
+      <!-- Email -->
+      <div style="margin-bottom: 16px;">
+        <label class="glass-label">Adresse email</label>
+        <div class="glass-input-wrap" style="margin-bottom: 0;">
+          <i class="fa-solid fa-envelope input-icon"></i>
+          <input type="email" class="glass-input" id="email" name="email"
+            placeholder="votre@email.com" required autocomplete="email">
+        </div>
+        <div class="form-error" id="emailError" style="color: #fca5a5; font-size: 0.78rem; margin-top: 6px; display:none;"></div>
+      </div>
+
+      <!-- Password -->
+      <div style="margin-bottom: 16px;">
+        <label class="glass-label">Mot de passe</label>
+        <div class="glass-input-wrap" style="margin-bottom: 0; position: relative;">
+          <i class="fa-solid fa-lock input-icon"></i>
+          <input type="password" class="glass-input" id="password" name="mot_de_passe"
+            placeholder="Votre mot de passe" required autocomplete="current-password">
+          <button type="button" class="eye-toggle" onclick="togglePassword('password', this)">
+            <i class="fa-regular fa-eye"></i>
+          </button>
+        </div>
+        <div class="form-error" id="passwordError" style="color: #fca5a5; font-size: 0.78rem; margin-top: 6px; display:none;"></div>
+      </div>
+
+      <!-- Options -->
+      <div class="auth-options">
+        <label class="checkbox-wrap">
+          <input type="checkbox" name="remember" id="remember">
+          Se souvenir de moi
+        </label>
+        <a href="#" class="forgot-link">Mot de passe oublié ?</a>
+      </div>
+
+      <!-- Submit -->
+      <button type="submit" class="btn-auth" id="submitBtn">
+        <i class="fa-solid fa-sign-in-alt"></i>
+        Se connecter
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      Pas encore de compte ?
+      <a href="loginuser.html">Créer un compte</a>
+    </div>
+
+    <div style="text-align: center; margin-top: 20px;">
+      <a href="index.html" style="font-size: 0.82rem; color: rgba(255,255,255,0.3);">
+        <i class="fa-solid fa-arrow-left"></i> Retour à l'accueil
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.className = 'fa-regular fa-eye-slash';
+    } else {
+      input.type = 'password';
+      icon.className = 'fa-regular fa-eye';
+    }
+  }
+
+  document.getElementById('loginForm').addEventListener('submit', function(e) {
+    // Si vous voulez le laisser rediriger vers l'index directement, vous pouvez laisser ça
+  });
+</script>
+
+</body>
+</html>
