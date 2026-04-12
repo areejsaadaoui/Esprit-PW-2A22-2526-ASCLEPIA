@@ -241,8 +241,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <textarea id="postContent" 
                                       name="contenu"  
                                       class="form-control" 
-                                      rows="10" 
-                                      required><?php echo htmlspecialchars($post->getContenu()); ?></textarea>
+                                      rows="10" ><?php echo htmlspecialchars($post->getContenu()); ?></textarea>
                             <div class="form-hint" id="charCount"><?php echo strlen($post->getContenu()); ?> / 2000 caractères</div>
                         </div>
                         

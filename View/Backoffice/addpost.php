@@ -152,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 
 <nav class="navbar" id="navbar">
-    <a href="../frontoffice/index.html" class="navbar-brand">
+    <a href="../Frontoffice/index.html" class="navbar-brand">
         <div class="navbar-logo"></div>
         <div class="navbar-name">ASC<span>LEPIA</span></div>
     </a>
@@ -161,8 +161,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <a href="../frontoffice/index.html#services" class="nav-link">Services</a>
         <a href="../frontoffice/index.html#pharmacies" class="nav-link">Pharmacies</a>
         <a href="../frontoffice/index.html#assurances" class="nav-link">Assurances</a>
-        <a href="forum.php" class="nav-link active">Forum</a>
-        <a href="../frontoffice/index.html#avis" class="nav-link">Avis</a>
+        <a href="postList.php" class="nav-link active">Communauté</a>
+        <a href="../Frontoffice/index.html#avis" class="nav-link">Avis</a>
     </div>
     <div class="nav-actions">
         <a href="../frontoffice/login.html" class="btn btn-outline-white btn-sm">Se connecter</a>
@@ -214,9 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <textarea id="postContent" 
                                       name="contenu"  
                                       class="form-control" 
-                                      rows="10" 
-                                      placeholder="Décrivez votre situation, posez votre question ou partagez votre expérience..."
-                                      required></textarea>
+                                      rows="10" ></textarea>
                             <div class="form-error" id="contentError"></div>
                             <div class="form-hint" id="charCount">0 / 2000 caractères (minimum 10 requis)</div>
                         </div>
@@ -290,7 +288,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <li><a href="consultation.php">Consultations</a></li>
                         <li><a href="addpharmacie.php">Pharmacies</a></li>
                         <li><a href="assurance.php">Assurances</a></li>
-                        <li><a href="forum.php">Forum santé</a></li>
+                        <li><a href="../Frontoffice/postList.php">Forum santé</a></li>
                     </ul>
                 </div>
             </div>
@@ -298,9 +296,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="footer-section">
                     <h4>Liens utiles</h4>
                     <ul class="footer-links">
-                        <li><a href="../frontoffice/index.html">Accueil</a></li>
-                        <li><a href="../frontoffice/login.html">S'inscrire</a></li>
-                        <li><a href="../frontoffice/login.html">Se connecter</a></li>
+                        <li><a href="../Frontoffice/index.html">Accueil</a></li>
+                        <li><a href="../Frontoffice/index.html">S'inscrire</a></li>
+                        <li><a href="../Frontoffice/index.html">Se connecter</a></li>
                     </ul>
                 </div>
             </div>
