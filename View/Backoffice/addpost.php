@@ -102,52 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/frontoffice.css">
-    <style>
-        .image-preview-container {
-            margin-top: 10px;
-            position: relative;
-            display: inline-block;
-        }
-        .image-preview {
-            max-width: 200px;
-            max-height: 200px;
-            border-radius: var(--radius);
-            border: 2px solid var(--border);
-            padding: 4px;
-            background: var(--white);
-        }
-        .remove-image {
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            background: var(--danger);
-            color: white;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 12px;
-            transition: var(--transition);
-        }
-        .remove-image:hover {
-            transform: scale(1.1);
-        }
-        .file-input-wrapper {
-            position: relative;
-            display: inline-block;
-            cursor: pointer;
-        }
-        .file-input-wrapper input {
-            position: absolute;
-            opacity: 0;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-        }
-    </style>
+    
 </head>
 <body>
 
@@ -157,16 +112,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="navbar-name">ASC<span>LEPIA</span></div>
     </a>
     <div class="nav-links" id="navLinks">
-        <a href="../frontoffice/index.html#accueil" class="nav-link">Accueil</a>
-        <a href="../frontoffice/index.html#services" class="nav-link">Services</a>
-        <a href="../frontoffice/index.html#pharmacies" class="nav-link">Pharmacies</a>
-        <a href="../frontoffice/index.html#assurances" class="nav-link">Assurances</a>
-        <a href="postList.php" class="nav-link active">Communauté</a>
+        <a href="../Frontoffice/index.html#accueil" class="nav-link">Accueil</a>
+        <a href="../Frontoffice/index.html#services" class="nav-link">Services</a>
+        <a href="../Frontoffice/index.html#pharmacies" class="nav-link">Pharmacies</a>
+        <a href="../Frontoffice/index.html#assurances" class="nav-link">Assurances</a>
+        <a href="../Frontoffice/postList.php" class="nav-link active">Communauté</a>
         <a href="../Frontoffice/index.html#avis" class="nav-link">Avis</a>
     </div>
     <div class="nav-actions">
-        <a href="../frontoffice/login.html" class="btn btn-outline-white btn-sm">Se connecter</a>
-        <a href="../frontoffice/login.html" class="btn btn-primary btn-sm">S'inscrire</a>
+        <a href="../Frontoffice/login.html" class="btn btn-outline-white btn-sm">Se connecter</a>
+        <a href="../Frontoffice/login.html" class="btn btn-primary btn-sm">S'inscrire</a>
         <div class="hamburger" id="hamburger" onclick="toggleMenu()">
             <span></span><span></span><span></span>
         </div>
@@ -310,73 +265,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </footer>
 
 <script src="../Frontoffice/addpost.js"></script>
-<script>
-    const navbar = document.getElementById('navbar');
-    window.addEventListener('scroll', () => {
-        navbar.classList.toggle('scrolled', window.scrollY > 30);
-    });
-
-    function toggleMenu() {
-        document.getElementById('navLinks').classList.toggle('open');
-    }
-    
-    // Gestion de l'aperçu d'image
-    const imageInput = document.getElementById('imageUpload');
-    const previewContainer = document.getElementById('imagePreviewContainer');
-    let currentImageData = null;
-    
-    imageInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            // Vérifier la taille
-            if (file.size > 5 * 1024 * 1024) {
-                alert('❌ L\'image ne doit pas dépasser 5MB.');
-                imageInput.value = '';
-                return;
-            }
-            
-            // Vérifier le type
-            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-            if (!allowedTypes.includes(file.type)) {
-                alert('❌ Seuls les formats JPG, PNG, GIF et WEBP sont autorisés.');
-                imageInput.value = '';
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = function(ev) {
-                currentImageData = ev.target.result;
-                previewContainer.innerHTML = `
-                    <div class="image-preview-container">
-                        <img src="${ev.target.result}" alt="Aperçu" class="image-preview">
-                        <div class="remove-image" onclick="removeImage()">
-                            <i class="fa-solid fa-times"></i>
-                        </div>
-                    </div>
-                `;
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-    
-    function removeImage() {
-        imageInput.value = '';
-        previewContainer.innerHTML = '';
-        currentImageData = null;
-    }
-    
-    // Bouton reset
-    const resetBtn = document.getElementById('resetBtn');
-    if (resetBtn) {
-        resetBtn.addEventListener('click', function() {
-            if (confirm('Effacer tout le formulaire ?')) {
-                document.getElementById('postContent').value = '';
-                document.getElementById('charCount').textContent = '0 / 2000 caractères (minimum 10 requis)';
-                removeImage();
-            }
-        });
-    }
-</script>
-
 </body>
 </html>
