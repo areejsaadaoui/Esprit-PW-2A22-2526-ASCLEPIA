@@ -5,57 +5,125 @@ require_once '../../models/Consultation.php';
 $model = new Consultation($pdo);
 $consultations = $model->getAll();
 ?>
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Liste des consultations</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        h1 { color: #2c3e50; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { background-color: #2c3e50; color: white; padding: 10px; }
-        td { padding: 10px; border: 1px solid #ddd; }
-        tr:nth-child(even) { background-color: #f2f2f2; }
-        .btn { padding: 6px 12px; border-radius: 4px; text-decoration: none; color: white; }
-        .btn-add { background-color: #27ae60; margin-bottom: 15px; display: inline-block; }
-        .btn-edit { background-color: #f39c12; }
-        .btn-delete { background-color: #e74c3c; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consultations - ASCLEPIA Admin</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="../../assets/css/backoffice.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
+<div class="admin-wrapper">
 
-<h1>Liste des consultations</h1>
-<a href="add_consultation.php" class="btn btn-add">+ Ajouter une consultation</a>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <a href="#" class="sidebar-brand">
+            <div class="sidebar-logo">🏥</div>
+            <div class="sidebar-title">ASCL<span>EPIA</span></div>
+        </a>
+        <div class="sidebar-user">
+            <div class="user-avatar">A</div>
+            <div class="user-info">
+                <div class="name">Ala</div>
+                <div class="role">Médecin</div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Consultation</div>
+            <div class="nav-item">
+                <a href="list_consultation.php" class="active">
+                    <span class="nav-icon"><i class="fa-solid fa-calendar-check"></i></span>
+                    Consultations
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="add_consultation.php">
+                    <span class="nav-icon"><i class="fa-solid fa-plus"></i></span>
+                    Ajouter
+                </a>
+            </div>
+        </nav>
+    </aside>
 
-<table>
-    <tr>
-        <th>ID</th>
-        <th>Date</th>
-        <th>Diagnostique</th>
-        <th>Notes</th>
-        <th>Actions</th>
-    </tr>
-    <?php if (empty($consultations)): ?>
-    <tr>
-        <td colspan="5" style="text-align:center">Aucune consultation trouvée</td>
-    </tr>
-    <?php else: ?>
-    <?php foreach ($consultations as $c): ?>
-    <tr>
-        <td><?= $c['id_consultation'] ?></td>
-        <td><?= $c['date_consultation'] ?></td>
-        <td><?= htmlspecialchars($c['diagnostique']) ?></td>
-        <td><?= htmlspecialchars($c['notes']) ?></td>
-        <td>
-            <a href="edit_consultation.php?id=<?= $c['id_consultation'] ?>" class="btn btn-edit">Modifier</a>
-            <a href="delete_consultation.php?id=<?= $c['id_consultation'] ?>" class="btn btn-delete">Supprimer</a>
-        </td>
-    </tr>
-    <?php endforeach; ?>
-    <?php endif; ?>
-</table>
+    <!-- MAIN -->
+    <div class="main-content">
+        <div class="topbar">
+            <div class="topbar-left">
+                <button class="sidebar-toggle"><i class="fa-solid fa-bars"></i></button>
+                <div>
+                    <div class="page-title">Consultations</div>
+                    <div class="breadcrumb">
+                        <a href="#">Dashboard</a>
+                        <span>/</span>
+                        <span>Consultations</span>
+                    </div>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <a href="add_consultation.php" class="btn btn-primary btn-sm">
+                    <i class="fa-solid fa-plus"></i> Nouvelle consultation
+                </a>
+            </div>
+        </div>
 
+        <div class="page-content">
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Date</th>
+                            <th>Diagnostique</th>
+                            <th>Notes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($consultations)): ?>
+                        <tr>
+                            <td colspan="5">
+                                <div class="empty-state">
+                                    <div class="icon">📋</div>
+                                    <h3>Aucune consultation</h3>
+                                    <p>Commencez par ajouter une consultation.</p>
+                                    <a href="add_consultation.php" class="btn btn-primary btn-sm">+ Ajouter</a>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php else: ?>
+                        <?php foreach ($consultations as $c): ?>
+                        <tr>
+                            <td><?= $c['id_consultation'] ?></td>
+                            <td><?= $c['date_consultation'] ?></td>
+                            <td><?= htmlspecialchars(substr($c['diagnostique'], 0, 50)) ?>...</td>
+                            <td><?= htmlspecialchars(substr($c['notes'], 0, 40)) ?>...</td>
+                            <td>
+                                <div class="actions">
+                                    <a href="edit_consultation.php?id=<?= $c['id_consultation'] ?>" class="btn btn-outline btn-sm">
+                                        <i class="fa-solid fa-pen"></i> Modifier
+                                    </a>
+                                    <a href="delete_consultation.php?id=<?= $c['id_consultation'] ?>" class="btn btn-danger btn-sm">
+                                        <i class="fa-solid fa-trash"></i> Supprimer
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelector('.sidebar-toggle').addEventListener('click', function() {
+        document.querySelector('.sidebar').classList.toggle('open');
+    });
+</script>
 </body>
 </html>
