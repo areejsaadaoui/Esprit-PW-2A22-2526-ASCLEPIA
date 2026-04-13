@@ -1,26 +1,22 @@
 <?php
 session_start();
 
-// Forcer l'admin directement (pour les tests)
-// À enlever quand vous aurez un vrai système d'authentification
-$_SESSION['user_id'] = 1;
-$_SESSION['role'] = 'admin';
-$_SESSION['user_name'] = 'Administrateur';
+
 
 include '../../Controller/PostController.php';
 require_once __DIR__ . '/../../Model/Post.php';
 
 $postC = new PostController();
 
-// Récupérer tous les posts
+
 $posts = $postC->listPosts();
 
-// Trier par date décroissante (du plus récent au plus ancien)
+// tri desc
 usort($posts, function($a, $b) {
     return strtotime($b->getDatePost()) - strtotime($a->getDatePost());
 });
 
-// Statistiques
+// stat
 $totalPosts = count($posts);
 $totalImages = 0;
 $totalMois = 0;
@@ -37,10 +33,10 @@ foreach ($posts as $post) {
     }
 }
 
-// Derniers posts (5 derniers)
+
 $latestPosts = $posts;
 
-// Données pour le graphique (12 derniers mois)
+// ma3loumet stat
 $months = [];
 $statsData = [];
 for ($i = 11; $i >= 0; $i--) {
@@ -279,7 +275,7 @@ $maxValue = max($statsData) ?: 1;
                                                 <?php echo (new DateTime($post->getDatePost()))->format('d/m/Y H:i'); ?>
                                             </td>
                                             <td class="table-actions">
-                                                <a href="../Frontoffice/postList.php?id=<?php echo $post->getIdPost(); ?>" class="btn btn-outline btn-sm" target="_blank">
+                                                <a href="showpost.php?id=<?php echo $post->getIdPost(); ?>" class="btn btn-outline btn-sm" target="_blank">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                                 <a href="updatepost.php?id=<?php echo $post->getIdPost(); ?>" class="btn btn-primary btn-sm">
