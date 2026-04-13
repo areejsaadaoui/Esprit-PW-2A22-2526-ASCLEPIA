@@ -20,8 +20,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($date)) {
         $errors[] = "La date est obligatoire.";
-    } elseif (strtotime($date) > time()) {
-        $errors[] = "La date ne peut pas être dans le futur.";
+    } elseif (strtotime($date) <= time()) {
+        $errors[] = "La date de consultation doit être dans le futur.";
+    } elseif ($model->existeDejaDate($date, $id)) {
+        $errors[] = "Une consultation existe déjà à cette date et heure exacte.";
     }
     if (empty($diagnostique) || strlen($diagnostique) < 10) {
         $errors[] = "Le diagnostique doit contenir au moins 10 caractères.";
@@ -133,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <label class="form-label">Date de consultation *</label>
                         <input type="datetime-local" name="date_consultation" id="date_consultation" class="form-control"
                             value="<?= date('Y-m-d\TH:i', strtotime($consultation['date_consultation'])) ?>">
-                        <span class="form-error" id="err_date">La date est obligatoire et ne peut pas être dans le futur.</span>
+                        <span class="form-error" id="err_date">La date de consultation doit être dans le futur.</span>
                     </div>
 
                     <div class="form-group">
@@ -183,7 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         document.querySelectorAll('.form-control').forEach(e => e.classList.remove('is-invalid'));
 
         const date = document.getElementById('date_consultation').value;
-        if (!date || new Date(date) > new Date()) {
+        if (!date || new Date(date) <= new Date()) {
             document.getElementById('date_consultation').classList.add('is-invalid');
             document.getElementById('err_date').style.display = 'block';
             valide = false;
@@ -208,7 +210,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     const maintenant = new Date();
     const offset = maintenant.getTimezoneOffset() * 60000;
-    document.getElementById('date_consultation').max = new Date(maintenant - offset).toISOString().slice(0, 16);
+    document.getElementById('date_consultation').min = new Date(maintenant - offset).toISOString().slice(0, 16);
 </script>
 </body>
 </html>

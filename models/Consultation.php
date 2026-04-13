@@ -21,6 +21,23 @@ class Consultation {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public function existeDejaDate($date, $id = null) {
+        if ($id) {
+            $stmt = $this->pdo->prepare(
+                "SELECT COUNT(*) FROM consultation 
+                 WHERE date_consultation = ? AND id_consultation != ?"
+            );
+            $stmt->execute([$date, $id]);
+        } else {
+            $stmt = $this->pdo->prepare(
+                "SELECT COUNT(*) FROM consultation 
+                 WHERE date_consultation = ?"
+            );
+            $stmt->execute([$date]);
+        }
+        return $stmt->fetchColumn() > 0;
+    }
+
     public function create($data) {
         $stmt = $this->pdo->prepare(
             "INSERT INTO consultation (date_consultation, diagnostique, notes)
