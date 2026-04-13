@@ -1,0 +1,553 @@
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Administration — Connexion | ASCLEPIA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/backoffice.css">
+  <style>
+    body {
+      background: var(--dark);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+    }
+
+    .admin-login-bg {
+      position: fixed;
+      inset: 0;
+      background: var(--gradient-hero);
+      z-index: 0;
+    }
+
+    .admin-login-bg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%230ea5e9' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .admin-glow {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.25;
+      pointer-events: none;
+    }
+
+    .glow-1 {
+      width: 500px;
+      height: 500px;
+      background: var(--primary);
+      top: -200px;
+      right: -100px;
+    }
+
+    .glow-2 {
+      width: 400px;
+      height: 400px;
+      background: var(--accent);
+      bottom: -150px;
+      left: -100px;
+    }
+
+    .admin-login-container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 460px;
+      padding: 24px;
+    }
+
+    .admin-login-card {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(40px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 28px;
+      padding: 44px 40px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.4);
+    }
+
+    .admin-login-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .admin-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 32px;
+      text-decoration: none;
+    }
+
+    .admin-logo-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--gradient-primary);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 8px 24px rgba(14,165,233,0.4);
+    }
+
+    .admin-logo-name {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--white);
+    }
+
+    .admin-logo-name span {
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .admin-login-title {
+      text-align: center;
+      color: var(--white);
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .admin-login-subtitle {
+      text-align: center;
+      color: rgba(255,255,255,0.45);
+      font-size: 0.88rem;
+      margin-bottom: 32px;
+    }
+
+    .admin-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(239,68,68,0.15);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #fca5a5;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    .glass-input-wrap {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .glass-input-wrap .input-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255,255,255,0.35);
+      font-size: 0.95rem;
+      z-index: 1;
+    }
+
+    .glass-input {
+      width: 100%;
+      padding: 14px 16px 14px 44px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      color: var(--white);
+      font-size: 0.95rem;
+      font-family: var(--font-main);
+      outline: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .glass-input::placeholder {
+      color: rgba(255,255,255,0.3);
+    }
+
+    .glass-input:focus {
+      border-color: var(--primary);
+      background: rgba(14,165,233,0.1);
+      box-shadow: 0 0 0 4px rgba(14,165,233,0.15);
+    }
+
+    .glass-input.input-error {
+      border-color: var(--danger);
+      background: rgba(239,68,68,0.1);
+    }
+
+    .glass-label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 8px;
+    }
+
+    .eye-toggle {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255,255,255,0.3);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-size: 0.9rem;
+      transition: all 0.15s ease;
+      z-index: 1;
+    }
+
+    .eye-toggle:hover {
+      color: var(--primary);
+    }
+
+    .form-error {
+      color: #fca5a5;
+      font-size: 0.78rem;
+      margin-top: 6px;
+      display: none;
+    }
+
+    .form-error.show {
+      display: block;
+    }
+
+    .admin-login-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--gradient-primary);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 0.98rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: var(--font-main);
+      box-shadow: 0 4px 20px rgba(14,165,233,0.4);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .admin-login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(14,165,233,0.5);
+    }
+
+    .admin-login-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .alert {
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+      border: 1px solid;
+    }
+
+    .alert.show {
+      display: flex;
+    }
+
+    .alert-danger {
+      background: rgba(239,68,68,0.15);
+      border-color: rgba(239,68,68,0.3);
+      color: #fca5a5;
+    }
+
+    .alert-warning {
+      background: rgba(245,158,11,0.15);
+      border-color: rgba(245,158,11,0.3);
+      color: #fcd34d;
+    }
+
+    .alert-success {
+      background: rgba(16,185,129,0.15);
+      border-color: rgba(16,185,129,0.3);
+      color: #6ee7b7;
+    }
+
+    .alert i {
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .admin-login-footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 0.86rem;
+      color: rgba(255,255,255,0.4);
+    }
+
+    .back-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .back-link a {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.3);
+      text-decoration: none;
+    }
+
+    .back-link a:hover {
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+
+<div class="admin-login-bg">
+  <div class="admin-glow glow-1"></div>
+  <div class="admin-glow glow-2"></div>
+</div>
+
+<div class="admin-login-container">
+  <a href="index.html" class="admin-logo">
+    <div class="admin-logo-icon">⚕️</div>
+    <div class="admin-logo-name">ASC<span>LEPIA</span></div>
+  </a>
+
+  <div class="admin-login-card">
+    <div class="admin-login-header">
+      <div class="admin-badge">
+        <i class="fa-solid fa-shield-haltered"></i>
+        ESPACE ADMINISTRATEUR
+      </div>
+      <h1 class="admin-login-title">Accès restreint 🔐</h1>
+      <p class="admin-login-subtitle">Connectez-vous à votre espace d'administration</p>
+    </div>
+
+    <div id="alertMessage" class="alert alert-danger" style="display: none;">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      <span id="alertText"></span>
+    </div>
+
+    <form id="loginForm">
+      <div>
+        <label class="glass-label">Email administrateur</label>
+        <div class="glass-input-wrap">
+          <i class="fa-solid fa-envelope input-icon"></i>
+          <input type="text" class="glass-input" id="email" name="email"
+            placeholder="admin@asclepia.com" autocomplete="off">
+        </div>
+        <div class="form-error" id="emailError"></div>
+      </div>
+
+      <div>
+        <label class="glass-label">Mot de passe</label>
+        <div class="glass-input-wrap">
+          <i class="fa-solid fa-lock input-icon"></i>
+          <input type="password" class="glass-input" id="password" name="mot_de_passe"
+            placeholder="••••••••" autocomplete="off">
+          <button type="button" class="eye-toggle" onclick="togglePassword('password', this)">
+            <i class="fa-regular fa-eye"></i>
+          </button>
+        </div>
+        <div class="form-error" id="passwordError"></div>
+      </div>
+
+      <button type="submit" class="admin-login-btn" id="submitBtn">
+        <i class="fa-solid fa-sign-in-alt"></i>
+        Accéder au BackOffice
+      </button>
+    </form>
+
+    <div class="admin-login-footer">
+      <i class="fa-solid fa-shield-alt"></i> Accès réservé aux administrateurs
+    </div>
+
+    <div class="back-link">
+      <a href="index.html">
+        <i class="fa-solid fa-arrow-left"></i> Retour à l'accueil
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showMessage(message, isError) {
+    var alertDiv = document.getElementById('alertMessage');
+    var alertText = document.getElementById('alertText');
+    alertText.textContent = message;
+    alertDiv.style.display = 'flex';
+    
+    if (isError) {
+      alertDiv.className = 'alert alert-danger';
+    } else {
+      alertDiv.className = 'alert alert-success';
+    }
+    
+    setTimeout(function() {
+      alertDiv.style.display = 'none';
+    }, 5000);
+  }
+
+  function hideMessage() {
+    var alertDiv = document.getElementById('alertMessage');
+    alertDiv.style.display = 'none';
+  }
+
+  function setFieldError(inputId, errorId, message) {
+    var input = document.getElementById(inputId);
+    var error = document.getElementById(errorId);
+    if (input) input.classList.add('input-error');
+    if (error) {
+      error.textContent = message;
+      error.classList.add('show');
+    }
+  }
+
+  function clearFieldError(inputId, errorId) {
+    var input = document.getElementById(inputId);
+    var error = document.getElementById(errorId);
+    if (input) input.classList.remove('input-error');
+    if (error) error.classList.remove('show');
+  }
+
+  function clearAllFieldErrors() {
+    clearFieldError('email', 'emailError');
+    clearFieldError('password', 'passwordError');
+  }
+
+  function validateEmail(email) {
+    var re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  }
+
+  function validateForm() {
+    var email = document.getElementById('email').value.trim();
+    var password = document.getElementById('password').value;
+    var valid = true;
+
+    clearAllFieldErrors();
+    hideMessage();
+
+    if (email === '') {
+      setFieldError('email', 'emailError', 'L\'adresse email est requise.');
+      valid = false;
+    } else if (!validateEmail(email)) {
+      setFieldError('email', 'emailError', 'Format d\'email invalide.');
+      valid = false;
+    }
+
+    if (password === '') {
+      setFieldError('password', 'passwordError', 'Le mot de passe est requis.');
+      valid = false;
+    } else if (password.length < 4) {
+      setFieldError('password', 'passwordError', 'Le mot de passe est trop court (minimum 4 caractères).');
+      valid = false;
+    }
+
+    return valid;
+  }
+
+  // Gestion du formulaire avec AJAX
+  var form = document.getElementById('loginForm');
+  if (form) {
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      if (!validateForm()) {
+        return;
+      }
+      
+      var btn = document.getElementById('submitBtn');
+      var email = document.getElementById('email').value.trim();
+      var password = document.getElementById('password').value;
+      
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Vérification en cours...';
+      
+      try {
+        var response = await fetch('check_admin.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ 
+            email: email, 
+            password: password 
+          })
+        });
+        
+        var data = await response.json();
+        
+        if (data.success) {
+          if (data.is_admin) {
+            showMessage('Connexion réussie ! Redirection en cours...', false);
+            setTimeout(function() {
+              window.location.href = 'dashboard_admin.php';
+            }, 1500);
+          } else {
+            showMessage('Accès refusé : vous n\'avez pas les droits administrateur.', true);
+            document.getElementById('email').classList.add('input-error');
+          }
+        } else {
+          showMessage(data.message || 'Email ou mot de passe incorrect.', true);
+          document.getElementById('email').classList.add('input-error');
+          document.getElementById('password').classList.add('input-error');
+        }
+      } catch (error) {
+        console.error('Erreur:', error);
+        showMessage('Erreur de connexion au serveur. Veuillez réessayer.', true);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-sign-in-alt"></i> Accéder au BackOffice';
+      }
+    });
+  }
+
+  // Nettoyage en temps réel
+  var emailInput = document.getElementById('email');
+  var passwordInput = document.getElementById('password');
+
+  if (emailInput) {
+    emailInput.addEventListener('input', function() {
+      clearFieldError('email', 'emailError');
+      hideMessage();
+    });
+  }
+
+  if (passwordInput) {
+    passwordInput.addEventListener('input', function() {
+      clearFieldError('password', 'passwordError');
+      hideMessage();
+    });
+  }
+
+  function togglePassword(inputId, btn) {
+    var input = document.getElementById(inputId);
+    var icon = btn.querySelector('i');
+    if (input && icon) {
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fa-regular fa-eye-slash';
+      } else {
+        input.type = 'password';
+        icon.className = 'fa-regular fa-eye';
+      }
+    }
+  }
+</script>
+
+</body>
+</html>
