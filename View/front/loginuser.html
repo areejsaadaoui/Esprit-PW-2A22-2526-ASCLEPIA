@@ -322,7 +322,7 @@ document.getElementById("userForm").addEventListener("submit", function(e) {
         .then(function(data) {
             if (data.success) {
                 alert(data.message || "Utilisateur ajouté avec succès!");
-                window.location.href = "liste_users.php";
+                window.location.href = "login.html";
             } else {
                 alert(data.message || "Erreur lors de l'ajout");
             }

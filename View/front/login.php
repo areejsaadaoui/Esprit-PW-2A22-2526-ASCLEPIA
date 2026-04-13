@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         setcookie('remember_token', $token, time() + (86400 * 30), "/");
     }
 
-    header('Location: index.html');
+    header('Location: indexp.html');
     exit();
 
 } else {
