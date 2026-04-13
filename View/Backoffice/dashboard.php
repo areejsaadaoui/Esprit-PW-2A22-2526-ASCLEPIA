@@ -38,7 +38,7 @@ foreach ($posts as $post) {
 }
 
 // Derniers posts (5 derniers)
-$latestPosts = array_slice($posts, 0, 5);
+$latestPosts = $posts;
 
 // Données pour le graphique (12 derniers mois)
 $months = [];
@@ -238,7 +238,7 @@ $maxValue = max($statsData) ?: 1;
                     <h3 style="font-size: 1rem;">
                         <i class="fas fa-clock"></i> Derniers posts
                     </h3>
-                    <a href="dashboard_posts.php" class="btn btn-outline btn-sm">Voir tous</a>
+                   
                 </div>
                 
                 <div style="overflow-x: auto;">

@@ -32,12 +32,14 @@ if (isset($_GET['error'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>ASCLEPIA — Forum santé</title>
+    <title>ASCLEPIA — communauté</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/frontoffice.css">
+    <link rel="stylesheet" href="assets/css/animations.css"/>
+<link rel="stylesheet" href="assets/css/frontoffice-animations.css"/>
     <style>
         /* ===== STYLES RESPONSIVES ===== */
         
@@ -75,25 +77,24 @@ if (isset($_GET['error'])) {
             flex-wrap: wrap;
         }
         
-        /* Grille responsive */
-        .row {
-            display: flex;
-            flex-wrap: wrap;
+        /* Grille responsive - 3 colonnes par défaut */
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
             margin: 0 -12px;
+            padding: 0 12px;
         }
         
-        .col-4 {
-            flex: 0 0 33.333%;
-            max-width: 33.333%;
-            padding: 0 12px;
-            margin-bottom: 24px;
+        .grid-item {
+            width: 100%;
         }
         
         /* ===== TABLETTES (768px - 1024px) ===== */
-        @media (max-width: 1024px) {
-            .col-4 {
-                flex: 0 0 50%;
-                max-width: 50%;
+        @media (max-width: 1024px) and (min-width: 769px) {
+            .posts-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 20px;
             }
             
             .container {
@@ -111,9 +112,9 @@ if (isset($_GET['error'])) {
         
         /* ===== MOBILES (moins de 768px) ===== */
         @media (max-width: 768px) {
-            .col-4 {
-                flex: 0 0 100%;
-                max-width: 100%;
+            .posts-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
             }
             
             .container {
@@ -271,6 +272,11 @@ if (isset($_GET['error'])) {
         
         /* ===== TRÈS PETITS MOBILES (moins de 480px) ===== */
         @media (max-width: 480px) {
+            .posts-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
             .container {
                 padding: 0 12px;
             }
@@ -410,9 +416,9 @@ if (isset($_GET['error'])) {
 
         <?php echo $message; ?>
 
-        <div class="row" id="postsContainer">
+        <div class="posts-grid">
             <?php if (empty($posts)): ?>
-                <div class="col-12">
+                <div class="grid-item" style="grid-column: 1 / -1;">
                     <div class="card" style="text-align: center; padding: 60px;">
                         <i class="fa-solid fa-comments" style="font-size: 3rem; color: var(--gray-light); margin-bottom: 16px;"></i>
                         <h3 style="margin-bottom: 8px;">Aucun post pour le moment</h3>
@@ -422,7 +428,7 @@ if (isset($_GET['error'])) {
                 </div>
             <?php else: ?>
                 <?php foreach ($posts as $post): ?>
-                    <div class="col-4">
+                    <div class="grid-item">
                         <div class="card post-card">
                             <!-- Afficher l'image si elle existe -->
                             <?php 
@@ -540,24 +546,8 @@ if (isset($_GET['error'])) {
     </div>
 </footer>
 
-<script>
-    const navbar = document.getElementById('navbar');
-    window.addEventListener('scroll', () => {
-        navbar.classList.toggle('scrolled', window.scrollY > 30);
-    });
-
-    function toggleMenu() {
-        const navLinks = document.getElementById('navLinks');
-        navLinks.classList.toggle('open');
-    }
-    
-    // Fermer le menu mobile quand on clique sur un lien
-    document.querySelectorAll('.nav-link').forEach(link => {
-        link.addEventListener('click', () => {
-            document.getElementById('navLinks').classList.remove('open');
-        });
-    });
-</script>
+<script src="addpost.js"></script>
+<script src="assets/js/animations.js" defer></script>
 
 </body>
 </html>
