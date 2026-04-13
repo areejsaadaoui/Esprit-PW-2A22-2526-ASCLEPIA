@@ -9,6 +9,25 @@
 
 <style type="text/css">
 /* Styles spécifiques pour la page d'ajout */
+/* Cacher la sidebar et la topbar */
+.admin-wrapper {
+    display: block;
+}
+
+.sidebar {
+    display: none;
+}
+
+.topbar {
+    display: none;
+}
+
+.main-content {
+    margin-left: 0;
+    width: 100%;
+    padding-top: 0;
+}
+
 .form-container {
     max-width: 700px;
     margin: 0 auto;
@@ -83,90 +102,11 @@
 <body>
 
 <div class="admin-wrapper">
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="sidebar-brand">
-            <div class="sidebar-logo">⚕️</div>
-            <div class="sidebar-title">ASCLEPIA <span>Admin</span></div>
-        </div>
-        <div class="sidebar-user">
-            <div class="user-avatar">AD</div>
-            <div class="user-info">
-                <div class="name">Administrateur</div>
-                <div class="role">Super Admin</div>
-            </div>
-        </div>
-        <div class="sidebar-nav">
-            <div class="nav-section-label">Principal</div>
-            <div class="nav-item">
-                <a href="dashboard.html">
-                    <span class="nav-icon">📊</span>
-                    <span>Tableau de bord</span>
-                </a>
-            </div>
-            <div class="nav-item has-sub open">
-                <a class="active">
-                    <span class="nav-icon">👥</span>
-                    <span>Utilisateurs</span>
-                    <span class="nav-arrow">▶</span>
-                </a>
-                <div class="sub-menu open">
-                    <a href="liste_users.php">Tous les utilisateurs</a>
-                    <a href="add_user.html" class="active">Ajouter un utilisateur</a>
-                    <a href="#">Rôles & permissions</a>
-                </div>
-            </div>
-            <div class="nav-item">
-                <a href="#">
-                    <span class="nav-icon">🏥</span>
-                    <span>Pharmacies</span>
-                </a>
-            </div>
-            <div class="nav-item">
-                <a href="#">
-                    <span class="nav-icon">💬</span>
-                    <span>Forum</span>
-                </a>
-            </div>
-            <div class="nav-section-label">Paramètres</div>
-            <div class="nav-item">
-                <a href="#">
-                    <span class="nav-icon">⚙️</span>
-                    <span>Configuration</span>
-                </a>
-            </div>
-        </div>
-        <div class="sidebar-footer">
-            <div class="sidebar-version">v2.0.0 | ASCLEPIA</div>
-        </div>
-    </div>
+    <!-- Sidebar - SUPPRIMÉE -->
 
     <!-- Main Content -->
     <div class="main-content">
-        <!-- Top Bar -->
-        <div class="topbar">
-            <div class="topbar-left">
-                <button class="sidebar-toggle" id="sidebarToggle">☰</button>
-                <div>
-                    <div class="page-title">Ajouter un utilisateur</div>
-                    <div class="breadcrumb">
-                        <a href="dashboard.html">Accueil</a> /
-                        <a href="liste_users.php">Utilisateurs</a> /
-                        <span>Ajouter</span>
-                    </div>
-                </div>
-            </div>
-            <div class="topbar-right">
-                <button class="topbar-btn">🔔<span class="topbar-notif">3</span></button>
-                <a href="#" class="topbar-user">
-                    <div class="user-avatar" style="width:36px;height:36px;">AD</div>
-                    <div>
-                        <div class="name">Admin</div>
-                        <div class="role">Administrateur</div>
-                    </div>
-                </a>
-            </div>
-        </div>
+        <!-- Top Bar - SUPPRIMÉE -->
 
         <!-- Page Content -->
         <div class="page-content">
@@ -208,7 +148,7 @@
 
                     <div class="form-group form-group-full">
                         <label class="form-label">Adresse <span class="required-star">*</span></label>
-                        <textarea id="adresse" class="form-control" rows="2" placeholder=""></textarea>
+                        <textarea id="adresse" class="form-control" rows="2" placeholder="123 Rue Exemple, Tunis"></textarea>
                         <div id="adresse-error" class="error-message"></div>
                     </div>
 
@@ -232,9 +172,8 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Téléphone</label>
-                            <input type="tel" id="telephone" class="form-control" placeholder="+216 ">
+                            <input type="tel" id="telephone" class="form-control" placeholder="+216 XX XXX XXX">
                         </div>
-
                     </div>
 
                     <div class="form-group form-group-full">
@@ -257,16 +196,7 @@
 </div>
 
 <script type="text/javascript">
-// Sidebar toggle pour mobile
-var sidebarToggle = document.getElementById('sidebarToggle');
-var sidebar = document.querySelector('.sidebar');
-
-if (sidebarToggle) {
-    sidebarToggle.addEventListener('click', function() {
-        sidebar.classList.toggle('open');
-    });
-}
-
+// Fonctions de validation
 function showError(id, message) {
     var errorDiv = document.getElementById(id);
     var inputField = document.getElementById(id.replace('-error', ''));
@@ -295,23 +225,7 @@ function clearErrors() {
     }
 }
 
-function redirectToApache() {
-    if (window.location.protocol === 'file:') {
-        var path = window.location.pathname.replace(/\\/g, '/').toLowerCase();
-        if (path.indexOf('/xampp/htdocs/asclepia/view/front/loginuser.html') !== -1) {
-            window.location.href = 'http://localhost/asclepia/View/front/loginuser.html';
-            return true;
-        }
-        alert('Ouvrez cette page via Apache : http://localhost/asclepia/View/front/loginuser.html');
-        return true;
-    }
-    return false;
-}
-
-if (redirectToApache()) {
-    // page will redirect if opened from file://
-}
-
+// Gestion de l'envoi du formulaire
 document.getElementById("userForm").addEventListener("submit", function(e) {
     e.preventDefault();
     clearErrors();
@@ -325,7 +239,6 @@ document.getElementById("userForm").addEventListener("submit", function(e) {
     var date_naissance = document.getElementById("date_naissance").value;
     var telephone = document.getElementById("telephone").value;
     var description = document.getElementById("description").value;
-    var specialite = document.getElementById("specialite").value;
 
     var valid = true;
 
@@ -337,14 +250,23 @@ document.getElementById("userForm").addEventListener("submit", function(e) {
     if (email === "") {
         showError("email-error", "Email requis");
         valid = false;
+    } else if (!email.includes('@') || !email.includes('.')) {
+        showError("email-error", "Email invalide");
+        valid = false;
     }
 
-    if (password.length < 6) {
+    if (password === "") {
+        showError("password-error", "Mot de passe requis");
+        valid = false;
+    } else if (password.length < 6) {
         showError("password-error", "Minimum 6 caractères");
         valid = false;
     }
 
-    if (password !== confirm) {
+    if (confirm === "") {
+        showError("confirm-error", "Confirmation requise");
+        valid = false;
+    } else if (password !== confirm) {
         showError("confirm-error", "Les mots de passe ne correspondent pas");
         valid = false;
     }
@@ -369,24 +291,24 @@ document.getElementById("userForm").addEventListener("submit", function(e) {
         submitBtn.innerHTML = '⏳ Envoi en cours...';
         submitBtn.disabled = true;
 
+        // Préparer les données à envoyer
+        var userData = {
+            nom: nom,
+            email: email,
+            mot_de_passe: password,
+            adresse: adresse,
+            role: role,
+            date_naissance: date_naissance,
+            telephone: telephone,
+            description: description
+        };
+
         fetch(addUserUrl, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                user: {
-                    nom: nom,
-                    email: email,
-                    mot_de_passe: password,
-                    adresse: adresse,
-                    role: role,
-                    date_naissance: date_naissance,
-                    telephone: telephone,
-                    description: description,
-                    specialite: specialite
-                }
-            })
+            body: JSON.stringify({ user: userData })
         })
         .then(function(res) {
             return res.text().then(function(text) {
@@ -398,9 +320,11 @@ document.getElementById("userForm").addEventListener("submit", function(e) {
             });
         })
         .then(function(data) {
-            alert(data.message);
             if (data.success) {
+                alert(data.message || "Utilisateur ajouté avec succès!");
                 window.location.href = "liste_users.php";
+            } else {
+                alert(data.message || "Erreur lors de l'ajout");
             }
         })
         .catch(function(error) {

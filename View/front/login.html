@@ -74,7 +74,6 @@
       font-size: 0.88rem; margin-bottom: 32px;
     }
 
-    /* Glass inputs */
     .glass-input-wrap { position: relative; margin-bottom: 16px; }
 
     .glass-input-wrap .input-icon {
@@ -161,11 +160,21 @@
       box-shadow: 0 8px 32px rgba(14,165,233,0.5);
     }
 
+    .btn-auth:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
     .error-msg {
       background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
       color: #fca5a5; padding: 12px 16px; border-radius: var(--radius);
       font-size: 0.84rem; margin-bottom: 20px; display: none;
       align-items: center; gap: 8px;
+    }
+
+    .error-msg.show {
+      display: flex;
     }
   </style>
 </head>
@@ -186,34 +195,38 @@
     <h1 class="auth-title">Bon retour 👋</h1>
     <p class="auth-subtitle">Connectez-vous à votre espace personnel</p>
 
-    <!-- Error message -->
-    <div class="error-msg" id="errorMsg">
-      <i class="fa-solid fa-circle-exclamation"></i>
-      <span id="errorText">Email ou mot de passe incorrect.</span>
-    </div>
+    <div id="alertInscription" class="error-msg">
+  <i class="fa-solid fa-user-plus"></i>
+  <span>Aucun compte trouvé avec cette adresse email. <a href="loginuser.html" style="color: white; text-decoration: underline;">S'inscrire</a></span>
+</div>
 
-    <!-- Modifié pour être une simple page html (temporairement) en enlevant action php -->
-    <form id="loginForm" method="GET" action="index.html" novalidate>
-      <input type="hidden" name="action" value="login">
+<div id="alertPassword" class="error-msg">
+  <i class="fa-solid fa-key"></i>
+  <span>Mot de passe incorrect. Veuillez réessayer.</span>
+</div>
 
-      <!-- Email -->
+<div id="alertGeneric" class="error-msg">
+  <i class="fa-solid fa-circle-info"></i>
+  <span>Une erreur est survenue. Veuillez réessayer.</span>
+</div>
+
+    <form id="loginForm" method="POST" action="login.php" novalidate>
       <div style="margin-bottom: 16px;">
         <label class="glass-label">Adresse email</label>
         <div class="glass-input-wrap" style="margin-bottom: 0;">
           <i class="fa-solid fa-envelope input-icon"></i>
           <input type="email" class="glass-input" id="email" name="email"
-            placeholder="votre@email.com" required autocomplete="email">
+            placeholder="votre@email.com" autocomplete="email">
         </div>
         <div class="form-error" id="emailError" style="color: #fca5a5; font-size: 0.78rem; margin-top: 6px; display:none;"></div>
       </div>
 
-      <!-- Password -->
       <div style="margin-bottom: 16px;">
         <label class="glass-label">Mot de passe</label>
         <div class="glass-input-wrap" style="margin-bottom: 0; position: relative;">
           <i class="fa-solid fa-lock input-icon"></i>
           <input type="password" class="glass-input" id="password" name="mot_de_passe"
-            placeholder="Votre mot de passe" required autocomplete="current-password">
+            placeholder="Votre mot de passe" autocomplete="current-password">
           <button type="button" class="eye-toggle" onclick="togglePassword('password', this)">
             <i class="fa-regular fa-eye"></i>
           </button>
@@ -221,16 +234,14 @@
         <div class="form-error" id="passwordError" style="color: #fca5a5; font-size: 0.78rem; margin-top: 6px; display:none;"></div>
       </div>
 
-      <!-- Options -->
       <div class="auth-options">
         <label class="checkbox-wrap">
           <input type="checkbox" name="remember" id="remember">
           Se souvenir de moi
         </label>
-        <a href="#" class="forgot-link">Mot de passe oublié ?</a>
+        <a href="forgot_password.html" class="forgot-link">Mot de passe oublié ?</a>
       </div>
 
-      <!-- Submit -->
       <button type="submit" class="btn-auth" id="submitBtn">
         <i class="fa-solid fa-sign-in-alt"></i>
         Se connecter
@@ -251,9 +262,142 @@
 </div>
 
 <script>
+  /* =============================================
+     UTILITAIRES
+  ============================================= */
+  function hideAllAlerts() {
+    document.getElementById('alertInscription').classList.remove('show');
+    document.getElementById('alertPassword').classList.remove('show');
+    document.getElementById('alertGeneric').classList.remove('show');
+  }
+
+  function showAlert(id, autoHide) {
+    hideAllAlerts();
+    document.getElementById(id).classList.add('show');
+    if (autoHide) {
+      setTimeout(function() {
+        document.getElementById(id).classList.remove('show');
+      }, 6000);
+    }
+  }
+
+  function setFieldError(inputId, errorId, message) {
+    var input = document.getElementById(inputId);
+    var error = document.getElementById(errorId);
+    input.classList.add('input-error');
+    error.textContent = message;
+    error.classList.add('show');
+  }
+
+  function clearFieldError(inputId, errorId) {
+    document.getElementById(inputId).classList.remove('input-error');
+    document.getElementById(errorId).classList.remove('show');
+  }
+
+  function clearAllFieldErrors() {
+    clearFieldError('email', 'emailError');
+    clearFieldError('password', 'passwordError');
+  }
+
+  /* =============================================
+     VALIDATION JS (sans HTML5)
+  ============================================= */
+  function validateEmail(email) {
+    // Regex basique : doit contenir @ et un point après
+    var re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  }
+
+  function validateForm() {
+    var email    = document.getElementById('email').value.trim();
+    var password = document.getElementById('password').value;
+    var valid    = true;
+
+    clearAllFieldErrors();
+    hideAllAlerts();
+
+    if (email === '') {
+      setFieldError('email', 'emailError', 'L\'adresse email est requise.');
+      valid = false;
+    } else if (!validateEmail(email)) {
+      setFieldError('email', 'emailError', 'Format d\'email invalide (ex: nom@domaine.com).');
+      valid = false;
+    }
+
+    if (password === '') {
+      setFieldError('password', 'passwordError', 'Le mot de passe est requis.');
+      valid = false;
+    } else if (password.length < 4) {
+      setFieldError('password', 'passwordError', 'Le mot de passe est trop court.');
+      valid = false;
+    }
+
+    return valid;
+  }
+
+  /* =============================================
+     SOUMISSION DU FORMULAIRE
+  ============================================= */
+  document.getElementById('loginForm').addEventListener('submit', function(e) {
+    if (!validateForm()) {
+      e.preventDefault();
+      return;
+    }
+
+    // Désactiver le bouton pendant l'envoi
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connexion en cours...';
+  });
+
+  /* =============================================
+     NETTOYAGE EN TEMPS RÉEL
+  ============================================= */
+  document.getElementById('email').addEventListener('input', function() {
+    clearFieldError('email', 'emailError');
+    hideAllAlerts();
+  });
+
+  document.getElementById('password').addEventListener('input', function() {
+    clearFieldError('password', 'passwordError');
+    hideAllAlerts();
+  });
+
+  /* =============================================
+     LECTURE DES PARAMÈTRES D'URL (retour login.php)
+     error=1 → email introuvable → s'inscrire
+     error=2 → mot de passe incorrect
+  ============================================= */
+  window.addEventListener('DOMContentLoaded', function() {
+    var params = new URLSearchParams(window.location.search);
+    var error  = params.get('error');
+
+    if (error === '1') {
+      // Email n'existe pas dans la BD
+      showAlert('alertInscription', false);
+      
+      // Mettre en évidence le champ email
+      document.getElementById('email').classList.add('input-error');
+    } else if (error === '2') {
+      // Mot de passe incorrect
+      showAlert('alertPassword', true);
+      
+      // Mettre en évidence le champ mot de passe
+      document.getElementById('password').classList.add('input-error');
+    }
+
+    // Réinitialiser le bouton (au cas où l'utilisateur revient)
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-sign-in-alt"></i> Se connecter';
+  });
+
+  /* =============================================
+     TOGGLE AFFICHAGE MOT DE PASSE
+  ============================================= */
   function togglePassword(inputId, btn) {
-    const input = document.getElementById(inputId);
-    const icon = btn.querySelector('i');
+    var input = document.getElementById(inputId);
+    var icon  = btn.querySelector('i');
     if (input.type === 'password') {
       input.type = 'text';
       icon.className = 'fa-regular fa-eye-slash';
@@ -262,10 +406,6 @@
       icon.className = 'fa-regular fa-eye';
     }
   }
-
-  document.getElementById('loginForm').addEventListener('submit', function(e) {
-    // Si vous voulez le laisser rediriger vers l'index directement, vous pouvez laisser ça
-  });
 </script>
 
 </body>
