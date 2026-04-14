@@ -7,9 +7,10 @@ $success = '';
 $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $date = trim($_POST['date_consultation']);
-    $diagnostique = trim($_POST['diagnostique']);
-    $notes = trim($_POST['notes']);
+    $date = trim($_POST['date_consultation'] ?? '');
+    $diagnostique = trim($_POST['diagnostique'] ?? '');
+    $notes = trim($_POST['notes'] ?? '');
+    $statut = trim($_POST['statut'] ?? '');
 
     if (empty($date)) {
         $errors[] = "La date est obligatoire.";
@@ -18,18 +19,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($model->existeDejaDate($date)) {
         $errors[] = "Une consultation existe déjà à cette date et heure exacte.";
     }
-    if (empty($diagnostique) || strlen($diagnostique) < 10) {
-        $errors[] = "Le diagnostique doit contenir au moins 10 caractères.";
+
+    $dateEstPassee = !empty($date) && strtotime($date) <= time();
+    if ($dateEstPassee) {
+        if (empty($diagnostique) || strlen($diagnostique) < 10) {
+            $errors[] = "Le diagnostique doit contenir au moins 10 caractères.";
+        }
+        if (empty($notes) || strlen($notes) < 5) {
+            $errors[] = "Les notes doivent contenir au moins 5 caractères.";
+        }
     }
-    if (empty($notes) || strlen($notes) < 5) {
-        $errors[] = "Les notes doivent contenir au moins 5 caractères.";
+
+    if (empty($statut)) {
+        $errors[] = "Le statut est obligatoire.";
+    } elseif ($statut === 'terminée' && !empty($date) && strtotime($date) > time()) {
+        $errors[] = "Le statut 'terminée' est impossible pour une consultation future.";
     }
 
     if (empty($errors)) {
         $data = [
             'date_consultation' => $date,
             'diagnostique'      => $diagnostique,
-            'notes'             => $notes
+            'notes'             => $notes,
+            'statut'            => $statut
         ];
         if ($model->create($data)) {
             $success = "Consultation ajoutée avec succès !";
@@ -52,7 +64,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 <div class="admin-wrapper">
 
-    <!-- SIDEBAR -->
     <aside class="sidebar">
         <a href="#" class="sidebar-brand">
             <div class="sidebar-logo">🏥</div>
@@ -82,7 +93,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </nav>
     </aside>
 
-    <!-- MAIN -->
     <div class="main-content">
         <div class="topbar">
             <div class="topbar-left">
@@ -127,20 +137,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="form-group">
                         <label class="form-label">Date de consultation *</label>
-                        <input type="datetime-local" name="date_consultation" id="date_consultation" class="form-control">
+                        <input type="datetime-local" name="date_consultation" id="date_consultation" class="form-control" onchange="verifierDate()">
                         <span class="form-error" id="err_date">La date de consultation doit être dans le futur.</span>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Diagnostique * <span class="text-muted" style="font-weight:400;font-size:0.8rem">(min. 10 caractères)</span></label>
-                        <textarea name="diagnostique" id="diagnostique" class="form-control" placeholder="Entrez le diagnostique..." oninput="compter('diagnostique', 'count_diag', 10)"></textarea>
+                        <label class="form-label">Statut *</label>
+                        <select name="statut" id="statut" class="form-control">
+                            <option value="">-- Choisir un statut --</option>
+                            <option value="planifiée">Planifiée</option>
+                            <option value="terminée" id="opt_terminee">Terminée</option>
+                            <option value="annulée">Annulée</option>
+                        </select>
+                        <span class="form-error" id="err_statut">Veuillez choisir un statut.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Diagnostique
+                            <span class="text-muted" id="hint_diag" style="font-weight:400;font-size:0.8rem">(disponible après la consultation)</span>
+                        </label>
+                        <textarea name="diagnostique" id="diagnostique" class="form-control"
+                            placeholder="Disponible après la date de consultation..."
+                            disabled
+                            oninput="compter('diagnostique', 'count_diag', 10)"></textarea>
                         <span class="form-hint"><span id="count_diag">0</span> caractères</span>
                         <span class="form-error" id="err_diag">Le diagnostique doit contenir au moins 10 caractères.</span>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Notes * <span class="text-muted" style="font-weight:400;font-size:0.8rem">(min. 5 caractères)</span></label>
-                        <textarea name="notes" id="notes" class="form-control" placeholder="Entrez les notes..." oninput="compter('notes', 'count_notes', 5)"></textarea>
+                        <label class="form-label">
+                            Notes
+                            <span class="text-muted" id="hint_notes" style="font-weight:400;font-size:0.8rem">(disponible après la consultation)</span>
+                        </label>
+                        <textarea name="notes" id="notes" class="form-control"
+                            placeholder="Disponible après la date de consultation..."
+                            disabled
+                            oninput="compter('notes', 'count_notes', 5)"></textarea>
                         <span class="form-hint"><span id="count_notes">0</span> caractères</span>
                         <span class="form-error" id="err_notes">Les notes doivent contenir au moins 5 caractères.</span>
                     </div>
@@ -170,6 +203,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         el.style.color = nb >= minimum ? 'green' : 'red';
     }
 
+    function verifierDate() {
+        const dateVal = document.getElementById('date_consultation').value;
+        const diag = document.getElementById('diagnostique');
+        const notes = document.getElementById('notes');
+        const hintDiag = document.getElementById('hint_diag');
+        const hintNotes = document.getElementById('hint_notes');
+        const optTerminee = document.getElementById('opt_terminee');
+        const selectStatut = document.getElementById('statut');
+
+        if (!dateVal) {
+            diag.disabled = true;
+            notes.disabled = true;
+            diag.placeholder = "Disponible après la date de consultation...";
+            notes.placeholder = "Disponible après la date de consultation...";
+            optTerminee.disabled = true;
+            return;
+        }
+
+        const dateChoisie = new Date(dateVal);
+        const maintenant = new Date();
+
+        if (dateChoisie <= maintenant) {
+            // Date passée → activer tout
+            diag.disabled = false;
+            notes.disabled = false;
+            diag.placeholder = "Entrez le diagnostique...";
+            notes.placeholder = "Entrez les notes...";
+            hintDiag.textContent = "(min. 10 caractères)";
+            hintNotes.textContent = "(min. 5 caractères)";
+            optTerminee.disabled = false;
+        } else {
+            // Date future → désactiver diagnostic, notes et option "terminée"
+            diag.disabled = true;
+            diag.value = '';
+            notes.disabled = true;
+            notes.value = '';
+            diag.placeholder = "Disponible après la date de consultation...";
+            notes.placeholder = "Disponible après la date de consultation...";
+            hintDiag.textContent = "(disponible après la consultation)";
+            hintNotes.textContent = "(disponible après la consultation)";
+            document.getElementById('count_diag').textContent = '0';
+            document.getElementById('count_notes').textContent = '0';
+            optTerminee.disabled = true;
+            if (selectStatut.value === 'terminée') selectStatut.value = '';
+        }
+    }
+
     function validerFormulaire() {
         let valide = true;
         document.querySelectorAll('.form-error').forEach(e => e.style.display = 'none');
@@ -182,18 +262,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             valide = false;
         }
 
-        const diag = document.getElementById('diagnostique').value.trim();
-        if (diag.length < 10) {
-            document.getElementById('diagnostique').classList.add('is-invalid');
-            document.getElementById('err_diag').style.display = 'block';
+        const statut = document.getElementById('statut').value;
+        if (!statut) {
+            document.getElementById('statut').classList.add('is-invalid');
+            document.getElementById('err_statut').style.display = 'block';
             valide = false;
         }
 
-        const notes = document.getElementById('notes').value.trim();
-        if (notes.length < 5) {
-            document.getElementById('notes').classList.add('is-invalid');
-            document.getElementById('err_notes').style.display = 'block';
-            valide = false;
+        const dateChoisie = new Date(date);
+        const maintenant = new Date();
+        if (date && dateChoisie <= maintenant) {
+            const diag = document.getElementById('diagnostique').value.trim();
+            if (diag.length < 10) {
+                document.getElementById('diagnostique').classList.add('is-invalid');
+                document.getElementById('err_diag').style.display = 'block';
+                valide = false;
+            }
+            const notes = document.getElementById('notes').value.trim();
+            if (notes.length < 5) {
+                document.getElementById('notes').classList.add('is-invalid');
+                document.getElementById('err_notes').style.display = 'block';
+                valide = false;
+            }
         }
 
         return valide;
@@ -202,6 +292,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     const maintenant = new Date();
     const offset = maintenant.getTimezoneOffset() * 60000;
     document.getElementById('date_consultation').min = new Date(maintenant - offset).toISOString().slice(0, 16);
+
+    verifierDate();
 </script>
 </body>
 </html>

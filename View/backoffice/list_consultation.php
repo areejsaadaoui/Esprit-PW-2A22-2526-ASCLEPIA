@@ -78,13 +78,14 @@ $consultations = $model->getAll();
                             <th>Date</th>
                             <th>Diagnostique</th>
                             <th>Notes</th>
+                            <th>Statut</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($consultations)): ?>
                         <tr>
-                            <td colspan="5">
+                            <td colspan="6">
                                 <div class="empty-state">
                                     <div class="icon">📋</div>
                                     <h3>Aucune consultation</h3>
@@ -100,6 +101,27 @@ $consultations = $model->getAll();
                             <td><?= $c['date_consultation'] ?></td>
                             <td><?= htmlspecialchars(substr($c['diagnostique'], 0, 50)) ?>...</td>
                             <td><?= htmlspecialchars(substr($c['notes'], 0, 40)) ?>...</td>
+                            <td>
+                                <?php
+                                $statut = $c['statut'] ?? 'planifiée';
+                                $badgeClass = match($statut) {
+                                    'planifiée' => 'badge-primary',
+                                    'terminée'  => 'badge-success',
+                                    'annulée'   => 'badge-danger',
+                                    default     => 'badge-gray'
+                                };
+                                $icone = match($statut) {
+                                    'planifiée' => 'fa-clock',
+                                    'terminée'  => 'fa-circle-check',
+                                    'annulée'   => 'fa-circle-xmark',
+                                    default     => 'fa-circle'
+                                };
+                                ?>
+                                <span class="badge <?= $badgeClass ?>">
+                                    <i class="fa-solid <?= $icone ?>"></i>
+                                    <?= ucfirst($statut) ?>
+                                </span>
+                            </td>
                             <td>
                                 <div class="actions">
                                     <a href="edit_consultation.php?id=<?= $c['id_consultation'] ?>" class="btn btn-outline btn-sm">

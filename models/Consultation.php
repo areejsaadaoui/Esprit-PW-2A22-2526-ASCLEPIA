@@ -40,25 +40,27 @@ class Consultation {
 
     public function create($data) {
         $stmt = $this->pdo->prepare(
-            "INSERT INTO consultation (date_consultation, diagnostique, notes)
-             VALUES (?, ?, ?)"
+            "INSERT INTO consultation (date_consultation, diagnostique, notes, statut)
+             VALUES (?, ?, ?, ?)"
         );
         return $stmt->execute([
             $data['date_consultation'],
             $data['diagnostique'],
-            $data['notes']
+            $data['notes'],
+            $data['statut']
         ]);
     }
 
     public function update($id, $data) {
         $stmt = $this->pdo->prepare(
-            "UPDATE consultation SET date_consultation=?, diagnostique=?, notes=?
+            "UPDATE consultation SET date_consultation=?, diagnostique=?, notes=?, statut=?
              WHERE id_consultation=?"
         );
         return $stmt->execute([
             $data['date_consultation'],
             $data['diagnostique'],
             $data['notes'],
+            $data['statut'],
             $id
         ]);
     }
