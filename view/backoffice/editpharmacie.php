@@ -1,7 +1,7 @@
 <?php
 require_once '../../controller/PharmacieC.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {//flag appele
     $pharmacie = new pharmacie(
         $_POST['id_pharmacie'],
         $_POST['nom'],
@@ -67,4 +67,4 @@ include 'header_back.php';
     </div>  
 </main>
 
-<?php include 'footer_back.php'; ?>
+<?php include 'footer_back.php'; ?>

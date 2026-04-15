@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_POST['email']
     );
     $pharmacieC->ajouterPharmacie($pharmacie);
-    header('Location: listepharmacie.php');
+    header('Location: listepharmacie.php'); //redurection vers la page de liste après l'ajout
     exit();
 }
 
@@ -65,4 +65,4 @@ include 'header_back.php';
     </div>  
 </main>
 
-<?php include 'footer_back.php'; ?>
+<?php include 'footer_back.php'; ?>

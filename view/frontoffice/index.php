@@ -1,3 +1,11 @@
+<?php
+require_once '../../Controller/PharmacieC.php';
+require_once '../../Controller/MedicamentC.php';
+$pc = new pharmacieC();
+$mc = new medicamentC();
+$listePharmacies = $pc->listepharmacie();
+$listeMedicaments = $mc->afficherMedicaments();
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -21,7 +29,7 @@
      NAVBAR
      ================================================ -->
 <nav class="navbar" id="navbar">
-  <a href="index.html" class="navbar-brand">
+  <a href="index.php" class="navbar-brand">
     <div class="navbar-logo"></div>
     <div class="navbar-name">ASC<span>LEPIA</span></div>
   </a>
@@ -30,6 +38,7 @@
     <a href="#accueil" class="nav-link active">Accueil</a>
     <a href="#services" class="nav-link">Services</a>
     <a href="#pharmacies" class="nav-link">Pharmacies</a>
+    <a href="#produits" class="nav-link">Produits</a>
     <a href="#assurances" class="nav-link">Assurances</a>
     <a href="#forum" class="nav-link">Post&Reponse</a>
     <a href="#avis" class="nav-link">Avis</a>
@@ -284,102 +293,188 @@
 
     <div class="row" id="pharmaciesGrid">
 
-      <div class="col-4">
-        <div class="card pharmacie-card" style="gap: 16px; flex-direction: column; padding: 24px;">
-          <div class="d-flex align-center" style="gap: 16px;">
-            <div class="icon-box" style="background: linear-gradient(135deg,#10b981,#059669);">
-              <i class="fa-solid fa-mortar-pestle"></i>
-            </div>
-            <div>
-              <h3 style="font-size: 1rem; margin-bottom: 2px;">Pharmacie Al Amal</h3>
-              <span class="badge badge-success">Ouverte</span>
-            </div>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 6px;">
-            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
-              <i class="fa-solid fa-location-dot" style="color: var(--primary); width: 16px;"></i>
-              Rue Habib Bourguiba, Tunis
-            </div>
-            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
-              <i class="fa-solid fa-phone" style="color: var(--primary); width: 16px;"></i>
-              +216 71 123 456
-            </div>
-            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
-              <i class="fa-solid fa-envelope" style="color: var(--primary); width: 16px;"></i>
-              alalampharmacy@email.tn
-            </div>
-          </div>
-          <a href="../backoffice/listepharmacie.php" class="btn btn-outline btn-sm" style="align-self: flex-start;">
-            Voir médicaments
-          </a>
-        </div>
-      </div>
-
-      <div class="col-4">
-        <div class="card pharmacie-card" style="gap: 16px; flex-direction: column; padding: 24px;">
-          <div class="d-flex align-center" style="gap: 16px;">
-            <div class="icon-box" style="background: linear-gradient(135deg,#10b981,#059669);">
-              <i class="fa-solid fa-mortar-pestle"></i>
-            </div>
-            <div>
-              <h3 style="font-size: 1rem; margin-bottom: 2px;">Pharmacie Centrale</h3>
-              <span class="badge badge-success">Ouverte</span>
+      <?php if (!empty($listePharmacies)): ?>
+        <?php foreach ($listePharmacies as $p): ?>
+          <div class="col-4">
+            <div class="card pharmacie-card" style="gap: 16px; flex-direction: column; padding: 24px;">
+              <div class="d-flex align-center" style="gap: 16px;">
+                <div class="icon-box" style="background: linear-gradient(135deg,#10b981,#059669);">
+                  <i class="fa-solid fa-mortar-pestle"></i>
+                </div>
+                <div>
+                  <h3 style="font-size: 1rem; margin-bottom: 2px;"><?= htmlspecialchars($p['nom']) ?></h3>
+                  <!-- Badge statique pour l'instant pour éviter les erreurs de BDD -->
+                  <span class="badge badge-success">Ouverte</span>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
+                  <i class="fa-solid fa-location-dot" style="color: var(--primary); width: 16px;"></i>
+                  <?= htmlspecialchars($p['adresse']) ?>
+                </div>
+                <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
+                  <i class="fa-solid fa-phone" style="color: var(--primary); width: 16px;"></i>
+                  <?= htmlspecialchars($p['telephone']) ?>
+                </div>
+                <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
+                  <i class="fa-solid fa-envelope" style="color: var(--primary); width: 16px;"></i>
+                  <?= htmlspecialchars($p['email']) ?>
+                </div>
+              </div>
+              <a href="../backoffice/listepharmacie.php" class="btn btn-outline btn-sm" style="align-self: flex-start;">
+                Voir médicaments
+              </a>
             </div>
           </div>
-          <div style="display: flex; flex-direction: column; gap: 6px;">
-            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
-              <i class="fa-solid fa-location-dot" style="color: var(--primary); width: 16px;"></i>
-              Avenue de la Liberté, Sfax
-            </div>
-            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
-              <i class="fa-solid fa-phone" style="color: var(--primary); width: 16px;"></i>
-              +216 74 234 567
-            </div>
-            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
-              <i class="fa-solid fa-envelope" style="color: var(--primary); width: 16px;"></i>
-              centrale.pharm@email.tn
-            </div>
-          </div>
-          <a href="../backoffice/listepharmacie.php" class="btn btn-outline btn-sm" style="align-self: flex-start;">
-            Voir médicaments
-          </a>
-        </div>
-      </div>
-
-      <div class="col-4">
-        <div class="card pharmacie-card" style="gap: 16px; flex-direction: column; padding: 24px;">
-          <div class="d-flex align-center" style="gap: 16px;">
-            <div class="icon-box" style="background: linear-gradient(135deg,#10b981,#059669);">
-              <i class="fa-solid fa-mortar-pestle"></i>
-            </div>
-            <div>
-              <h3 style="font-size: 1rem; margin-bottom: 2px;">Pharmacie du Lac</h3>
-              <span class="badge badge-warning">Garde</span>
-            </div>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 6px;">
-            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
-              <i class="fa-solid fa-location-dot" style="color: var(--primary); width: 16px;"></i>
-              Les Berges du Lac, Tunis
-            </div>
-            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
-              <i class="fa-solid fa-phone" style="color: var(--primary); width: 16px;"></i>
-              +216 71 345 678
-            </div>
-            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
-              <i class="fa-solid fa-envelope" style="color: var(--primary); width: 16px;"></i>
-              phlac@email.tn
-            </div>
-          </div>
-          <a href="../backoffice/listepharmacie.php" class="btn btn-outline btn-sm" style="align-self: flex-start;">
-            Voir médicaments
-          </a>
-        </div>
-      </div>
+        <?php endforeach; ?>
+      <?php else: ?>
+        <p style="text-align: center; width: 100%; color: var(--text-muted);">Aucune pharmacie trouvée.</p>
+      <?php endif; ?>
 
     </div>
   </div>
 </section>
+
+<!-- ================================================
+     MEDICAMENTS SECTION
+     ================================================ -->
+<section class="section-padding" id="produits" style="background: var(--bg);">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">
+        <i class="fa-solid fa-pills"></i>
+        Catalogue Santé
+      </div>
+      <h2 class="section-title">Nos Médicaments</h2>
+      <p class="section-desc">Découvrez notre gamme de produits disponibles pour votre bien-être.</p>
+    </div>
+
+    <div class="row">
+      <?php if (!empty($listeMedicaments)): ?>
+        <?php foreach ($listeMedicaments as $m): ?>
+          <div class="col-4">
+            <div class="card product-card">
+              <div class="product-image-container">
+                <?php 
+                  $imgPath = htmlspecialchars($m['images']);
+                  // Si l'image est vide ou n'existe pas, on met un placeholder premium
+                  if(empty($m['images'])) {
+                    $imgPath = "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=400";
+                  }
+                ?>
+                <img src="<?= $imgPath ?>" alt="<?= htmlspecialchars($m['nom']) ?>" class="product-img" onerror="this.src='https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=400'">
+                <span class="product-category"><?= htmlspecialchars($m['categorie']) ?></span>
+              </div>
+              <div class="product-content">
+                <h3 class="product-name"><?= htmlspecialchars($m['nom']) ?></h3>
+                <div class="product-price"><?= number_format($m['prix'], 3) ?> DT</div>
+                <div class="product-stock <?= $m['stock'] > 0 ? 'in-stock' : 'out-of-stock' ?>">
+                  <i class="fa-solid <?= $m['stock'] > 0 ? 'fa-circle-check' : 'fa-circle-xmark' ?>"></i>
+                  <?= $m['stock'] > 0 ? 'En Stock' : 'Rupture' ?>
+                </div>
+                <div class="product-actions">
+                  <button class="btn btn-primary btn-sm">Acheter</button>
+                  <button class="btn btn-outline btn-sm"><i class="fa-solid fa-eye"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      <?php else: ?>
+        <p style="text-align: center; width: 100%; color: var(--text-muted);">Aucun médicament disponible pour le moment.</p>
+      <?php endif; ?>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Product Section Premium Styles */
+  .product-card {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: white;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+  }
+  .product-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-hover);
+  }
+  .product-image-container {
+    height: 200px;
+    background: #f8f9fa;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .product-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+  .product-card:hover .product-img {
+    transform: scale(1.1);
+  }
+  .no-image-placeholder {
+    font-size: 3rem;
+    color: var(--gray-light);
+  }
+  .product-category {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255,255,255,0.9);
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--primary);
+    box-shadow: var(--shadow-sm);
+    z-index: 2;
+  }
+  .product-content {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex-grow: 1;
+  }
+  .product-name {
+    font-size: 1.15rem;
+    margin: 0;
+    color: var(--dark);
+  }
+  .product-price {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--primary);
+  }
+  .product-stock {
+    font-size: 0.82rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .in-stock { color: var(--accent); }
+  .out-of-stock { color: var(--danger); }
+  
+  .product-actions {
+    margin-top: auto;
+    display: flex;
+    gap: 10px;
+  }
+  .product-actions .btn-primary {
+    flex-grow: 1;
+  }
+</style>
 
 <!-- ================================================
      ASSURANCES SECTION
@@ -626,11 +721,11 @@
       <h2>Prêt à prendre soin de votre santé ?</h2>
       <p>Créez votre compte gratuitement et accédez à tous les services ASCLEPIA dès aujourd'hui.</p>
       <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
-        <a href="login.html" class="btn btn-primary btn-lg">
+        <a href="login.php" class="btn btn-primary btn-lg">
           <i class="fa-solid fa-user-plus"></i>
           Créer un compte patient
         </a>
-        <a href="login.html" class="btn btn-outline-white btn-lg">
+        <a href="login.php" class="btn btn-outline-white btn-lg">
           <i class="fa-solid fa-sign-in-alt"></i>
           Se connecter
         </a>
@@ -682,7 +777,7 @@
         <div class="footer-section">
           <h4>Liens utiles</h4>
           <ul class="footer-links">
-            <li><a href="index.html"><i class="fa-solid fa-home"></i> Accueil</a></li>
+            <li><a href="index.php"><i class="fa-solid fa-home"></i> Accueil</a></li>
             <li><a href="login.html"><i class="fa-solid fa-user-plus"></i> S'inscrire</a></li>
             <li><a href="login.html"><i class="fa-solid fa-sign-in-alt"></i> Se connecter</a></li>
             <li><a href="#avis"><i class="fa-solid fa-star"></i> Témoignages</a></li>
@@ -717,7 +812,7 @@
     </div>
 
     <div class="footer-bottom">
-      <p>© 2026 <a href="index.html">ASCLEPIA</a>. Tous droits réservés.</p>
+      <p>© 2026 <a href="index.php">ASCLEPIA</a>. Tous droits réservés.</p>
       <p>Conçu avec  pour une meilleure santé</p>
     </div>
   </div>
@@ -789,7 +884,7 @@
   }
 
   // ---- Cards entrance animation ----
-  const cards = document.querySelectorAll('.card, .avis-card');
+  const cards = document.querySelectorAll('.card, .avis-card, .pharmacie-card');
   const cardObserver = new IntersectionObserver(entries => {
     entries.forEach((entry, i) => {
       if (entry.isIntersecting) {
@@ -801,13 +896,8 @@
       }
     });
   }, { threshold: 0.1 });
+  cards.forEach(card => cardObserver.observe(card));
 
-  cards.forEach(card => {
-    card.style.opacity = '0';
-    card.style.transform = 'translateY(20px)';
-    card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-    cardObserver.observe(card);
-  });
 </script>
 
 </body>

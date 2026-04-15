@@ -91,15 +91,16 @@
 <body>
 
 <nav class="navbar scrolled" id="navbar">
-  <a href="../frontoffice/index.html" class="navbar-brand">
+  <a href="../frontoffice/index.php" class="navbar-brand">
     <div class="navbar-logo">⚕️</div>
     <div class="navbar-name">ASC<span>LEPIA</span></div>
   </a>
 
   <div class="nav-links" id="navLinks">
-    <a href="../frontoffice/index.html" class="nav-link">Accueil</a>
-    <a href="listepharmacie.php" class="nav-link active">Gestion Pharmacies</a>
-    <a href="../frontoffice/index.html#services" class="nav-link">Services</a>
+    <a href="dashboard.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : ''; ?>">Tableau de Bord</a>
+    <a href="listepharmacie.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'listepharmacie.php' ? 'active' : ''; ?>">Gestion Pharmacies</a>
+    <a href="listemedicament.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'listemedicament.php' ? 'active' : ''; ?>">Gestion Médicaments</a>
+    <a href="../frontoffice/index.php" class="nav-link">Site Public</a>
   </div>
 
   <div class="nav-actions">

@@ -5,10 +5,10 @@ class medicament
     private $nom;
     private $prix;
     private $stock;
-    private $categorie;
+    private $id_pharmacie;
     private $images;    
 
-    public function __construct($id, $nom, $prix, $stock, $categorie, $images)
+    public function __construct($id, $nom, $prix, $stock, $categorie, $images, $id_pharmacie)
     {
         $this->id = $id;
         $this->nom = $nom;
@@ -16,6 +16,7 @@ class medicament
         $this->images = $images;
         $this->prix = $prix;
         $this->stock = $stock;
+        $this->id_pharmacie = $id_pharmacie;
     }
 
     public function getId()
@@ -44,5 +45,10 @@ class medicament
         public function getImages()
         {
             return $this->images;
+        }
+
+        public function getIdPharmacie()
+        {
+            return $this->id_pharmacie;
         }
     }
