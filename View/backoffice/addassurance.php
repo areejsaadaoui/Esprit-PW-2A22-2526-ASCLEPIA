@@ -1,5 +1,5 @@
 <?php
-include '../../controller/AssuranceController.php';
+include '../../Controller/AssuranceController.php';
 require_once __DIR__ . '/../../Model/Assurance.php';
 
 $error      = '';
@@ -21,9 +21,11 @@ if (isset($_POST['nom_assurance'], $_POST['description'], $_POST['prix'], $_POST
         exit;
     } else {
         $error = "Veuillez remplir tous les champs.";
+        
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -37,7 +39,6 @@ if (isset($_POST['nom_assurance'], $_POST['description'], $_POST['prix'], $_POST
 <body>
 <div class="admin-wrapper">
 
-    <!-- SIDEBAR -->
     <aside class="sidebar">
         <a href="#" class="sidebar-brand">
             <div class="sidebar-logo">🏥</div>
@@ -67,7 +68,6 @@ if (isset($_POST['nom_assurance'], $_POST['description'], $_POST['prix'], $_POST
         </nav>
     </aside>
 
-    <!-- MAIN -->
     <div class="main-content">
         <div class="topbar">
             <div class="topbar-left">
@@ -129,7 +129,7 @@ if (isset($_POST['nom_assurance'], $_POST['description'], $_POST['prix'], $_POST
                         <div class="col-4">
                             <div class="form-group">
                                 <label class="form-label">Prix (DT / mois)</label>
-                                <input type="number" step="0.01" name="prix" id="prix" class="form-control" placeholder="0.00">
+                                <input type="number" name="prix" id="prix" class="form-control" placeholder="0.00">
                                 <span class="form-error" id="err_prix">Doit être supérieur à 0.</span>
                             </div>
                         </div>
@@ -143,7 +143,7 @@ if (isset($_POST['nom_assurance'], $_POST['description'], $_POST['prix'], $_POST
                         <div class="col-4">
                             <div class="form-group">
                                 <label class="form-label">Taux remboursement (%)</label>
-                                <input type="number" step="0.01" name="taux_remboursement" id="taux_remboursement" class="form-control" placeholder="80">
+                                <input type="number" name="taux_remboursement" id="taux_remboursement" class="form-control" placeholder="80">
                                 <span class="form-error" id="err_taux">Doit être entre 0 et 100.</span>
                             </div>
                         </div>
@@ -166,7 +166,7 @@ if (isset($_POST['nom_assurance'], $_POST['description'], $_POST['prix'], $_POST
         document.querySelector('.sidebar').classList.toggle('open');
     });
 
-    function validerChamp(id, condition, errId) {
+    function validerChamp(id, condition) {
         var input = document.getElementById(id);
         var valide = condition(input.value);
         input.classList.toggle('is-invalid', !valide);
@@ -175,19 +175,27 @@ if (isset($_POST['nom_assurance'], $_POST['description'], $_POST['prix'], $_POST
 
     function validerFormulaire() {
         var ok = true;
-        if (!validerChamp('nom_assurance', function(v) { return v.trim().length >= 3; }, 'err_nom')) ok = false;
-        if (!validerChamp('description', function(v) { return v.trim().length >= 10; }, 'err_description')) ok = false;
-        if (!validerChamp('prix', function(v) { return v !== '' && parseFloat(v) > 0; }, 'err_prix')) ok = false;
-        if (!validerChamp('TYPE', function(v) { return v !== ''; }, 'err_type')) ok = false;
-        if (!validerChamp('duree', function(v) { return v !== '' && parseInt(v) > 0; }, 'err_duree')) ok = false;
-        if (!validerChamp('taux_remboursement', function(v) { return v !== '' && parseFloat(v) >= 0 && parseFloat(v) <= 100; }, 'err_taux')) ok = false;
+        if (!validerChamp('nom_assurance', function(v) { return v.trim().length >= 3; })) ok = false;
+        if (!validerChamp('description', function(v) { return v.trim().length >= 10; })) ok = false;
+        if (!validerChamp('prix', function(v) { return v.trim() !== '' && parseFloat(v) > 0; })) ok = false;
+        if (!validerChamp('TYPE', function(v) { return v !== ''; })) ok = false;
+        if (!validerChamp('duree', function(v) { return v.trim() !== '' && parseInt(v) > 0; })) ok = false;
+        if (!validerChamp('taux_remboursement', function(v) { return v.trim() !== '' && parseFloat(v) >= 0 && parseFloat(v) <= 100; })) ok = false;
         return ok;
     }
 
-    ['nom_assurance','description','prix','duree','taux_remboursement'].forEach(function(id) {
-        document.getElementById(id).addEventListener('input', function() { validerFormulaire(); });
+    ['nom_assurance', 'description', 'prix', 'duree', 'taux_remboursement'].forEach(function(id) {
+        document.getElementById(id).addEventListener('input', function() { validerChamp(id, function(v) {
+            if (id === 'nom_assurance') return v.trim().length >= 3;
+            if (id === 'description') return v.trim().length >= 10;
+            if (id === 'prix') return v.trim() !== '' && parseFloat(v) > 0;
+            if (id === 'duree') return v.trim() !== '' && parseInt(v) > 0;
+            if (id === 'taux_remboursement') return v.trim() !== '' && parseFloat(v) >= 0 && parseFloat(v) <= 100;
+        }); });
     });
-    document.getElementById('TYPE').addEventListener('change', function() { validerFormulaire(); });
+    document.getElementById('TYPE').addEventListener('change', function() {
+        validerChamp('TYPE', function(v) { return v !== ''; });
+    });
 </script>
 </body>
 </html>

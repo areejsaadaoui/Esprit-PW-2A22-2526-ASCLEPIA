@@ -1,7 +1,28 @@
 <?php
-include '../../controller/AssuranceController.php';
+include '../../Controller/AssuranceController.php';
 $assuranceC = new AssuranceController();
 $list       = $assuranceC->listAssurances();
+
+// Calcul des stats
+$assurances = [];
+$totalPrix = 0;
+$totalTaux = 0;
+$types = [];
+
+foreach ($list as $a) {
+    $assurances[] = $a;
+    $totalPrix += $a['prix'];
+    $totalTaux += $a['taux_remboursement'];
+    $types[] = $a['TYPE'];
+}
+
+$count      = count($assurances);
+$prixMoyen  = $count > 0 ? $totalPrix / $count : 0;
+$tauxMoyen  = $count > 0 ? $totalTaux / $count : 0;
+
+// Type le plus populaire
+$typeCount  = array_count_values($types);
+$typePop    = $count > 0 ? array_search(max($typeCount), $typeCount) : 'N/A';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -70,6 +91,56 @@ $list       = $assuranceC->listAssurances();
 
         <!-- PAGE CONTENT -->
         <div class="page-content">
+
+            <!-- STAT CARDS -->
+            <div class="row mb-4">
+                <div class="col-3">
+                    <div class="stat-card">
+                        <div class="stat-card-icon blue">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <div class="stat-card-body">
+                            <div class="stat-card-value"><?= $count ?></div>
+                            <div class="stat-card-label">Total Assurances</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="stat-card">
+                        <div class="stat-card-icon green">
+                            <i class="fa-solid fa-money-bill-wave"></i>
+                        </div>
+                        <div class="stat-card-body">
+                            <div class="stat-card-value"><?= number_format($prixMoyen, 0) ?> DT</div>
+                            <div class="stat-card-label">Prix Moyen / mois</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="stat-card">
+                        <div class="stat-card-icon purple">
+                            <i class="fa-solid fa-trophy"></i>
+                        </div>
+                        <div class="stat-card-body">
+                            <div class="stat-card-value"><?= $typePop ?></div>
+                            <div class="stat-card-label">Type le plus populaire</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="stat-card">
+                        <div class="stat-card-icon cyan">
+                            <i class="fa-solid fa-percent"></i>
+                        </div>
+                        <div class="stat-card-body">
+                            <div class="stat-card-value"><?= number_format($tauxMoyen, 1) ?>%</div>
+                            <div class="stat-card-label">Taux Remboursement Moyen</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABLE -->
             <div class="table-wrapper">
                 <table class="table">
                     <thead>
@@ -84,7 +155,7 @@ $list       = $assuranceC->listAssurances();
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (!$list || $list->rowCount() === 0): ?>
+                        <?php if ($count === 0): ?>
                         <tr>
                             <td colspan="7">
                                 <div class="empty-state">
@@ -96,7 +167,7 @@ $list       = $assuranceC->listAssurances();
                             </td>
                         </tr>
                         <?php else: ?>
-                        <?php foreach ($list as $a): ?>
+                        <?php foreach ($assurances as $a): ?>
                         <tr>
                             <td><?= $a['id_assurance'] ?></td>
                             <td><strong><?= htmlspecialchars($a['nom_assurance']) ?></strong></td>
@@ -125,6 +196,7 @@ $list       = $assuranceC->listAssurances();
                     </tbody>
                 </table>
             </div>
+
         </div>
     </div>
 </div>

@@ -1,0 +1,260 @@
+/* ============================================
+   ASCLEPIA - Module Assurance Styles
+   ============================================ */
+
+/* ---- FILTRES PAR TYPE ---- */
+.filter-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 32px;
+}
+
+.filter-btn {
+    padding: 8px 20px;
+    border-radius: var(--radius-full);
+    border: 2px solid var(--border);
+    background: var(--white);
+    color: var(--text);
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+}
+
+.filter-btn:hover, .filter-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+/* ---- BARRE DE RECHERCHE FRONTOFFICE ---- */
+.front-search {
+    max-width: 480px;
+    margin: 0 auto 32px;
+    position: relative;
+}
+
+.front-search input {
+    width: 100%;
+    padding: 14px 20px 14px 48px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-full);
+    font-size: 0.95rem;
+    font-family: var(--font-main);
+    outline: none;
+    transition: var(--transition);
+    background: var(--white);
+}
+
+.front-search input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(14,165,233,0.12);
+}
+
+.front-search .search-icon {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray-light);
+}
+
+/* ---- CHECKBOX COMPARATEUR ---- */
+.compare-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-top: 12px;
+    cursor: pointer;
+    justify-content: center;
+}
+
+.compare-check input { cursor: pointer; }
+
+/* ---- BARRE FIXE COMPARATEUR ---- */
+.compare-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--dark);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 999;
+    transform: translateY(100%);
+    transition: var(--transition);
+    border-top: 2px solid var(--primary);
+}
+
+.compare-bar.visible { transform: translateY(0); }
+.compare-bar p { color: white; font-size: 0.9rem; }
+.compare-bar span { color: var(--primary); font-weight: 700; }
+
+/* ---- TABLEAU COMPARATEUR ---- */
+.comparateur-section {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    margin-bottom: 48px;
+}
+
+.comparateur-section h2 {
+    font-size: 1.4rem;
+    margin-bottom: 24px;
+    color: var(--dark);
+}
+
+.compare-table { width: 100%; border-collapse: collapse; }
+
+.compare-table th {
+    background: var(--dark);
+    color: white;
+    padding: 16px 20px;
+    text-align: center;
+    font-size: 1rem;
+}
+
+.compare-table th:first-child {
+    background: var(--dark-2);
+    text-align: left;
+}
+
+.compare-table td {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.compare-table td:first-child {
+    font-weight: 600;
+    color: var(--text-muted);
+    text-align: left;
+    background: var(--bg);
+}
+
+.winner { color: var(--accent); font-weight: 700; }
+.loser  { color: var(--danger); }
+
+/* ---- ANIMATION CARTES ---- */
+@keyframes fadeInCard {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes fadeOutCard {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+}
+
+.carte-assurance {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.carte-assurance.show {
+    animation: fadeInCard 0.35s ease forwards;
+}
+
+.carte-assurance.hide {
+    animation: fadeOutCard 0.25s ease forwards;
+}
+
+/* ---- MODE SOMBRE ---- */
+body.dark-mode {
+    --bg: #0f172a;
+    --bg-card: #1e293b;
+    --white: #1e293b;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --border: #334155;
+    --dark: #0f172a;
+    --dark-2: #1e293b;
+    background: #0f172a;
+    color: #e2e8f0;
+}
+
+body.dark-mode .card {
+    background: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+
+body.dark-mode .card h3 { color: #e2e8f0; }
+body.dark-mode .card p  { color: #94a3b8; }
+
+body.dark-mode .filter-btn {
+    background: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+
+body.dark-mode .filter-btn:hover,
+body.dark-mode .filter-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+body.dark-mode .front-search input {
+    background: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+
+body.dark-mode .front-search input::placeholder { color: #64748b; }
+
+body.dark-mode .comparateur-section {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+body.dark-mode .compare-table td:first-child { background: #0f172a; }
+body.dark-mode .compare-table td { border-color: #334155; color: #e2e8f0; }
+body.dark-mode .comparateur-section h2 { color: #e2e8f0; }
+
+body.dark-mode .section-padding { background: #0f172a !important; }
+
+/* Bouton mode sombre */
+.dark-toggle {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(14,165,233,0.4);
+    z-index: 998;
+    transition: var(--transition);
+}
+
+.dark-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 28px rgba(14,165,233,0.5);
+}
