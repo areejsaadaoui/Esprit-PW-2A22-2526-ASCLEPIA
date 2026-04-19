@@ -1,18 +1,18 @@
 <?php
 require_once '../../config/db.php';
-require_once '../../models/Consultation.php';
+require_once '../../controllers/ConsultationController.php';
 
-$model = new Consultation($pdo);
+$controller = new ConsultationController($pdo);
 
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-$consultation = $model->getById($id);
+$consultation = $controller->getConsultationById($id);
 
 if (!$consultation) {
     die("Consultation introuvable.");
 }
 
 if (isset($_GET['confirm']) && $_GET['confirm'] === 'oui') {
-    $model->delete($id);
+    $controller->deleteConsultation($id);
     header('Location: list_consultation.php');
     exit;
 }
@@ -90,17 +90,17 @@ if (isset($_GET['confirm']) && $_GET['confirm'] === 'oui') {
 
                 <div class="form-group">
                     <label class="form-label">Date</label>
-                    <p><?= $consultation['date_consultation'] ?></p>
+                    <p><?= $consultation->getDateConsultation() ?></p>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Diagnostique</label>
-                    <p><?= htmlspecialchars($consultation['diagnostique']) ?></p>
+                    <p><?= htmlspecialchars($consultation->getDiagnostique()) ?></p>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Notes</label>
-                    <p><?= htmlspecialchars($consultation['notes']) ?></p>
+                    <p><?= htmlspecialchars($consultation->getNotes()) ?></p>
                 </div>
 
                 <div class="d-flex gap-2 mt-3">

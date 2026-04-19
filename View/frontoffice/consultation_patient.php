@@ -1,10 +1,10 @@
 <?php
 require_once '../../config/db.php';
-require_once '../../models/Consultation.php';
+require_once '../../controllers/ConsultationController.php';
 
-$model = new Consultation($pdo);
-$consultations = $model->getAll();
-?>
+$controller = new ConsultationController($pdo);
+$consultations = $controller->getAllConsultations();
+?>"
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -69,11 +69,11 @@ $consultations = $model->getAll();
                         <div class="card-header">
                             <div class="card-title">
                                 <i class="fa-solid fa-calendar-check" style="color:var(--primary)"></i>
-                                Consultation #<?= $c['id_consultation'] ?>
+                                Consultation #<?= $c->getIdConsultation() ?>
                             </div>
                             <span class="badge badge-primary">
                                 <i class="fa-regular fa-clock"></i>
-                                <?= date('d/m/Y', strtotime($c['date_consultation'])) ?>
+                                <?= date('d/m/Y', strtotime($c->getDateConsultation())) ?>
                             </span>
                         </div>
 
@@ -82,7 +82,7 @@ $consultations = $model->getAll();
                                 <i class="fa-solid fa-stethoscope"></i> Diagnostique
                             </label>
                             <p style="color:var(--text-muted); font-size:0.9rem; line-height:1.6;">
-                                <?= htmlspecialchars($c['diagnostique']) ?>
+                                <?= htmlspecialchars($c->getDiagnostique()) ?>
                             </p>
                         </div>
 
@@ -91,7 +91,7 @@ $consultations = $model->getAll();
                                 <i class="fa-solid fa-notes-medical"></i> Notes
                             </label>
                             <p style="color:var(--text-muted); font-size:0.9rem; line-height:1.6;">
-                                <?= htmlspecialchars($c['notes']) ?>
+                                <?= htmlspecialchars($c->getNotes()) ?>
                             </p>
                         </div>
                     </div>

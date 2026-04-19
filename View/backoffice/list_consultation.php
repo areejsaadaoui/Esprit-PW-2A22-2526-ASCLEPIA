@@ -1,10 +1,10 @@
 <?php
 require_once '../../config/db.php';
-require_once '../../models/Consultation.php';
+require_once '../../controllers/ConsultationController.php';
 
-$model = new Consultation($pdo);
-$consultations = $model->getAll();
-?>
+$controller = new ConsultationController($pdo);
+$consultations = $controller->getAllConsultations();
+?>"
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -97,13 +97,13 @@ $consultations = $model->getAll();
                         <?php else: ?>
                         <?php foreach ($consultations as $c): ?>
                         <tr>
-                            <td><?= $c['id_consultation'] ?></td>
-                            <td><?= $c['date_consultation'] ?></td>
-                            <td><?= htmlspecialchars(substr($c['diagnostique'], 0, 50)) ?>...</td>
-                            <td><?= htmlspecialchars(substr($c['notes'], 0, 40)) ?>...</td>
+                            <td><?= $c->getIdConsultation() ?></td>
+                            <td><?= $c->getDateConsultation() ?></td>
+                            <td><?= htmlspecialchars(substr($c->getDiagnostique(), 0, 50)) ?>...</td>
+                            <td><?= htmlspecialchars(substr($c->getNotes(), 0, 40)) ?>...</td>
                             <td>
                                 <?php
-                                $statut = $c['statut'] ?? 'planifiée';
+                                $statut = $c->getStatut() ?: 'planifiée';
                                 $badgeClass = match($statut) {
                                     'planifiée' => 'badge-primary',
                                     'terminée'  => 'badge-success',
@@ -116,7 +116,7 @@ $consultations = $model->getAll();
                                     'annulée'   => 'fa-circle-xmark',
                                     default     => 'fa-circle'
                                 };
-                                ?>
+                                ?>"
                                 <span class="badge <?= $badgeClass ?>">
                                     <i class="fa-solid <?= $icone ?>"></i>
                                     <?= ucfirst($statut) ?>
@@ -124,10 +124,10 @@ $consultations = $model->getAll();
                             </td>
                             <td>
                                 <div class="actions">
-                                    <a href="edit_consultation.php?id=<?= $c['id_consultation'] ?>" class="btn btn-outline btn-sm">
+                                    <a href="edit_consultation.php?id=<?= $c->getIdConsultation() ?>" class="btn btn-outline btn-sm">
                                         <i class="fa-solid fa-pen"></i> Modifier
                                     </a>
-                                    <a href="delete_consultation.php?id=<?= $c['id_consultation'] ?>" class="btn btn-danger btn-sm">
+                                    <a href="delete_consultation.php?id=<?= $c->getIdConsultation() ?>" class="btn btn-danger btn-sm">
                                         <i class="fa-solid fa-trash"></i> Supprimer
                                     </a>
                                 </div>

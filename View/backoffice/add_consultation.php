@@ -1,8 +1,8 @@
 <?php
 require_once '../../config/db.php';
-require_once '../../models/Consultation.php';
+require_once '../../controllers/ConsultationController.php';
 
-$model = new Consultation($pdo);
+$controller = new ConsultationController($pdo);
 $success = '';
 $errors = [];
 
@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = "La date est obligatoire.";
     } elseif (strtotime($date) <= time()) {
         $errors[] = "La date de consultation doit être dans le futur.";
-    } elseif ($model->existeDejaDate($date)) {
+    } elseif ($controller->existsByDate($date)) {
         $errors[] = "Une consultation existe déjà à cette date et heure exacte.";
     }
 
@@ -37,13 +37,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors)) {
-        $data = [
+        $consultation = Consultation::fromArray([
             'date_consultation' => $date,
             'diagnostique'      => $diagnostique,
             'notes'             => $notes,
-            'statut'            => $statut
-        ];
-        if ($model->create($data)) {
+            'statut'            => $statut,
+        ]);
+
+        if ($controller->createConsultation($consultation)) {
             $success = "Consultation ajoutée avec succès !";
         } else {
             $errors[] = "Erreur lors de l'ajout.";

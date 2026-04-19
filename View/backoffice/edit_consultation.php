@@ -1,27 +1,27 @@
 <?php
 require_once '../../config/db.php';
-require_once '../../models/Consultation.php';
+require_once '../../controllers/ConsultationController.php';
 
-$model = new Consultation($pdo);
+$controller = new ConsultationController($pdo);
 $success = '';
 $errors = [];
 
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-$consultation = $model->getById($id);
+$consultation = $controller->getConsultationById($id);
 
 if (!$consultation) {
     die("Consultation introuvable.");
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-$date = isset($_POST['date_consultation']) ? trim($_POST['date_consultation']) : '';
-$diagnostique = isset($_POST['diagnostique']) ? trim($_POST['diagnostique']) : '';
-$notes = isset($_POST['notes']) ? trim($_POST['notes']) : '';
-$statut = isset($_POST['statut']) ? trim($_POST['statut']) : '';
+    $date = isset($_POST['date_consultation']) ? trim($_POST['date_consultation']) : '';
+    $diagnostique = isset($_POST['diagnostique']) ? trim($_POST['diagnostique']) : '';
+    $notes = isset($_POST['notes']) ? trim($_POST['notes']) : '';
+    $statut = isset($_POST['statut']) ? trim($_POST['statut']) : '';
 
     if (empty($date)) {
         $errors[] = "La date est obligatoire.";
-    } elseif ($model->existeDejaDate($date, $id)) {
+    } elseif ($controller->existsByDate($date, $id)) {
         $errors[] = "Une consultation existe déjà à cette date et heure exacte.";
     }
 
@@ -41,15 +41,17 @@ $statut = isset($_POST['statut']) ? trim($_POST['statut']) : '';
     }
 
     if (empty($errors)) {
-        $data = [
+        $updatedConsultation = Consultation::fromArray([
+            'id_consultation'   => $id,
             'date_consultation' => $date,
             'diagnostique'      => $diagnostique,
             'notes'             => $notes,
-            'statut'            => $statut
-        ];
-        if ($model->update($id, $data)) {
+            'statut'            => $statut,
+        ]);
+
+        if ($controller->updateConsultation($updatedConsultation)) {
             $success = "Consultation modifiée avec succès !";
-            $consultation = $model->getById($id);
+            $consultation = $controller->getConsultationById($id);
         } else {
             $errors[] = "Erreur lors de la modification.";
         }
@@ -143,7 +145,7 @@ $statut = isset($_POST['statut']) ? trim($_POST['statut']) : '';
                     <div class="form-group">
                         <label class="form-label">Date de consultation *</label>
                         <input type="datetime-local" name="date_consultation" id="date_consultation" class="form-control"
-                            value="<?= date('Y-m-d\TH:i', strtotime($consultation['date_consultation'])) ?>"
+                            value="<?= date('Y-m-d\TH:i', strtotime($consultation->getDateConsultation())) ?>"
                             onchange="verifierDate()">
                         <span class="form-error" id="err_date">La date est obligatoire.</span>
                     </div>
@@ -151,9 +153,9 @@ $statut = isset($_POST['statut']) ? trim($_POST['statut']) : '';
                     <div class="form-group">
                         <label class="form-label">Statut *</label>
                         <select name="statut" id="statut" class="form-control">
-                            <option value="planifiée" <?= ($consultation['statut'] ?? '') === 'planifiée' ? 'selected' : '' ?>>Planifiée</option>
-                            <option value="terminée" <?= ($consultation['statut'] ?? '') === 'terminée' ? 'selected' : '' ?>>Terminée</option>
-                            <option value="annulée" <?= ($consultation['statut'] ?? '') === 'annulée' ? 'selected' : '' ?>>Annulée</option>
+                            <option value="planifiée" <?= $consultation->getStatut() === 'planifiée' ? 'selected' : '' ?>>Planifiée</option>
+                            <option value="terminée" <?= $consultation->getStatut() === 'terminée' ? 'selected' : '' ?>>Terminée</option>
+                            <option value="annulée" <?= $consultation->getStatut() === 'annulée' ? 'selected' : '' ?>>Annulée</option>
                         </select>
                         <span class="form-error" id="err_statut">Veuillez choisir un statut.</span>
                     </div>
@@ -165,8 +167,8 @@ $statut = isset($_POST['statut']) ? trim($_POST['statut']) : '';
                             </span>
                         </label>
                         <textarea name="diagnostique" id="diagnostique" class="form-control"
-                            oninput="compter('diagnostique', 'count_diag', 10)"><?= htmlspecialchars($consultation['diagnostique']) ?></textarea>
-                        <span class="form-hint"><span id="count_diag"><?= strlen($consultation['diagnostique']) ?></span> caractères</span>
+                            oninput="compter('diagnostique', 'count_diag', 10)"><?= htmlspecialchars($consultation->getDiagnostique()) ?></textarea>
+                        <span class="form-hint"><span id="count_diag"><?= strlen($consultation->getDiagnostique()) ?></span> caractères</span>
                         <span class="form-error" id="err_diag">Le diagnostique doit contenir au moins 10 caractères.</span>
                     </div>
 
@@ -177,8 +179,8 @@ $statut = isset($_POST['statut']) ? trim($_POST['statut']) : '';
                             </span>
                         </label>
                         <textarea name="notes" id="notes" class="form-control"
-                            oninput="compter('notes', 'count_notes', 5)"><?= htmlspecialchars($consultation['notes']) ?></textarea>
-                        <span class="form-hint"><span id="count_notes"><?= strlen($consultation['notes']) ?></span> caractères</span>
+                            oninput="compter('notes', 'count_notes', 5)"><?= htmlspecialchars($consultation->getNotes()) ?></textarea>
+                        <span class="form-hint"><span id="count_notes"><?= strlen($consultation->getNotes()) ?></span> caractères</span>
                         <span class="form-error" id="err_notes">Les notes doivent contenir au moins 5 caractères.</span>
                     </div>
 

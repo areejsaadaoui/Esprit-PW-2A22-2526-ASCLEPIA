@@ -1,75 +1,85 @@
 <?php
+
 class Consultation {
-    private $pdo;
+    private ?int $id_consultation;
+    private string $date_consultation;
+    private string $diagnostique;
+    private string $notes;
+    private string $statut;
 
-    public function __construct($pdo) {
-        $this->pdo = $pdo;
+    public function __construct(
+        ?int $id_consultation = null,
+        string $date_consultation = '',
+        string $diagnostique = '',
+        string $notes = '',
+        string $statut = 'planifiée'
+    ) {
+        $this->id_consultation = $id_consultation;
+        $this->date_consultation = $date_consultation;
+        $this->diagnostique = $diagnostique;
+        $this->notes = $notes;
+        $this->statut = $statut;
     }
 
-    public function getAll() {
-        $stmt = $this->pdo->query(
-            "SELECT * FROM consultation ORDER BY date_consultation DESC"
+    public static function fromArray(array $data): self {
+        return new self(
+            isset($data['id_consultation']) ? intval($data['id_consultation']) : null,
+            $data['date_consultation'] ?? '',
+            $data['diagnostique'] ?? '',
+            $data['notes'] ?? '',
+            $data['statut'] ?? 'planifiée'
         );
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getById($id) {
-        $stmt = $this->pdo->prepare(
-            "SELECT * FROM consultation WHERE id_consultation = ?"
-        );
-        $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+    public function toArray(): array {
+        return [
+            'id_consultation' => $this->id_consultation,
+            'date_consultation' => $this->date_consultation,
+            'diagnostique' => $this->diagnostique,
+            'notes' => $this->notes,
+            'statut' => $this->statut,
+        ];
     }
 
-    public function existeDejaDate($date, $id = null) {
-        if ($id) {
-            $stmt = $this->pdo->prepare(
-                "SELECT COUNT(*) FROM consultation 
-                 WHERE date_consultation = ? AND id_consultation != ?"
-            );
-            $stmt->execute([$date, $id]);
-        } else {
-            $stmt = $this->pdo->prepare(
-                "SELECT COUNT(*) FROM consultation 
-                 WHERE date_consultation = ?"
-            );
-            $stmt->execute([$date]);
-        }
-        return $stmt->fetchColumn() > 0;
+    public function getIdConsultation(): ?int {
+        return $this->id_consultation;
     }
 
-    public function create($data) {
-        $stmt = $this->pdo->prepare(
-            "INSERT INTO consultation (date_consultation, diagnostique, notes, statut)
-             VALUES (?, ?, ?, ?)"
-        );
-        return $stmt->execute([
-            $data['date_consultation'],
-            $data['diagnostique'],
-            $data['notes'],
-            $data['statut']
-        ]);
+    public function setIdConsultation(int $id_consultation): void {
+        $this->id_consultation = $id_consultation;
     }
 
-    public function update($id, $data) {
-        $stmt = $this->pdo->prepare(
-            "UPDATE consultation SET date_consultation=?, diagnostique=?, notes=?, statut=?
-             WHERE id_consultation=?"
-        );
-        return $stmt->execute([
-            $data['date_consultation'],
-            $data['diagnostique'],
-            $data['notes'],
-            $data['statut'],
-            $id
-        ]);
+    public function getDateConsultation(): string {
+        return $this->date_consultation;
     }
 
-    public function delete($id) {
-        $stmt = $this->pdo->prepare(
-            "DELETE FROM consultation WHERE id_consultation = ?"
-        );
-        return $stmt->execute([$id]);
+    public function setDateConsultation(string $date_consultation): void {
+        $this->date_consultation = $date_consultation;
+    }
+
+    public function getDiagnostique(): string {
+        return $this->diagnostique;
+    }
+
+    public function setDiagnostique(string $diagnostique): void {
+        $this->diagnostique = $diagnostique;
+    }
+
+    public function getNotes(): string {
+        return $this->notes;
+    }
+
+    public function setNotes(string $notes): void {
+        $this->notes = $notes;
+    }
+
+    public function getStatut(): string {
+        return $this->statut;
+    }
+
+    public function setStatut(string $statut): void {
+        $this->statut = $statut;
     }
 }
+
 ?>
