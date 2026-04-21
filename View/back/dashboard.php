@@ -1,3 +1,18 @@
+<?php
+// dashboard.php - Page admin sécurisée
+session_start();
+
+// Vérifier si l'admin est connecté
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || 
+    !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+    header('Location: loginadmin.html');
+    exit();
+}
+
+// Récupérer les infos de l'admin connecté
+$adminNom = $_SESSION['user_nom'] ?? 'Administrateur';
+$adminEmail = $_SESSION['user_email'] ?? '';
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -207,9 +222,9 @@
         </div>
         
         <div class="sidebar-user">
-            <div class="user-avatar" id="adminAvatar">AD</div>
+            <div class="user-avatar" id="adminAvatar"><?php echo strtoupper(substr($adminNom, 0, 2)); ?></div>
             <div class="user-info">
-                <div class="name" id="adminName">Administrateur</div>
+                <div class="name" id="adminName"><?php echo htmlspecialchars($adminNom); ?></div>
                 <div class="role">Super Admin</div>
             </div>
         </div>
@@ -218,7 +233,7 @@
             <div class="nav-section-label">Menu Principal</div>
             
             <div class="nav-item">
-                <a href="back.html" class="active">
+                <a href="dashboard.php" class="active">
                     <i class="fas fa-tachometer-alt nav-icon"></i>
                     <span>Tableau de bord</span>
                 </a>
@@ -240,14 +255,15 @@
             <div class="nav-section-label">Configuration</div>
             
             <div class="nav-item">
-                <a href="../front/indexp.html">
+                <a href="../front/indexp.php">
                     <i class="fas fa-globe nav-icon"></i>
                     <span>Voir le site</span>
                 </a>
             </div>
             
+            <!-- DÉCONNEXION MODIFIÉE -->
             <div class="nav-item">
-                <a href="loginadmin.html">
+                <a href="logout.php">
                     <i class="fas fa-sign-out-alt nav-icon"></i>
                     <span>Déconnexion</span>
                 </a>
@@ -282,7 +298,7 @@
                 <div class="topbar-user">
                     <i class="fas fa-user-circle" style="font-size: 1.5rem;"></i>
                     <div>
-                        <div class="name" id="topbarName">Admin</div>
+                        <div class="name" id="topbarName"><?php echo htmlspecialchars($adminNom); ?></div>
                         <div class="role">Administrateur</div>
                     </div>
                 </div>
@@ -355,7 +371,7 @@
                 </div>
             </div>
             
-            <!-- Tableau Médecins (avec adresse) -->
+            <!-- Tableau Médecins -->
             <div id="medecinsTab" class="tab-content">
                 <div class="filter-bar">
                     <div class="search-bar" style="max-width: 300px;">
@@ -396,7 +412,7 @@
     </main>
 </div>
 
-<!-- Modal Ajout/Modification -->
+<!-- Modals (Ajout/Modification) -->
 <div id="userModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -447,7 +463,7 @@
     </div>
 </div>
 
-<!-- Modal Confirmation Suppression -->
+<!-- Modal Suppression -->
 <div id="deleteModal" class="modal">
     <div class="modal-content" style="max-width: 400px;">
         <div class="modal-header">
@@ -474,12 +490,10 @@
 <script>
     let currentTab = 'patients';
 
-    // Initialisation
     document.addEventListener('DOMContentLoaded', function() {
         loadUsers();
     });
     
-    // Charger les utilisateurs
     function loadUsers() {
         fetch('back.php')
             .then(response => response.json())
@@ -495,44 +509,36 @@
             });
     }
     
-    // Mettre à jour les statistiques
     function updateStats(data) {
         document.getElementById('totalPatients').textContent = data.patients.length;
         document.getElementById('totalMedecins').textContent = data.medecins.length;
         document.getElementById('totalUsers').textContent = data.patients.length + data.medecins.length;
     }
     
-    // Filtrer patients
     function filterPatients() {
         const searchTerm = document.getElementById('searchPatient').value.toLowerCase();
         const rows = document.querySelectorAll('#patientsTable tr:not(.no-data)');
-        
         rows.forEach(row => {
             const text = row.textContent.toLowerCase();
             row.style.display = text.includes(searchTerm) ? '' : 'none';
         });
     }
     
-    // Filtrer médecins
     function filterMedecins() {
         const searchTerm = document.getElementById('searchMedecin').value.toLowerCase();
         const rows = document.querySelectorAll('#medecinsTable tr:not(.no-data)');
-        
         rows.forEach(row => {
             const text = row.textContent.toLowerCase();
             row.style.display = text.includes(searchTerm) ? '' : 'none';
         });
     }
     
-    // Afficher tableau patients
     function renderPatientsTable(patients) {
         const tbody = document.getElementById('patientsTable');
-        
         if (!patients || patients.length === 0) {
             tbody.innerHTML = '<tr class="no-data"><td colspan="6" style="text-align: center; padding: 40px;"><i class="fas fa-inbox"></i> Aucun patient trouvé</td></tr>';
             return;
         }
-        
         tbody.innerHTML = patients.map(patient => `
             <tr>
                 <td>${patient.id_user}</td>
@@ -557,15 +563,12 @@
         `).join('');
     }
     
-    // Afficher tableau médecins (avec adresse)
     function renderMedecinsTable(medecins) {
         const tbody = document.getElementById('medecinsTable');
-        
         if (!medecins || medecins.length === 0) {
             tbody.innerHTML = '<tr class="no-data"><td colspan="7" style="text-align: center; padding: 40px;"><i class="fas fa-inbox"></i> Aucun médecin trouvé</td></tr>';
             return;
         }
-        
         tbody.innerHTML = medecins.map(medecin => `
             <tr>
                 <td>${medecin.id_user}</td>
@@ -591,7 +594,6 @@
         `).join('');
     }
     
-    // Éditer un utilisateur
     function editUser(id, role) {
         fetch(`back.php?action=get_user&id=${id}`)
             .then(response => response.json())
@@ -604,7 +606,6 @@
                     document.getElementById('userTelephone').value = data.user.telephone || '';
                     document.getElementById('userAdresse').value = data.user.adresse || '';
                     document.getElementById('modalTitle').innerHTML = '<i class="fas fa-user-edit"></i> Modifier ' + (role === 'patient' ? 'le patient' : 'le médecin');
-                    
                     document.getElementById('resetPassword').checked = false;
                     document.getElementById('passwordField').style.display = 'none';
                     document.getElementById('userModal').classList.add('active');
@@ -618,7 +619,6 @@
             });
     }
     
-    // Sauvegarder utilisateur
     function saveUser() {
         const userId = document.getElementById('userId').value;
         const role = document.getElementById('userRole').value;
@@ -632,7 +632,6 @@
             reset_password: document.getElementById('resetPassword').checked,
             new_password: document.getElementById('userPassword').value
         };
-        
         fetch('back.php?action=save_user', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -650,10 +649,8 @@
         });
     }
     
-    // Supprimer utilisateur
     function confirmDelete() {
         const id = document.getElementById('deleteUserId').value;
-        
         fetch('back.php?action=delete_user', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -671,7 +668,6 @@
         });
     }
     
-    // Ouvrir modal ajout
     function openAddModal(role) {
         document.getElementById('userId').value = '';
         document.getElementById('userRole').value = role;
@@ -680,19 +676,15 @@
         document.getElementById('userTelephone').value = '';
         document.getElementById('userAdresse').value = '';
         document.getElementById('modalTitle').innerHTML = '<i class="fas fa-user-plus"></i> Ajouter un ' + (role === 'patient' ? 'patient' : 'médecin');
-        
         document.getElementById('resetPassword').checked = true;
         document.getElementById('passwordField').style.display = 'block';
         document.getElementById('userModal').classList.add('active');
     }
     
-    // Changer onglet
     function switchTab(tab) {
         currentTab = tab;
-        
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-        
         if (tab === 'patients') {
             document.querySelector('.tab-btn:first-child').classList.add('active');
             document.getElementById('patientsTab').classList.add('active');
@@ -702,7 +694,6 @@
         }
     }
     
-    // Utilitaires
     function escapeHtml(text) {
         if (!text) return '';
         const div = document.createElement('div');
@@ -756,13 +747,9 @@
         alertDiv.style.maxWidth = '300px';
         alertDiv.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i> ${message}`;
         document.body.appendChild(alertDiv);
-        
-        setTimeout(() => {
-            alertDiv.remove();
-        }, 3000);
+        setTimeout(() => alertDiv.remove(), 3000);
     }
     
-    // Événements
     document.getElementById('resetPassword').addEventListener('change', function() {
         document.getElementById('passwordField').style.display = this.checked ? 'block' : 'none';
     });
@@ -770,7 +757,6 @@
     document.getElementById('searchPatient').addEventListener('input', filterPatients);
     document.getElementById('searchMedecin').addEventListener('input', filterMedecins);
     
-    // Fermer modals en cliquant en dehors
     window.onclick = function(event) {
         if (event.target.classList.contains('modal')) {
             event.target.classList.remove('active');

@@ -1,3 +1,12 @@
+<?php
+// indexp.php - Dans View/front/
+session_start();
+
+$isLoggedIn = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
+$userNom = $_SESSION['user_nom'] ?? '';
+$userEmail = $_SESSION['user_email'] ?? '';
+$userRole = $_SESSION['user_role'] ?? '';
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -18,10 +27,10 @@
 <body>
 
 <!-- ================================================
-     NAVBAR
+     NAVBAR (avec session)
      ================================================ -->
 <nav class="navbar" id="navbar">
-  <a href="index.html" class="navbar-brand">
+  <a href="indexp.php" class="navbar-brand">
     <div class="navbar-logo"></div>
     <div class="navbar-name">ASC<span>LEPIA</span></div>
   </a>
@@ -37,8 +46,23 @@
   </div>
 
   <div class="nav-actions">
-    <a href="login.html" class="btn btn-outline-white btn-sm">Se deconnecter</a>
-    
+    <?php if ($isLoggedIn): ?>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <i class="fa-solid fa-user-circle" style="font-size: 1.2rem; color: var(--primary);"></i>
+        <span style="color: white; font-weight: 500;">Bonjour, <?php echo htmlspecialchars($userNom); ?></span>
+        <?php if ($userRole === 'admin'): ?>
+          <a href="../back/dashboard.php" class="btn btn-outline-white btn-sm">
+            <i class="fa-solid fa-shield-haltered"></i> Admin
+          </a>
+        <?php endif; ?>
+        <a href="../back/logout.php" class="btn btn-outline-white btn-sm">
+          <i class="fa-solid fa-sign-out-alt"></i> Déconnexion
+        </a>
+      </div>
+    <?php else: ?>
+      <a href="login.html" class="btn btn-outline-white btn-sm">Se connecter</a>
+      <a href="loginuser.html" class="btn btn-primary btn-sm">S'inscrire</a>
+    <?php endif; ?>
     <div class="hamburger" id="hamburger" onclick="toggleMenu()">
       <span></span><span></span><span></span>
     </div>
@@ -46,7 +70,7 @@
 </nav>
 
 <!-- ================================================
-     HERO SECTION
+     HERO SECTION (identique à index.html)
      ================================================ -->
 <section class="hero" id="accueil">
   <div class="hero-glow hero-glow-1"></div>
@@ -74,10 +98,12 @@
         </p>
 
         <div class="hero-actions">
-          <a href="login.html" class="btn btn-primary btn-lg">
-            <i class="fa-solid fa-user-plus"></i>
-            Commencer gratuitement
-          </a>
+          <?php if (!$isLoggedIn): ?>
+            <a href="login.html" class="btn btn-primary btn-lg">
+              <i class="fa-solid fa-user-plus"></i>
+              Commencer gratuitement
+            </a>
+          <?php endif; ?>
           <a href="#services" class="btn btn-outline-white btn-lg">
             <i class="fa-solid fa-play"></i>
             Découvrir
@@ -158,7 +184,7 @@
 </section>
 
 <!-- ================================================
-     SERVICES SECTION (5 Modules)
+     SERVICES SECTION (identique à index.html)
      ================================================ -->
 <section class="section-padding services-section" id="services">
   <div class="container">
@@ -183,9 +209,15 @@
           </div>
           <h3>Espace Personnel</h3>
           <p>Créez votre compte patient ou médecin. Accédez à votre espace sécurisé avec gestion complète de votre profil.</p>
-          <a href="login.html" class="btn btn-outline btn-sm mt-3">
-            S'inscrire <i class="fa-solid fa-arrow-right"></i>
-          </a>
+          <?php if (!$isLoggedIn): ?>
+            <a href="loginuser.html" class="btn btn-outline btn-sm mt-3">
+              S'inscrire <i class="fa-solid fa-arrow-right"></i>
+            </a>
+          <?php else: ?>
+            <a href="#" class="btn btn-outline btn-sm mt-3">
+              Mon profil <i class="fa-solid fa-arrow-right"></i>
+            </a>
+          <?php endif; ?>
         </div>
       </div>
 
@@ -209,7 +241,7 @@
           <div class="icon-box icon-box-lg" style="background: linear-gradient(135deg,#10b981,#059669);">
             <i class="fa-solid fa-pills"></i>
           </div>
-          <h3>Pharmacies & Médicaments</h3>
+          <h3>Pharmacies & Médicamentos</h3>
           <p>Trouvez les médicaments disponibles dans les pharmacies partenaires. Vérifiez les stocks en temps réel.</p>
           <a href="pharmacie.php" class="btn btn-outline btn-sm mt-3">
             Explorer <i class="fa-solid fa-arrow-right"></i>
@@ -251,9 +283,15 @@
           <div style="font-size: 3rem; margin-bottom: 16px;">🚀</div>
           <h3 style="color: white;">Commencez aujourd'hui</h3>
           <p style="color: rgba(255,255,255,0.7);">Rejoignez des milliers de patients qui gèrent leur santé intelligemment avec ASCLEPIA.</p>
-          <a href="login.html" class="btn btn-outline-white btn-sm mt-3">
-            Créer un compte <i class="fa-solid fa-arrow-right"></i>
-          </a>
+          <?php if (!$isLoggedIn): ?>
+            <a href="loginuser.html" class="btn btn-outline-white btn-sm mt-3">
+              Créer un compte <i class="fa-solid fa-arrow-right"></i>
+            </a>
+          <?php else: ?>
+            <a href="#" class="btn btn-outline-white btn-sm mt-3">
+              Accéder à mon espace <i class="fa-solid fa-arrow-right"></i>
+            </a>
+          <?php endif; ?>
         </div>
       </div>
 
@@ -262,7 +300,7 @@
 </section>
 
 <!-- ================================================
-     PHARMACIES SECTION
+     PHARMACIES SECTION (identique à index.html)
      ================================================ -->
 <section class="section-padding" id="pharmacies" style="background: white;">
   <div class="container">
@@ -383,7 +421,7 @@
 </section>
 
 <!-- ================================================
-     ASSURANCES SECTION
+     ASSURANCES SECTION (identique à index.html)
      ================================================ -->
 <section class="section-padding" id="assurances" style="background: var(--bg);">
   <div class="container">
@@ -460,7 +498,7 @@
 </section>
 
 <!-- ================================================
-     FORUM / POSTS SECTION
+     FORUM SECTION (identique à index.html)
      ================================================ -->
 <section class="section-padding" id="forum" style="background: white;">
   <div class="container">
@@ -547,7 +585,7 @@
 </section>
 
 <!-- ================================================
-     AVIS / TÉMOIGNAGES SECTION
+     AVIS SECTION (identique à index.html)
      ================================================ -->
 <section class="section-padding avis-section" id="avis">
   <div class="container" style="position: relative; z-index: 1;">
@@ -613,7 +651,6 @@
     </div>
   </div>
 </section>
-
 <!-- ================================================
      MEDECINS SECTION
      ================================================ -->
@@ -632,9 +669,8 @@
     </div>
   </div>
 </section>
-
 <!-- ================================================
-     CTA SECTION
+     CTA SECTION (identique à index.html)
      ================================================ -->
 <section class="cta-section">
   <div class="container">
@@ -646,21 +682,32 @@
       <h2>Prêt à prendre soin de votre santé ?</h2>
       <p>Créez votre compte gratuitement et accédez à tous les services ASCLEPIA dès aujourd'hui.</p>
       <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
-        <a href="login.html" class="btn btn-primary btn-lg">
-          <i class="fa-solid fa-user-plus"></i>
-          Créer un compte patient
-        </a>
-        <a href="login.html" class="btn btn-outline-white btn-lg">
-          <i class="fa-solid fa-sign-in-alt"></i>
-          Se connecter
-        </a>
+        <?php if (!$isLoggedIn): ?>
+          <a href="loginuser.html" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-user-plus"></i>
+            Créer un compte patient
+          </a>
+          <a href="login.html" class="btn btn-outline-white btn-lg">
+            <i class="fa-solid fa-sign-in-alt"></i>
+            Se connecter
+          </a>
+        <?php else: ?>
+          <a href="#" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-calendar-check"></i>
+            Prendre rendez-vous
+          </a>
+          <a href="#" class="btn btn-outline-white btn-lg">
+            <i class="fa-solid fa-file-prescription"></i>
+            Mes ordonnances
+          </a>
+        <?php endif; ?>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ================================================
-     FOOTER
+     FOOTER (identique à index.html)
      ================================================ -->
 <footer class="footer">
   <div class="container">
@@ -702,9 +749,13 @@
         <div class="footer-section">
           <h4>Liens utiles</h4>
           <ul class="footer-links">
-            <li><a href="index.html"><i class="fa-solid fa-home"></i> Accueil</a></li>
-            <li><a href="login.html"><i class="fa-solid fa-user-plus"></i> S'inscrire</a></li>
-            <li><a href="login.html"><i class="fa-solid fa-sign-in-alt"></i> Se connecter</a></li>
+            <li><a href="indexp.php"><i class="fa-solid fa-home"></i> Accueil</a></li>
+            <?php if (!$isLoggedIn): ?>
+              <li><a href="loginuser.html"><i class="fa-solid fa-user-plus"></i> S'inscrire</a></li>
+              <li><a href="login.html"><i class="fa-solid fa-sign-in-alt"></i> Se connecter</a></li>
+            <?php else: ?>
+              <li><a href="../back/logout.php"><i class="fa-solid fa-sign-out-alt"></i> Déconnexion</a></li>
+            <?php endif; ?>
             <li><a href="#avis"><i class="fa-solid fa-star"></i> Témoignages</a></li>
             <li><a href="#"><i class="fa-solid fa-file-lines"></i> Confidentialité</a></li>
           </ul>
@@ -737,28 +788,28 @@
     </div>
 
     <div class="footer-bottom">
-      <p>© 2026 <a href="index.html">ASCLEPIA</a>. Tous droits réservés.</p>
-      <p>Conçu avec  pour une meilleure santé</p>
+      <p>© 2026 <a href="indexp.php">ASCLEPIA</a>. Tous droits réservés.</p>
+      <p>Conçu avec ❤️ pour une meilleure santé</p>
     </div>
   </div>
 </footer>
 
 <!-- ================================================
-     SCRIPTS
+     SCRIPTS (identiques à index.html)
      ================================================ -->
 <script>
-  // ---- Navbar scroll effect ----
+  // Navbar scroll effect
   const navbar = document.getElementById('navbar');
   window.addEventListener('scroll', () => {
     navbar.classList.toggle('scrolled', window.scrollY > 30);
   });
 
-  // ---- Mobile menu ----
+  // Mobile menu
   function toggleMenu() {
     document.getElementById('navLinks').classList.toggle('open');
   }
 
-  // ---- Smooth scroll for nav links ----
+  // Smooth scroll for nav links
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
       e.preventDefault();
@@ -770,7 +821,7 @@
     });
   });
 
-  // ---- Active nav link on scroll ----
+  // Active nav link on scroll
   const sections = document.querySelectorAll('section[id], div[id]');
   const navLinks = document.querySelectorAll('.nav-link');
 
@@ -786,7 +837,7 @@
     });
   });
 
-  // ---- Animate progress bars on scroll ----
+  // Animate progress bars on scroll
   const progressBars = document.querySelectorAll('.progress-bar');
   const observer = new IntersectionObserver(entries => {
     entries.forEach(entry => {
@@ -797,68 +848,7 @@
   }, { threshold: 0.5 });
   progressBars.forEach(bar => observer.observe(bar));
 
-  // ---- Animate counters ----
-  function animateCounter(element, target, duration = 2000) {
-    let start = 0;
-    const step = target / (duration / 16);
-    const timer = setInterval(() => {
-      start += step;
-      if (start >= target) { start = target; clearInterval(timer); }
-      element.textContent = Math.floor(start).toLocaleString();
-    }, 16);
-  }
-
-  // ---- Médecins depuis la BD ----
-  (function () {
-    var gradients = [
-      'linear-gradient(135deg,#0ea5e9,#06b6d4)',
-      'linear-gradient(135deg,#6366f1,#8b5cf6)',
-      'linear-gradient(135deg,#10b981,#059669)',
-      'linear-gradient(135deg,#f59e0b,#d97706)',
-      'linear-gradient(135deg,#ec4899,#db2777)',
-      'linear-gradient(135deg,#14b8a6,#0d9488)'
-    ];
-    function initials(nom) {
-      if (!nom) return 'DR';
-      var p = nom.trim().split(' ');
-      return p.length >= 2 ? (p[0][0] + p[1][0]).toUpperCase() : nom.substring(0, 2).toUpperCase();
-    }
-    function esc(t) {
-      if (!t) return '';
-      var d = document.createElement('div'); d.textContent = t; return d.innerHTML;
-    }
-    function makeCard(m, i) {
-      var grad = gradients[i % gradients.length];
-      return '<div class="col-4">'
-        + '<div class="card" style="flex-direction:column;gap:14px;padding:28px;text-align:center;">'
-        + '<div style="margin:0 auto;width:72px;height:72px;border-radius:50%;background:' + grad
-        + ';display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;color:white;">'
-        + initials(m.nom) + '</div>'
-        + '<h3 style="font-size:1.05rem;margin-bottom:2px;">Dr. ' + esc(m.nom) + '</h3>'
-        + '<div style="display:flex;flex-direction:column;gap:8px;text-align:left;margin-top:4px;">'
-        + (m.adresse ? '<div style="display:flex;align-items:flex-start;gap:8px;font-size:0.85rem;color:var(--text-muted);"><i class="fa-solid fa-location-dot" style="color:var(--primary);margin-top:2px;flex-shrink:0;"></i><span>' + esc(m.adresse) + '</span></div>' : '')
-        + (m.telephone ? '<div style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--text-muted);"><i class="fa-solid fa-phone" style="color:var(--primary);flex-shrink:0;"></i><span>' + esc(m.telephone) + '</span></div>' : '')
-        + (m.description ? '<div style="display:flex;align-items:flex-start;gap:8px;font-size:0.85rem;color:var(--text-muted);"><i class="fa-solid fa-circle-info" style="color:var(--primary);margin-top:2px;flex-shrink:0;"></i><span>' + esc(m.description) + '</span></div>' : '')
-        + '</div></div></div>';
-    }
-
-    fetch('index.php')
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        var grid = document.getElementById('medecinsGrid');
-        if (data.success && data.medecins && data.medecins.length > 0) {
-          grid.innerHTML = data.medecins.map(makeCard).join('');
-        } else {
-          grid.innerHTML = '<p style="text-align:center;color:var(--text-muted);width:100%;">Aucun médecin disponible pour le moment.</p>';
-        }
-      })
-      .catch(function (err) {
-        document.getElementById('medecinsGrid').innerHTML = '<p style="text-align:center;color:var(--danger);width:100%;">Erreur de chargement. Vérifiez la console.</p>';
-        console.error('Erreur médecins:', err);
-      });
-  })();
-
-  // ---- Cards entrance animation ----
+  // Cards entrance animation
   const cards = document.querySelectorAll('.card, .avis-card');
   const cardObserver = new IntersectionObserver(entries => {
     entries.forEach((entry, i) => {
@@ -878,6 +868,36 @@
     card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
     cardObserver.observe(card);
   });
+  // Charger les médecins depuis la BD
+fetch('index.php')
+    .then(response => response.json())
+    .then(data => {
+        const grid = document.getElementById('medecinsGrid');
+        if (data.success && data.medecins && data.medecins.length > 0) {
+            grid.innerHTML = data.medecins.map(medecin => `
+                <div class="col-4">
+                    <div class="card" style="text-align:center; padding:28px;">
+                        <div style="width:80px;height:80px;background:var(--gradient-primary);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.5rem;font-weight:700;color:white;">
+                            ${(medecin.nom ? medecin.nom.substring(0,2).toUpperCase() : 'DR')}
+                        </div>
+                        <h3 style="margin-bottom:8px;">Dr. ${medecin.nom || 'Médecin'}</h3>
+                        ${medecin.adresse ? `<p style="color:var(--text-muted);"><i class="fa-solid fa-location-dot"></i> ${medecin.adresse}</p>` : ''}
+                        ${medecin.telephone ? `<p style="color:var(--text-muted);"><i class="fa-solid fa-phone"></i> ${medecin.telephone}</p>` : ''}
+                        ${medecin.description ? `<p style="color:var(--text-muted); margin-top:8px;">${medecin.description}</p>` : ''}
+                        <a href="consultation.php" class="btn btn-outline btn-sm mt-3" style="margin-top:16px;">
+                            Prendre rendez-vous <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            grid.innerHTML = '<p style="text-align:center;color:var(--text-muted);width:100%;">Aucun médecin disponible pour le moment.</p>';
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        document.getElementById('medecinsGrid').innerHTML = '<p style="text-align:center;color:var(--danger);width:100%;">Erreur de chargement des médecins.</p>';
+    });
 </script>
 
 </body>

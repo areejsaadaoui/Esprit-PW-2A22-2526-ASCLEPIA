@@ -1,4 +1,20 @@
 <?php
+// =============================================
+// 1. AJOUT : VÉRIFICATION DE SESSION ADMIN
+// =============================================
+session_start();
+
+// Vérifier que l'utilisateur est connecté ET qu'il est admin
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || 
+    !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Accès non autorisé. Veuillez vous reconnecter.']);
+    exit();
+}
+
+// =============================================
+// 2. LE RESTE DE VOTRE CODE ORIGINAL (inchangé)
+// =============================================
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, DELETE');
@@ -142,7 +158,13 @@ switch($action) {
         break;
         
     case 'check_session':
-        echo json_encode(['is_admin' => true, 'nom' => 'Administrateur']);
+        // AMÉLIORATION : retourne les vraies infos de session
+        echo json_encode([
+            'is_admin' => true, 
+            'nom' => $_SESSION['user_nom'] ?? 'Administrateur',
+            'email' => $_SESSION['user_email'] ?? '',
+            'logged_in' => true
+        ]);
         break;
         
     default:
