@@ -11,9 +11,7 @@ $totalPosts = count($posts);
 // Récupérer les avis
 
 $avisC = new AvisController();
-$avisList = $avisC->listAvis();
-$totalAvis = count($avisList);
-$avisRecents = $avisC->listAvis(); // Récupère tous les avis, on affichera les plus récents dans le tableau
+
 
 // Recherche
 $searchTerm = '';
@@ -520,43 +518,9 @@ for ($i = 11; $i >= 0; $i--) {
         </div>
     </main>
 </div>
-<!-- Carte statistique pour les avis -->
-<div class="stat-circle">
-    <div class="circle orange"><?= $totalAvis ?></div>
-    <h3><?= $totalAvis ?></h3>
-    <p>Avis</p>
-    <small>💬 Témoignages</small>
-</div>
 
-<!-- Tableau des avis récents -->
-<div class="card" style="margin-top: 30px;">
-    <h3><i class="fas fa-star"></i> Derniers avis</h3>
-    <table class="table">
-        <thead>
-            <tr><th>Auteur</th><th>Catégorie</th><th>Note</th><th>Date</th><th>Actions</th></tr>
-        </thead>
-        <tbody>
-            <?php foreach ($avisRecents as $avis): ?>
-            <tr>
-                <td><?= htmlspecialchars($avis->auteur ?? 'Anonyme') ?></td>
-                <td><?= htmlspecialchars($avis->categorie ?? 'general') ?></td>
-                <td><?= $avis->note ? str_repeat('⭐', $avis->note) : '-' ?></td>
-                <td><?= date('d/m/Y', strtotime($avis->getDateAvis())) ?></td>
-                <td>
-                    <a href="showavis.php?id=<?= $avis->getIdAvis() ?>" class="btn btn-outline btn-sm"><i class="fas fa-eye"></i></a>
-                    <a href="deleteavis.php?id=<?= $avis->getIdAvis() ?>" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ?')"><i class="fas fa-trash"></i></a>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-</div>
-$avisEnAttente = array_filter($avisList, fn($a) => $a->statut === 'en_attente');
-?>
-<div class="card">
-    <h3>Avis en attente de modération (<?= count($avisEnAttente) ?>)</h3>
-    <!-- Tableau avec boutons "Publier" / "Supprimer" -->
-</div>
+
+
 
 <!-- Toast de notification -->
 <div id="toastMsg" class="toast-notify"><i class="fas fa-check-circle"></i> <span id="toastText"></span></div>
@@ -587,7 +551,7 @@ $avisEnAttente = array_filter($avisList, fn($a) => $a->statut === 'en_attente');
         });
     });
 
-    // Animation des barres du graphique
+    // Animations 
     const bars = document.querySelectorAll('.bar');
     bars.forEach(bar => {
         const height = bar.style.height;
@@ -596,48 +560,46 @@ $avisEnAttente = array_filter($avisList, fn($a) => $a->statut === 'en_attente');
             bar.style.height = height;
         }, 200);
     });
-
-    // Bouton "Voir" - redirige vers le premier résultat ou vers un post spécifique
+// voir
     const goToPostBtn = document.getElementById('goToPostBtn');
     const searchInput = document.getElementById('searchInput');
     const selectedPostId = document.getElementById('selectedPostId');
 
     goToPostBtn.addEventListener('click', function() {
-        // Si un post est sélectionné via la liste, on y va
+        
         if (selectedPostId.value) {
             window.location.href = 'showpost.php?id=' + selectedPostId.value;
         } 
-        // Sinon, si c'est une recherche par mot-clé, on prend le premier résultat
+
         else if (searchInput.value.trim() !== '') {
-            // On soumet le formulaire pour voir les résultats
+           
             document.getElementById('searchForm').submit();
         } else {
             alert('Veuillez entrer un mot-clé ou sélectionner un post');
         }
     });
 
-    // Sélectionner un post dans les résultats (clic sur le div)
     document.querySelectorAll('.post-result').forEach(result => {
         result.addEventListener('click', function(e) {
-            // Éviter que le clic sur les boutons à l'intérieur déclenche la sélection
+           
             if (e.target.tagName === 'A' || e.target.closest('a')) return;
             
             const postId = this.getAttribute('data-post-id');
             selectedPostId.value = postId;
             
-            // Mettre en évidence le post sélectionné
+            
             document.querySelectorAll('.post-result').forEach(r => {
                 r.style.background = '';
             });
             this.style.background = 'rgba(14,165,233,0.1)';
             
-            // Optionnel : afficher un petit message
+           
             const btn = document.getElementById('goToPostBtn');
             btn.innerHTML = '<i class="fas fa-arrow-right"></i> Voir le post #' + postId;
         });
     });
 
-    // Afficher une notification toast si un message est passé en GET
+    // Afficher une notification si un message est passé en GET
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('success')) {
         let msg = '';

@@ -79,28 +79,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 
-<div class="admin-wrapper">
-    <aside class="sidebar">
-        <div class="sidebar-brand">
-            <div class="sidebar-logo">⚕️</div>
-            <div class="sidebar-title">ASC<span>LEPIA</span></div>
-        </div>
-        <div class="sidebar-user">
-            <div class="user-avatar">AD</div>
-            <div class="user-info"><div class="name">Administrateur</div><div class="role">Super Admin</div></div>
-        </div>
-        <nav class="sidebar-nav">
-            <div class="nav-item"><a href="dashboard.php"><i class="fas fa-tachometer-alt nav-icon"></i><span>Tableau de bord</span></a></div>
-            <div class="nav-item"><a href="addpost.php"><i class="fas fa-plus-circle nav-icon"></i><span>Nouveau post</span></a></div>
-            <div class="nav-item"><a href="showpost.php"><i class="fas fa-eye nav-icon"></i><span>Tous les posts</span></a></div>
-            <div class="nav-item"><a href="chercherpost.php"><i class="fas fa-search nav-icon"></i><span>Rechercher</span></a></div>
-            <div class="nav-section-label">Autres</div>
-            <div class="nav-item"><a href="../Frontoffice/index.html"><i class="fas fa-globe nav-icon"></i><span>Voir le site</span></a></div>
-        </nav>
-        <div class="sidebar-footer">
-            <a href="#" class="btn btn-outline-white btn-sm" style="width:100%; justify-content:center;"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
-        </div>
-    </aside>
 
     <main class="main-content">
         <div class="topbar">

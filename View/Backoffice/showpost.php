@@ -222,13 +222,11 @@ p[style*="text-align: center"] {
                     
                     <!-- Boutons d'action -->
                     <div class="action-buttons">
-                        <button class="btn btn-outline" onclick="alert('Fonctionnalité à venir')">
+                        <button class="btn btn-outline">
                             <i class="fa-regular fa-heart"></i> J'aime
                         </button>
-                        <button class="btn btn-outline" onclick="alert('Fonctionnalité à venir')">
-                            <i class="fa-regular fa-comment"></i> Commenter
-                        </button>
-                        <button class="btn btn-outline" onclick="alert('Fonctionnalité à venir')">
+                        
+                        <button class="btn btn-outline" >
                             <i class="fa-regular fa-share-from-square"></i> Partager
                         </button>
                         <a href="../Backoffice/deletepost.php?id=<?php echo $post->getIdPost(); ?>" 
@@ -266,7 +264,8 @@ p[style*="text-align: center"] {
                 <a href="modifreponse.php?id=<?= $rep->getIdRep() ?>" class="btn btn-primary btn-sm">
                     <i class="fas fa-pen"></i> 
                 </a>
-                <a href="deleteReponse.php?id=<?= $rep->getIdRep() ?>" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer cette réponse ?')">
+                
+                <a href="deleteReponse.php?id=<?= $rep->getIdRep() ?>" class="btn btn-danger btn-sm">
                     <i class="fas fa-trash"></i> 
                 </a>
             </div>
