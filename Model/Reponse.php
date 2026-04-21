@@ -18,14 +18,14 @@ class Reponse {
         $this->id_post        = $id_post;
     }
 
-    // Getters
+    // getters
     public function getIdRep()          { return $this->id_rep; }
     public function getTexteRep()       { return $this->texte_rep; }
     public function getDateRep()        { return $this->date_rep; }
     public function getIdUtilisateur()  { return $this->id_utilisateur; }
     public function getIdPost()         { return $this->id_post; }
     public function getAuteur() { return $this->auteur ?? 'Anonyme'; }
-    // Setters
+    // setters
     public function setTexteRep(?string $texte_rep) { $this->texte_rep = $texte_rep; }
     public function setIdPost(?int $id_post)        { $this->id_post = $id_post; }
 }

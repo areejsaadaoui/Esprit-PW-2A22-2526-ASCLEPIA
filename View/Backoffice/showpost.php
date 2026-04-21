@@ -54,6 +54,106 @@ if (isset($_GET['id']) && !empty($_GET['id'])) {
             border-top: 1px solid var(--border);
             flex-wrap: wrap;
         }
+        /* ===== ANIMATIONS OBLIGATOIRES ===== */
+@keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+}
+@keyframes floatSoft {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-6px); }
+    100% { transform: translateY(0px); }
+}
+@keyframes shineBorder {
+    0% { border-left-color: #0ea5e9; }
+    50% { border-left-color: #10b981; }
+    100% { border-left-color: #0ea5e9; }
+}
+
+/* Carte principale du post */
+.card {
+    animation: fadeInScale 0.5s ease-out;
+    transition: all 0.3s;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 35px -12px rgba(0,0,0,0.2);
+}
+
+/* Image */
+.detail-image {
+    transition: transform 0.3s;
+}
+.detail-image:hover {
+    transform: scale(1.02);
+}
+
+/* Avatar */
+.post-avatar {
+    animation: floatSoft 3s infinite;
+    transition: 0.2s;
+}
+.post-avatar:hover {
+    transform: scale(1.1);
+}
+
+/* Boutons d'action */
+.action-buttons .btn {
+    transition: all 0.2s;
+}
+.action-buttons .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(0,0,0,0.1);
+}
+
+/* Formulaire de réponse */
+textarea.form-control {
+    transition: 0.2s;
+    border-radius: 28px;
+}
+textarea.form-control:focus {
+    transform: scale(1.01);
+    border-color: #0ea5e9;
+    box-shadow: 0 0 0 3px rgba(14,165,233,0.2);
+}
+
+/* Cartes de réponse (chaque réponse) */
+.card[style*="background: var(--bg)"] {
+    transition: all 0.25s;
+    border-left: 4px solid #0ea5e9;
+    animation: fadeInScale 0.3s backwards;
+    animation-delay: calc(0.05s * var(--order, 1));
+}
+.card[style*="background: var(--bg)"]:hover {
+    transform: translateX(6px) translateY(-2px);
+    background: white !important;
+    border-left-color: #10b981;
+    animation: shineBorder 1s infinite;
+}
+
+/* Bouton Publier */
+.btn-primary.btn-sm:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(14,165,233,0.4);
+}
+
+/* Bouton Retour */
+.btn-outline {
+    transition: 0.2s;
+}
+.btn-outline:hover {
+    transform: translateX(-5px);
+    background: #0ea5e9;
+    color: white;
+}
+
+/* Message "Soyez le premier" */
+p[style*="text-align: center"] {
+    animation: floatSoft 2s infinite;
+    background: #f1f5f9;
+    border-radius: 60px;
+    padding: 20px;
+}
     </style>
 </head>
 <body>
@@ -142,7 +242,7 @@ if (isset($_GET['id']) && !empty($_GET['id'])) {
     <input type="hidden" name="id_post" value="<?php echo $post->getIdPost(); ?>">
     <textarea class="form-control" name="texte_rep" rows="3" 
               placeholder="Écrire une réponse..." 
-              style="margin-bottom: 12px;" required></textarea>
+              style="margin-bottom: 12px;" ></textarea>
     <div style="text-align: right;">
         <button type="submit" class="btn btn-primary btn-sm">
             <i class="fa-regular fa-paper-plane"></i> Publier
@@ -150,44 +250,40 @@ if (isset($_GET['id']) && !empty($_GET['id'])) {
     </div>
 </form>
 
-<!-- Afficher les réponses existantes (résultat de la jointure) -->
+<!-- Afficher les réponses existantes -->
 <?php if (!empty($reponses)): ?>
     <?php foreach ($reponses as $rep): ?>
-        <div class="card" style="padding: 16px; margin-top: 16px; background: var(--bg);">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <strong>Utilisateur #<?php echo $rep->getIdUtilisateur(); ?></strong>
-                <span style="color: var(--text-muted); font-size: 0.8rem;">
-                    <?php 
-                        $d = new DateTime($rep->getDateRep());
-                        echo $d->format('d/m/Y à H:i');
-                    ?>
-                </span>
+        <div class="card" style="padding: 16px; margin-top: 16px; background: var(--bg); border-radius: 16px;">
+            <!-- En-tête : auteur + date -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <strong><?= htmlspecialchars($rep->getAuteur()) ?></strong>
+                <small><?= date('d/m/Y H:i', strtotime($rep->getDateRep())) ?></small>
             </div>
-            <p style="margin-top: 8px;"><?php echo nl2br(htmlspecialchars($rep->getTexteRep())); ?></p>
+            <!-- Contenu de la réponse -->
+            <p style="margin: 10px 0;"><?= nl2br(htmlspecialchars($rep->getTexteRep())) ?></p>
+            <!-- Boutons d'action -->
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <a href="modifreponse.php?id=<?= $rep->getIdRep() ?>" class="btn btn-primary btn-sm">
+                    <i class="fas fa-pen"></i> 
+                </a>
+                <a href="deleteReponse.php?id=<?= $rep->getIdRep() ?>" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer cette réponse ?')">
+                    <i class="fas fa-trash"></i> 
+                </a>
+            </div>
         </div>
-          <!-- Bouton supprimer -->
-            <a href="deleteReponse.php?id=<?= $rep->getIdRep() ?>" 
-               class="btn btn-danger btn-sm" 
-               onclick="return confirm('Supprimer cette réponse ?')">
-                <i class="fas fa-trash"></i>
-            </a>
     <?php endforeach; ?>
-
 <?php else: ?>
     <p style="text-align: center; color: var(--text-muted); padding: 40px;">
         Soyez le premier à répondre !
     </p>
 <?php endif; ?>
-                    
-                    <!-- Bouton retour -->
+                     <!-- Bouton retour -->
                     <div style="margin-top: 32px; text-align: center;">
                         <a href="../Frontoffice/postlist.php" class="btn btn-outline">
                             <i class="fa-solid fa-arrow-left"></i> Retour au forum
                         </a>
-                         
+                </div>                 
                     </div>
-
-                </div>
             </div>
         </div>
     </div>

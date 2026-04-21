@@ -2,10 +2,18 @@
 session_start();
 include '../../Controller/PostController.php';
 require_once __DIR__ . '/../../Model/Post.php';
+include '../../Controller/AvisController.php';
 
 $postC = new PostController();
 $posts = $postC->listPosts();
 $totalPosts = count($posts);
+
+// Récupérer les avis
+
+$avisC = new AvisController();
+$avisList = $avisC->listAvis();
+$totalAvis = count($avisList);
+$avisRecents = $avisC->listAvis(); // Récupère tous les avis, on affichera les plus récents dans le tableau
 
 // Recherche
 $searchTerm = '';
@@ -40,6 +48,7 @@ for ($i = 11; $i >= 0; $i--) {
     }
     $monthlyCounts[] = $count;
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -52,8 +61,6 @@ for ($i = 11; $i >= 0; $i--) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/backoffice.css">
-    <!-- Chart.js pour le graphique -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* ---------- ANIMATIONS GLOBALES ---------- */
         @keyframes fadeInUp {
@@ -73,6 +80,11 @@ for ($i = 11; $i >= 0; $i--) {
             0% { background-position: -200% 0; }
             100% { background-position: 200% 0; }
         }
+        /* Animation pour les barres du graphique */
+        @keyframes barGrow {
+            from { height: 0; opacity: 0; }
+            to { height: attr(data-height); opacity: 1; }
+        }
 
         .animate-fadeUp {
             animation: fadeInUp 0.6s ease forwards;
@@ -84,23 +96,29 @@ for ($i = 11; $i >= 0; $i--) {
         }
 
         /* Cartes statistiques */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 24px;
-            margin-bottom: 40px;
-        }
-        .stat-circle {
-            text-align: center;
-            padding: 24px 20px;
-            background: var(--white);
-            border-radius: 24px;
-            box-shadow: var(--shadow);
-            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-            border: 1px solid rgba(0,0,0,0.03);
-            position: relative;
-            overflow: hidden;
-        }
+      
+.stats-grid {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+.stat-circle {
+    text-align: center;
+    padding: 24px 20px;
+    background: var(--white);
+    border-radius: 24px;
+    box-shadow: var(--shadow);
+    transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    border: 1px solid rgba(0,0,0,0.03);
+    position: relative;
+    overflow: hidden;
+    min-width: 200px;
+    flex: 0 1 auto;
+}
         .stat-circle::before {
             content: '';
             position: absolute;
@@ -154,6 +172,9 @@ for ($i = 11; $i >= 0; $i--) {
         .search-wrapper {
             position: relative;
             transition: all 0.3s;
+            display: flex;
+            gap: 10px;
+            align-items: center;
         }
         .search-wrapper i {
             position: absolute;
@@ -164,7 +185,7 @@ for ($i = 11; $i >= 0; $i--) {
             transition: color 0.2s;
         }
         .search-wrapper input {
-            width: 100%;
+            flex: 1;
             padding: 14px 20px 14px 48px;
             border: 2px solid var(--border);
             border-radius: 60px;
@@ -180,8 +201,22 @@ for ($i = 11; $i >= 0; $i--) {
         .search-wrapper:hover i {
             color: var(--primary);
         }
+        .btn-go {
+            padding: 14px 24px;
+            border-radius: 60px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-go:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
 
-        /* Cartes liens rapides (animation pulsation continue + hover) */
+        /* Cartes liens rapides */
         .quick-links-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -221,6 +256,50 @@ for ($i = 11; $i >= 0; $i--) {
             transform: scale(1.1);
         }
 
+        /* Graphique à barres */
+        .bar-chart-container {
+            background: var(--white);
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s;
+        }
+        .bar-chart-container:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            height: 250px;
+            margin-top: 20px;
+        }
+        .bar-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .bar {
+            width: 100%;
+            background: var(--gradient-primary);
+            border-radius: 8px;
+            transition: height 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            min-height: 4px;
+        }
+        .bar-value {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        .bar-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
         /* Lignes du tableau animées */
         .table tbody tr {
             transition: all 0.2s;
@@ -236,20 +315,6 @@ for ($i = 11; $i >= 0; $i--) {
         }
         .btn-sm:hover {
             transform: translateY(-2px);
-        }
-
-        /* Graphique */
-        .chart-container {
-            background: var(--white);
-            border-radius: 24px;
-            padding: 20px;
-            margin-bottom: 30px;
-            box-shadow: var(--shadow);
-            transition: transform 0.3s;
-        }
-        .chart-container:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-lg);
         }
 
         /* Notification toast */
@@ -278,7 +343,7 @@ for ($i = 11; $i >= 0; $i--) {
 <body>
 
 <div class="admin-wrapper">
-    <!-- Sidebar identique à votre version -->
+    <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-brand">
             <div class="sidebar-logo">⚕️</div>
@@ -301,7 +366,6 @@ for ($i = 11; $i >= 0; $i--) {
                 </a>
                 <div class="sub-menu">
                     <a href="#stats">📊 Statistiques</a>
-                    <a href="addpost.php">➕ Ajouter un post</a>
                     <a href="#search">🔍 Rechercher</a>
                     <a href="#recent">📋 Tous les posts</a>
                 </div>
@@ -326,44 +390,49 @@ for ($i = 11; $i >= 0; $i--) {
             <div class="topbar-right"><div class="topbar-user"><i class="fas fa-user-circle" style="font-size:1.5rem;"></i><div><div class="name">Admin</div><div class="role">Administrateur</div></div></div></div>
         </div>
 
-        <div class="page-content">
-            <!-- Statistiques en cercles (animées) -->
-            <div id="stats" class="stats-grid">
+        <div class="page-content" >
+            <!-- Statistiques en cercles -->
+            <div id="stats" class="stats-grid" >
                 <div class="stat-circle animate-fadeUp" style="animation-delay:0.1s">
                     <div class="circle blue"><?= $totalPosts ?></div>
                     <h3><?= $totalPosts ?></h3>
                     <p>Total posts</p>
-                    <small>📈 +12% ce mois</small>
                 </div>
-                <div class="stat-circle animate-fadeUp" style="animation-delay:0.2s">
+                <div class="stat-circle animate-fadeUp" style="animation-delay:0.2s" >
                     <div class="circle green"><?= $postsWithImages ?></div>
                     <h3><?= $postsWithImages ?></h3>
                     <p>Avec image</p>
                     <small>🖼️ <?= $totalPosts ? round(($postsWithImages/$totalPosts)*100) : 0 ?>% du total</small>
                 </div>
-                <div class="stat-circle animate-fadeUp" style="animation-delay:0.3s">
-                    <div class="circle orange"><?= date('m') ?></div>
-                    <h3><?= date('m') ?></h3>
-                    <p>Posts ce mois</p>
-                    <small>📅 <?= date('F Y') ?></small>
-                </div>
                 <div class="stat-circle animate-fadeUp" style="animation-delay:0.4s">
                     <div class="circle purple"><?= count($latestPosts) ?></div>
                     <h3><?= count($latestPosts) ?></h3>
                     <p>Au total</p>
-                    <small>✨ Tous les posts</small>
+                    <small>Tous les posts</small>
                 </div>
             </div>
 
-            <!-- Graphique d'évolution (Chart.js) -->
-            <div class="chart-container animate-fadeLeft" style="animation-delay:0.2s">
+            <!-- Graphique à barres (au lieu de courbe) -->
+            <div class="bar-chart-container animate-fadeLeft" style="animation-delay:0.2s">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3><i class="fas fa-chart-line" style="color:var(--primary)"></i> Évolution des posts (12 mois)</h3>
+                    <h3><i class="fas fa-chart-bar" style="color:var(--primary)"></i> Évolution des posts (12 mois)</h3>
                 </div>
-                <canvas id="postsChart" width="400" height="200" style="max-height: 280px;"></canvas>
+                <div class="bar-chart" id="barChart">
+                    <?php 
+                    $maxValue = max($monthlyCounts) ?: 1;
+                    foreach ($months as $index => $month): 
+                        $height = ($monthlyCounts[$index] / $maxValue) * 180;
+                    ?>
+                        <div class="bar-item">
+                            <div class="bar-value"><?= $monthlyCounts[$index] ?></div>
+                            <div class="bar" style="height: <?= $height ?>px;"></div>
+                            <div class="bar-label"><?= $month ?></div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
             </div>
 
-            <!-- Liens rapides (2 cartes animées) -->
+            <!-- Liens rapides -->
             <div class="quick-links-grid">
                 <a href="addpost.php" class="quick-card">
                     <i class="fas fa-plus-circle"></i>
@@ -375,15 +444,22 @@ for ($i = 11; $i >= 0; $i--) {
                 </a>
             </div>
 
-            <!-- Barre de recherche -->
+            <!-- Barre de recherche avec bouton "Voir" -->
             <div id="search" class="card" style="padding: 24px; margin-bottom: 30px; border-radius: 32px;">
                 <h3 style="margin-bottom: 20px;"><i class="fas fa-search"></i> Rechercher un post</h3>
-                <form method="GET" action="">
+                <form method="GET" action="" id="searchForm">
                     <div class="search-wrapper">
                         <i class="fas fa-search"></i>
-                        <input type="text" name="ch" placeholder="Rechercher par mot-clé..." value="<?= htmlspecialchars($searchTerm) ?>">
+                        <input type="text" name="ch" id="searchInput" placeholder="Rechercher par mot-clé..." value="<?= htmlspecialchars($searchTerm) ?>">
+                        <button type="button" class="btn-go" id="goToPostBtn">
+                            <i class="fas fa-arrow-right"></i> Voir
+                        </button>
                     </div>
                 </form>
+                
+                <!-- Champ caché pour l'ID du post sélectionné -->
+                <input type="hidden" id="selectedPostId" value="">
+
                 <?php if ($searchTerm): ?>
                     <div class="result-count" style="margin-top: 20px;">
                         <i class="fas fa-chart-simple"></i> <?= count($displayPosts) ?> résultat(s) pour "<strong><?= htmlspecialchars($searchTerm) ?></strong>"
@@ -392,7 +468,7 @@ for ($i = 11; $i >= 0; $i--) {
                     <div class="search-results">
                         <?php if (count($displayPosts) > 0): ?>
                             <?php foreach ($displayPosts as $post): ?>
-                                <div class="post-result">
+                                <div class="post-result" data-post-id="<?= $post->getIdPost() ?>" style="padding: 15px; border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.2s;">
                                     <h4><i class="fas fa-comment"></i> Post #<?= $post->getIdPost() ?></h4>
                                     <p><?= htmlspecialchars(substr($post->getContenu(), 0, 150)) ?>…</p>
                                     <small><i class="fas fa-calendar"></i> <?= date('d/m/Y H:i', strtotime($post->getDatePost())) ?>
@@ -400,7 +476,6 @@ for ($i = 11; $i >= 0; $i--) {
                                     </small>
                                     <div class="post-actions" style="margin-top:10px">
                                         <a href="showpost.php?id=<?= $post->getIdPost() ?>" class="btn btn-outline btn-sm"><i class="fas fa-eye"></i> Voir</a>
-                                        
                                         <a href="deletepost.php?id=<?= $post->getIdPost() ?>" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ce post ?')"><i class="fas fa-trash"></i> Supprimer</a>
                                     </div>
                                 </div>
@@ -445,15 +520,53 @@ for ($i = 11; $i >= 0; $i--) {
         </div>
     </main>
 </div>
+<!-- Carte statistique pour les avis -->
+<div class="stat-circle">
+    <div class="circle orange"><?= $totalAvis ?></div>
+    <h3><?= $totalAvis ?></h3>
+    <p>Avis</p>
+    <small>💬 Témoignages</small>
+</div>
 
-<!-- Toast de notification (exemple si action via GET) -->
+<!-- Tableau des avis récents -->
+<div class="card" style="margin-top: 30px;">
+    <h3><i class="fas fa-star"></i> Derniers avis</h3>
+    <table class="table">
+        <thead>
+            <tr><th>Auteur</th><th>Catégorie</th><th>Note</th><th>Date</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            <?php foreach ($avisRecents as $avis): ?>
+            <tr>
+                <td><?= htmlspecialchars($avis->auteur ?? 'Anonyme') ?></td>
+                <td><?= htmlspecialchars($avis->categorie ?? 'general') ?></td>
+                <td><?= $avis->note ? str_repeat('⭐', $avis->note) : '-' ?></td>
+                <td><?= date('d/m/Y', strtotime($avis->getDateAvis())) ?></td>
+                <td>
+                    <a href="showavis.php?id=<?= $avis->getIdAvis() ?>" class="btn btn-outline btn-sm"><i class="fas fa-eye"></i></a>
+                    <a href="deleteavis.php?id=<?= $avis->getIdAvis() ?>" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ?')"><i class="fas fa-trash"></i></a>
+                </td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+</div>
+$avisEnAttente = array_filter($avisList, fn($a) => $a->statut === 'en_attente');
+?>
+<div class="card">
+    <h3>Avis en attente de modération (<?= count($avisEnAttente) ?>)</h3>
+    <!-- Tableau avec boutons "Publier" / "Supprimer" -->
+</div>
+
+<!-- Toast de notification -->
 <div id="toastMsg" class="toast-notify"><i class="fas fa-check-circle"></i> <span id="toastText"></span></div>
 
 <script>
-    // Sidebar toggle
+    // Toggle sidebar
     function toggleSidebar() {
         document.querySelector('.sidebar').classList.toggle('open');
     }
+
     // Sous-menu
     function toggleSubMenu(element) {
         const parent = element.closest('.has-sub');
@@ -461,6 +574,7 @@ for ($i = 11; $i >= 0; $i--) {
         const subMenu = parent.querySelector('.sub-menu');
         if (subMenu) subMenu.classList.toggle('open');
     }
+
     // Smooth scroll
     document.querySelectorAll('.sub-menu a').forEach(link => {
         link.addEventListener('click', function(e) {
@@ -473,41 +587,61 @@ for ($i = 11; $i >= 0; $i--) {
         });
     });
 
-    // Graphique avec Chart.js
-    const ctx = document.getElementById('postsChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: <?= json_encode($months) ?>,
-            datasets: [{
-                label: 'Nombre de posts',
-                data: <?= json_encode($monthlyCounts) ?>,
-                borderColor: '#0ea5e9',
-                backgroundColor: 'rgba(14,165,233,0.05)',
-                borderWidth: 3,
-                pointRadius: 4,
-                pointBackgroundColor: '#0ea5e9',
-                pointBorderColor: '#fff',
-                pointHoverRadius: 6,
-                tension: 0.3,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: { legend: { position: 'top' }, tooltip: { mode: 'index' } },
-            scales: { y: { beginAtZero: true, grid: { color: '#e2e8f0' }, title: { display: true, text: 'Posts' } },
-                      x: { grid: { display: false }, title: { display: true, text: 'Mois' } } }
+    // Animation des barres du graphique
+    const bars = document.querySelectorAll('.bar');
+    bars.forEach(bar => {
+        const height = bar.style.height;
+        bar.style.height = '0px';
+        setTimeout(() => {
+            bar.style.height = height;
+        }, 200);
+    });
+
+    // Bouton "Voir" - redirige vers le premier résultat ou vers un post spécifique
+    const goToPostBtn = document.getElementById('goToPostBtn');
+    const searchInput = document.getElementById('searchInput');
+    const selectedPostId = document.getElementById('selectedPostId');
+
+    goToPostBtn.addEventListener('click', function() {
+        // Si un post est sélectionné via la liste, on y va
+        if (selectedPostId.value) {
+            window.location.href = 'showpost.php?id=' + selectedPostId.value;
+        } 
+        // Sinon, si c'est une recherche par mot-clé, on prend le premier résultat
+        else if (searchInput.value.trim() !== '') {
+            // On soumet le formulaire pour voir les résultats
+            document.getElementById('searchForm').submit();
+        } else {
+            alert('Veuillez entrer un mot-clé ou sélectionner un post');
         }
     });
 
-    // Afficher une notification toast si un message est passé en GET (ex: ?success=deleted)
+    // Sélectionner un post dans les résultats (clic sur le div)
+    document.querySelectorAll('.post-result').forEach(result => {
+        result.addEventListener('click', function(e) {
+            // Éviter que le clic sur les boutons à l'intérieur déclenche la sélection
+            if (e.target.tagName === 'A' || e.target.closest('a')) return;
+            
+            const postId = this.getAttribute('data-post-id');
+            selectedPostId.value = postId;
+            
+            // Mettre en évidence le post sélectionné
+            document.querySelectorAll('.post-result').forEach(r => {
+                r.style.background = '';
+            });
+            this.style.background = 'rgba(14,165,233,0.1)';
+            
+            // Optionnel : afficher un petit message
+            const btn = document.getElementById('goToPostBtn');
+            btn.innerHTML = '<i class="fas fa-arrow-right"></i> Voir le post #' + postId;
+        });
+    });
+
+    // Afficher une notification toast si un message est passé en GET
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('success')) {
         let msg = '';
         if (urlParams.get('success') === 'deleted') msg = 'Post supprimé avec succès !';
-        
         else msg = 'Action réussie !';
         const toast = document.getElementById('toastMsg');
         document.getElementById('toastText').innerText = msg;

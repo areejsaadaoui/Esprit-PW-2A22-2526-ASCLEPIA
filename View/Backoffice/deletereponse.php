@@ -1,5 +1,5 @@
 <?php
-// deleteReponse.php – suppression libre
+
 
 require_once '../../Controller/ReponseController.php';
 

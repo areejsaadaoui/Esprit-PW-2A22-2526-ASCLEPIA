@@ -6,9 +6,9 @@ $error = '';
 $success = '';
 $postC = new PostController();
 
-// Fonction pour uploader l'image dans le dossier View
+
 function uploadImage($file) {
-    // Dossier dans View/uploads/posts/
+    
     $targetDir = __DIR__ . '/uploads/posts/';
     
     // Créer le dossier s'il n'existe pas
@@ -20,13 +20,13 @@ function uploadImage($file) {
     $targetFile = $targetDir . $fileName;
     $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
     
-    // Vérifier si c'est une vraie image
+
     $check = getimagesize($file['tmp_name']);
     if ($check === false) {
         return ['error' => 'Le fichier n\'est pas une image valide.'];
     }
     
-    // Vérifier la taille (max 5MB)
+
     if ($file['size'] > 5 * 1024 * 1024) {
         return ['error' => 'L\'image ne doit pas dépasser 5MB.'];
     }
@@ -51,10 +51,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Nettoyer et sécuriser les données
         $contenu = htmlspecialchars($_POST['contenu']);
-        // ID utilisateur fixe = 1 (pas de session)
+        
         $id_utilisateur = 1;
         
-        // Gérer l'upload de l'image
         $imagePath = '';
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
             $uploadResult = uploadImage($_FILES['image']);
