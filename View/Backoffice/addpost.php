@@ -185,7 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </p>
         </div>
 
-        <div class="row" style="justify-content: center;">
+        <div class="row" >
             <div class="col-6">
                 <div class="card" style="padding: 32px;">
                     

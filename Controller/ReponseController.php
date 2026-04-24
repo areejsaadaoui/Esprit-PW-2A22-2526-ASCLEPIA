@@ -44,14 +44,14 @@ class ReponseController {
         $req->execute();
         return $req->fetch(PDO::FETCH_ASSOC);
     }
-    public function modifreponse($id_rep, $nouveauTexte) {
-    $db = config::getConnexion();
-    $sql = "UPDATE reponse SET texte_rep = :texte WHERE id_rep = :id";
-    $req = $db->prepare($sql);
-    $req->bindValue(':texte', $nouveauTexte, PDO::PARAM_STR);
-    $req->bindValue(':id', $id_rep, PDO::PARAM_INT);
-    return $req->execute();
-}
+   public function modifreponse($id_rep, $nouveauTexte) {
+     $db = config::getConnexion();
+        $sql = "UPDATE reponse SET texte_rep = :texte WHERE id_rep = :id";
+        $req = $db->prepare($sql);
+        $req->bindValue(':texte', $nouveauTexte, PDO::PARAM_STR);
+        $req->bindValue(':id', $id_rep, PDO::PARAM_INT);
+        return $req->execute();
+    }
  public function getReponsesByPost($id_post) {
         try {
             $db = config::getConnexion();
@@ -79,5 +79,6 @@ class ReponseController {
             return [];
         }
     }
+  
 }
 ?>

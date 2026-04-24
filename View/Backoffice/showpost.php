@@ -251,24 +251,49 @@ p[style*="text-align: center"] {
 <!-- Afficher les réponses existantes -->
 <?php if (!empty($reponses)): ?>
     <?php foreach ($reponses as $rep): ?>
-        <div class="card" style="padding: 16px; margin-top: 16px; background: var(--bg); border-radius: 16px;">
-            <!-- En-tête : auteur + date -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <strong><?= htmlspecialchars($rep->getAuteur()) ?></strong>
-                <small><?= date('d/m/Y H:i', strtotime($rep->getDateRep())) ?></small>
-            </div>
-            <!-- Contenu de la réponse -->
-            <p style="margin: 10px 0;"><?= nl2br(htmlspecialchars($rep->getTexteRep())) ?></p>
-            <!-- Boutons d'action -->
-            <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                <a href="modifreponse.php?id=<?= $rep->getIdRep() ?>" class="btn btn-primary btn-sm">
-                    <i class="fas fa-pen"></i> 
-                </a>
+        <div class="card" style="padding: 16px; margin-top: 16px; background: var(--bg); border-radius: 16px;" id="reponse-<?= $rep->getIdRep() ?>">
+            
+            <!-- Si on est en mode édition (paramètre edit) -->
+            <?php if (isset($_GET['edit_reponse']) && $_GET['edit_reponse'] == $rep->getIdRep()): ?>
                 
-                <a href="deleteReponse.php?id=<?= $rep->getIdRep() ?>" class="btn btn-danger btn-sm">
-                    <i class="fas fa-trash"></i> 
-                </a>
-            </div>
+                <!-- ✅ FORMULAIRE DE MODIFICATION (updateReponse.php) -->
+                <form method="POST" action="modifreponse.php">
+                    <div style="margin-bottom: 10px;">
+                        <strong><?= htmlspecialchars($rep->getAuteur()) ?></strong>
+                        <small><?= date('d/m/Y H:i', strtotime($rep->getDateRep())) ?></small>
+                    </div>
+                    <textarea name="texte_rep" class="form-control" rows="4" style="margin: 10px 0;"><?= htmlspecialchars($rep->getTexteRep()) ?></textarea>
+                    <input type="hidden" name="id_rep" value="<?= $rep->getIdRep() ?>">
+                    <input type="hidden" name="id_post" value="<?= $post->getIdPost() ?>">
+                    <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                        <button type="submit" class="btn btn-success btn-sm">
+                            <i class="fas fa-save"></i> Enregistrer
+                        </button>
+                        <a href="showpost.php?id=<?= $post->getIdPost() ?>" class="btn btn-outline btn-sm">
+                            <i class="fas fa-times"></i> Annuler
+                        </a>
+                    </div>
+                </form>
+                
+            <?php else: ?>
+                
+                <!-- Mode affichage normal -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <strong><?= htmlspecialchars($rep->getAuteur()) ?></strong>
+                    <small><?= date('d/m/Y H:i', strtotime($rep->getDateRep())) ?></small>
+                </div>
+                <p style="margin: 10px 0;"><?= nl2br(htmlspecialchars($rep->getTexteRep())) ?></p>
+                <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                    <a href="showpost.php?id=<?= $post->getIdPost() ?>&edit_reponse=<?= $rep->getIdRep() ?>" class="btn btn-primary btn-sm">
+                        <i class="fas fa-pen"></i> Modifier
+                    </a>
+                    <a href="deleteReponse.php?id=<?= $rep->getIdRep() ?>" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer cette réponse ?')">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </a>
+                </div>
+                
+            <?php endif; ?>
+            
         </div>
     <?php endforeach; ?>
 <?php else: ?>
@@ -334,5 +359,6 @@ p[style*="text-align: center"] {
     </div>
 </footer>
 
+<script src="../Frontoffice/rep.js"></script>
 </body>
 </html>
