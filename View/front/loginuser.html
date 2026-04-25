@@ -80,6 +80,21 @@
     margin-left: 2px;
 }
 
+/* Style pour le message de complexité du mot de passe */
+.password-complexity {
+    display: block;
+    font-size: 0.7rem;
+    margin-top: 4px;
+}
+
+.password-complexity.valid {
+    color: #10b981;
+}
+
+.password-complexity.invalid {
+    color: #ef4444;
+}
+
 @media (max-width: 768px) {
     .form-row {
         flex-direction: column;
@@ -135,7 +150,7 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Mot de passe <span class="required-star">*</span></label>
-                            <input type="password" id="mot_de_passe" class="form-control" placeholder="Minimum 6 caractères">
+                            <input type="password" id="mot_de_passe" class="form-control" placeholder="8+ caractères, chiffres, lettres et symboles">
                             <div id="password-error" class="error-message"></div>
                         </div>
 
@@ -196,6 +211,46 @@
 </div>
 
 <script type="text/javascript">
+// Fonction pour vérifier si le mot de passe est valide
+function isPasswordValid(password) {
+    // Vérifier la longueur minimale de 8 caractères
+    if (password.length < 8) {
+        return false;
+    }
+    
+    // Vérifier la présence de chiffres
+    var hasNumber = /[0-9]/.test(password);
+    // Vérifier la présence de lettres
+    var hasLetter = /[a-zA-Z]/.test(password);
+    // Vérifier la présence de symboles
+    var hasSymbol = /[/;!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+    // Le mot de passe est valide UNIQUEMENT s'il contient TOUS les éléments
+    return (hasNumber && hasLetter && hasSymbol);
+}
+
+// Fonction pour obtenir le message d'erreur
+function getPasswordErrorMessage(password) {
+    if (password.length < 8) {
+        return "Le mot de passe doit contenir au moins 8 caractères";
+    }
+    
+    var hasNumber = /[0-9]/.test(password);
+    var hasLetter = /[a-zA-Z]/.test(password);
+    var hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+    var missing = [];
+    if (!hasNumber) missing.push("chiffres");
+    if (!hasLetter) missing.push("lettres");
+    if (!hasSymbol) missing.push("symboles");
+    
+    if (missing.length > 0) {
+        return "Le mot de passe doit contenir : " + missing.join(", ");
+    }
+    
+    return "Mot de passe invalide";
+}
+
 // Fonctions de validation
 function showError(id, message) {
     var errorDiv = document.getElementById(id);
@@ -255,11 +310,12 @@ document.getElementById("userForm").addEventListener("submit", function(e) {
         valid = false;
     }
 
+    // Vérification du mot de passe
     if (password === "") {
         showError("password-error", "Mot de passe requis");
         valid = false;
-    } else if (password.length < 6) {
-        showError("password-error", "Minimum 6 caractères");
+    } else if (!isPasswordValid(password)) {
+        showError("password-error", getPasswordErrorMessage(password));
         valid = false;
     }
 
@@ -278,6 +334,11 @@ document.getElementById("userForm").addEventListener("submit", function(e) {
 
     if (role === "") {
         showError("role-error", "Choisir un rôle");
+        valid = false;
+    }
+    
+    if (telephone !== "" && !/^\+?\d{7,15}$/.test(telephone)) {
+        showError("telephone-error", "Numéro de téléphone invalide");
         valid = false;
     }
 
@@ -348,6 +409,42 @@ for (var i = 0; i < inputs.length; i++) {
         var errorDiv = document.getElementById(errorId);
         if (errorDiv) {
             errorDiv.className = 'error-message';
+        }
+        
+        // Nettoyer le message de complexité du mot de passe
+        if (this.id === 'mot_de_passe') {
+            var complexityMsg = document.getElementById("password-complexity");
+            if (complexityMsg) {
+                complexityMsg.innerHTML = "";
+            }
+        }
+    });
+}
+
+// Ajouter un événement en temps réel pour vérifier le mot de passe
+var passwordInput = document.getElementById("mot_de_passe");
+if (passwordInput) {
+    passwordInput.addEventListener('input', function() {
+        var password = this.value;
+        var complexityMsg = document.getElementById("password-complexity");
+        
+        if (password.length > 0) {
+            if (!complexityMsg) {
+                complexityMsg = document.createElement("small");
+                complexityMsg.id = "password-complexity";
+                complexityMsg.className = "password-complexity";
+                this.parentNode.appendChild(complexityMsg);
+            }
+            
+            if (isPasswordValid(password)) {
+                complexityMsg.className = "password-complexity valid";
+                complexityMsg.innerHTML = "✓ Mot de passe valide (chiffres + lettres + symboles)";
+            } else {
+                complexityMsg.className = "password-complexity invalid";
+                complexityMsg.innerHTML = "⚠ " + getPasswordErrorMessage(password);
+            }
+        } else if (complexityMsg) {
+            complexityMsg.innerHTML = "";
         }
     });
 }
