@@ -38,51 +38,57 @@ include 'header_back.php';
 
         <div class="crud-card animate-fadeInUp">
             <?php if(isset($currentMed) && $currentMed): ?>
-            <form action="editmedicament.php" method="POST" id="editMedForm">
+            <form action="editmedicament.php" method="POST" id="editMedForm" novalidate>
                 <input type="hidden" name="id_medicament" value="<?= $currentMed['id_medicament'] ?>">
                 
                 <div class="form-group">
                     <label for="nom">Nom du Médicament</label>
-                    <input type="text" id="nom" name="nom" class="form-control" value="<?= $currentMed['nom'] ?>" required>
+                    <input type="text" id="nom" name="nom" class="form-control" value="<?= htmlspecialchars($currentMed['nom']) ?>">
                     <div id="nom-error" class="error-message">Le nom doit contenir au moins 3 caractères.</div>
                 </div>
 
                 <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div>
                         <label for="categorie">Catégorie</label>
-                        <select id="categorie" name="categorie" class="form-control" required>
+                        <select id="categorie" name="categorie" class="form-control">
+                            <option value="">Choisir...</option>
                             <option value="Analgésique" <?= $currentMed['categorie'] == 'Analgésique' ? 'selected' : '' ?>>Analgésique</option>
                             <option value="Antibiotique" <?= $currentMed['categorie'] == 'Antibiotique' ? 'selected' : '' ?>>Antibiotique</option>
                             <option value="Anti-inflammatoire" <?= $currentMed['categorie'] == 'Anti-inflammatoire' ? 'selected' : '' ?>>Anti-inflammatoire</option>
                             <option value="Vitamine" <?= $currentMed['categorie'] == 'Vitamine' ? 'selected' : '' ?>>Vitamine</option>
                             <option value="Autre" <?= $currentMed['categorie'] == 'Autre' ? 'selected' : '' ?>>Autre</option>
                         </select>
+                        <div id="categorie-error" class="error-message">Veuillez sélectionner une catégorie.</div>
                     </div>
                     <div>
                         <label for="prix">Prix (DT)</label>
-                        <input type="number" step="0.001" id="prix" name="prix" class="form-control" value="<?= $currentMed['prix'] ?>" required>
+                        <input type="number" step="0.001" id="prix" name="prix" class="form-control" value="<?= $currentMed['prix'] ?>">
+                        <div id="prix-error" class="error-message">Le prix doit être supérieur à 0.</div>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label for="id_pharmacie">Pharmacie Associée</label>
-                    <select id="id_pharmacie" name="id_pharmacie" class="form-control" required>
+                    <select id="id_pharmacie" name="id_pharmacie" class="form-control">
+                        <option value="">Sélectionner une pharmacie...</option>
                         <?php foreach($pharmacies as $p): ?>
                             <option value="<?= $p['id_pharmacie'] ?>" <?= $currentMed['id_pharmacie'] == $p['id_pharmacie'] ? 'selected' : '' ?>>
                                 <?= htmlspecialchars($p['nom']) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
+                    <div id="id-pharmacie-error" class="error-message">Veuillez sélectionner une pharmacie.</div>
                 </div>
 
                 <div class="form-group">
                     <label for="stock">Quantité en Stock</label>
-                    <input type="number" id="stock" name="stock" class="form-control" value="<?= $currentMed['stock'] ?>" required>
+                    <input type="number" id="stock" name="stock" class="form-control" value="<?= $currentMed['stock'] ?>">
+                    <div id="stock-error" class="error-message">Le stock doit être un nombre entier supérieur ou égal à 0.</div>
                 </div>
 
                 <div class="form-group">
                     <label for="images">URL de l'image</label>
-                    <input type="text" id="images" name="images" class="form-control" value="<?= $currentMed['images'] ?>">
+                    <input type="text" id="images" name="images" class="form-control" value="<?= htmlspecialchars($currentMed['images']) ?>">
                 </div>
 
                 <div style="display: flex; gap: 10px; margin-top: 30px;">
@@ -102,14 +108,6 @@ include 'header_back.php';
     </div>  
 </main>
 
-<script>
-    document.getElementById('editMedForm').addEventListener('submit', function(e) {
-        const nom = document.getElementById('nom').value;
-        if (nom.length < 3) {
-            document.getElementById('nom-error').style.display = 'block';
-            e.preventDefault();
-        }
-    });
-</script>
+<script src="script.js"></script>
 
 <?php include 'footer_back.php'; ?>

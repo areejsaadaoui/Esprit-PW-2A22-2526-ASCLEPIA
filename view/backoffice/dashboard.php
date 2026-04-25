@@ -92,6 +92,10 @@ include "header_back.php";
                         <i class="fa-solid fa-eye"></i>
                         <span>Voir le Site Public</span>
                     </a>
+                    <a href="statistiques.php" class="quick-action-btn">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span>Voir les Statistiques</span>
+                    </a>
                 </div>
             </div>
         </div>

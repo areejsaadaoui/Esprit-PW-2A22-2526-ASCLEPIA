@@ -31,7 +31,7 @@ $listeMedicaments = $mc->afficherMedicaments();
 <nav class="navbar" id="navbar">
   <a href="index.php" class="navbar-brand">
     <div class="navbar-logo"></div>
-    <div class="navbar-name">ASC<span>LEPIA</span></div>
+    <div class="navbar-name" img src="logo.png">ASC<span>LEPIA</span></div>
   </a>
 
   <div class="nav-links" id="navLinks">
@@ -295,7 +295,7 @@ $listeMedicaments = $mc->afficherMedicaments();
 
       <?php if (!empty($listePharmacies)): ?>
         <?php foreach ($listePharmacies as $p): ?>
-          <div class="col-4">
+          <div class="col-4 pharm-item" data-nom="<?= strtolower(htmlspecialchars($p['nom'])) ?>">
             <div class="card pharmacie-card" style="gap: 16px; flex-direction: column; padding: 24px;">
               <div class="d-flex align-center" style="gap: 16px;">
                 <div class="icon-box" style="background: linear-gradient(135deg,#10b981,#059669);">
@@ -330,6 +330,12 @@ $listeMedicaments = $mc->afficherMedicaments();
       <?php else: ?>
         <p style="text-align: center; width: 100%; color: var(--text-muted);">Aucune pharmacie trouvée.</p>
       <?php endif; ?>
+
+      <!-- Message aucun résultat -->
+      <div id="pharmNoResult" style="display:none; text-align:center; width:100%; padding: 40px 0; color: var(--text-muted);">
+        <i class="fa-solid fa-magnifying-glass" style="font-size: 2.5rem; margin-bottom: 16px; opacity:.35;"></i>
+        <p style="font-size:1rem; font-weight:600;">Aucune pharmacie ne correspond à votre recherche.</p>
+      </div>
 
     </div>
   </div>
@@ -897,6 +903,37 @@ $listeMedicaments = $mc->afficherMedicaments();
     });
   }, { threshold: 0.1 });
   cards.forEach(card => cardObserver.observe(card));
+
+  // ---- Recherche pharmacie en temps réel ----
+  const pharmSearch = document.getElementById('pharmSearch');
+  if (pharmSearch) {
+    pharmSearch.addEventListener('input', function () {
+      const query = this.value.trim().toLowerCase();
+      const items  = document.querySelectorAll('.pharm-item');
+      const noResult = document.getElementById('pharmNoResult');
+      let visible = 0;
+
+      items.forEach(function (item) {
+        const nom = item.getAttribute('data-nom') || '';
+        if (nom.includes(query)) {
+          item.style.display = '';
+          // Micro-animation d'apparition
+          item.style.opacity  = '0';
+          item.style.transform = 'translateY(12px)';
+          setTimeout(function () {
+            item.style.transition = 'opacity .3s ease, transform .3s ease';
+            item.style.opacity  = '1';
+            item.style.transform = 'translateY(0)';
+          }, 20);
+          visible++;
+        } else {
+          item.style.display = 'none';
+        }
+      });
+
+      noResult.style.display = (visible === 0 && query !== '') ? 'block' : 'none';
+    });
+  }
 
 </script>
 

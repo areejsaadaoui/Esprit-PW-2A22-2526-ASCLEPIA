@@ -100,6 +100,7 @@
     <a href="dashboard.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : ''; ?>">Tableau de Bord</a>
     <a href="listepharmacie.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'listepharmacie.php' ? 'active' : ''; ?>">Gestion Pharmacies</a>
     <a href="listemedicament.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'listemedicament.php' ? 'active' : ''; ?>">Gestion Médicaments</a>
+    <a href="statistiques.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'statistiques.php' ? 'active' : ''; ?>">Statistiques</a>
     <a href="../frontoffice/index.php" class="nav-link">Site Public</a>
   </div>
 

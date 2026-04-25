@@ -33,17 +33,17 @@ include 'header_back.php';
         </div>
 
         <div class="crud-card animate-fadeInUp">
-            <form action="addmedicament.php" method="POST" id="medForm">
+            <form action="addmedicament.php" method="POST" id="medForm" novalidate>
                 <div class="form-group">
                     <label for="nom">Nom du Médicament</label>
-                    <input type="text" id="nom" name="nom" class="form-control" placeholder="Ex: Doliprane 1000mg" required>
+                    <input type="text" id="nom" name="nom" class="form-control" placeholder="Ex: Doliprane 1000mg">
                     <div id="nom-error" class="error-message">Le nom doit contenir au moins 3 caractères.</div>
                 </div>
 
                 <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div>
                         <label for="categorie">Catégorie</label>
-                        <select id="categorie" name="categorie" class="form-control" required>
+                        <select id="categorie" name="categorie" class="form-control">
                             <option value="">Choisir...</option>
                             <option value="Analgésique">Analgésique</option>
                             <option value="Antibiotique">Antibiotique</option>
@@ -51,26 +51,30 @@ include 'header_back.php';
                             <option value="Vitamine">Vitamine</option>
                             <option value="Autre">Autre</option>
                         </select>
+                        <div id="categorie-error" class="error-message">Veuillez sélectionner une catégorie.</div>
                     </div>
                     <div>
                         <label for="prix">Prix (DT)</label>
-                        <input type="number" step="0.001" id="prix" name="prix" class="form-control" placeholder="0.000" required>
+                        <input type="number" step="0.001" id="prix" name="prix" class="form-control" placeholder="0.000">
+                        <div id="prix-error" class="error-message">Le prix doit être supérieur à 0.</div>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label for="stock">Quantité en Stock</label>
-                    <input type="number" id="stock" name="stock" class="form-control" placeholder="Ex: 50" required>
+                    <input type="number" id="stock" name="stock" class="form-control" placeholder="Ex: 50">
+                    <div id="stock-error" class="error-message">Le stock doit être un nombre entier supérieur ou égal à 0.</div>
                 </div>
 
                 <div class="form-group">
                     <label for="id_pharmacie">Pharmacie Associée</label>
-                    <select id="id_pharmacie" name="id_pharmacie" class="form-control" required>
+                    <select id="id_pharmacie" name="id_pharmacie" class="form-control">
                         <option value="">Sélectionner une pharmacie...</option>
                         <?php foreach($pharmacies as $p): ?>
                             <option value="<?= $p['id_pharmacie'] ?>"><?= htmlspecialchars($p['nom']) ?></option>
                         <?php endforeach; ?>
                     </select>
+                    <div id="id-pharmacie-error" class="error-message">Veuillez sélectionner une pharmacie.</div>
                 </div>
 
                 <div class="form-group">
@@ -93,33 +97,5 @@ include 'header_back.php';
 </main>
 
 <script src="script.js"></script>
-<script>
-    // Simple custom validation for medicament
-    document.getElementById('medForm').addEventListener('submit', function(e) {
-        let valid = true;
-        const nom = document.getElementById('nom').value;
-        const prix = document.getElementById('prix').value;
-        const stock = document.getElementById('stock').value;
-
-        if (nom.length < 3) {
-            document.getElementById('nom-error').style.display = 'block';
-            valid = false;
-        } else {
-            document.getElementById('nom-error').style.display = 'none';
-        }
-
-        if (prix <= 0) {
-            alert("Le prix doit être supérieur à 0");
-            valid = false;
-        }
-
-        if (stock < 0) {
-            alert("Le stock ne peut pas être négatif");
-            valid = false;
-        }
-
-        if (!valid) e.preventDefault();
-    });
-</script>
 
 <?php include 'footer_back.php'; ?>
