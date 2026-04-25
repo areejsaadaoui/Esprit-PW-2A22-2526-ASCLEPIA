@@ -176,9 +176,11 @@ if (isset($_GET['comp1'], $_GET['comp2'])) {
                                    data-nom="<?= htmlspecialchars($a['nom_assurance']) ?>">
                             Ajouter à la comparaison
                         </label>
-                        <a href="#" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:12px;">
-                            Souscrire <i class="fa-solid fa-arrow-right"></i>
-                        </a>
+                        <a href="souscrireContrat.php?id_assurance=<?= $a['id_assurance'] ?>" 
+   class="btn btn-primary" 
+   style="width:100%; justify-content:center; margin-top:12px;">
+    Souscrire <i class="fa-solid fa-arrow-right"></i>
+</a>
                     </div>
                 </div>
                 <?php endforeach; ?>
@@ -341,7 +343,8 @@ if (isset($_GET['comp1'], $_GET['comp2'])) {
 
     function lancerComparaison() {
         if (selected.length === 2) {
-            window.location.href = 'assurancefront.php?comp1=' + selected[0].id + '&comp2=' + selected[1].id;
+           window.location.href = '/projetweb/View/frontoffice/assurancefront.php?comp1=' 
+    + selected[0].id + '&comp2=' + selected[1].id;
         }
     }
 
