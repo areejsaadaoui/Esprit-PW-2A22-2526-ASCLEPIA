@@ -56,6 +56,19 @@ if (isset($_GET['confirm']) && $_GET['confirm'] === 'oui') {
                     Ajouter
                 </a>
             </div>
+            <div class="nav-section-label">Ordonnance</div>
+            <div class="nav-item">
+                <a href="list_ordonnance.php">
+                    <span class="nav-icon"><i class="fa-solid fa-file-prescription"></i></span>
+                    Ordonnances
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="add_ordonnance.php">
+                    <span class="nav-icon"><i class="fa-solid fa-plus"></i></span>
+                    Ajouter
+                </a>
+            </div>
         </nav>
     </aside>
 

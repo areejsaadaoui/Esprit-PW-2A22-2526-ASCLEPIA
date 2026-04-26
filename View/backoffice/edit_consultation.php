@@ -25,7 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = "Une consultation existe déjà à cette date et heure exacte.";
     }
 
-    // Diagnostique et notes obligatoires seulement si date passée
     $dateEstPassee = !empty($date) && strtotime($date) <= time();
     if ($dateEstPassee) {
         if (empty($diagnostique) || strlen($diagnostique) < 10) {
@@ -93,6 +92,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div class="nav-item">
                 <a href="add_consultation.php">
+                    <span class="nav-icon"><i class="fa-solid fa-plus"></i></span>
+                    Ajouter
+                </a>
+            </div>
+            <div class="nav-section-label">Ordonnance</div>
+            <div class="nav-item">
+                <a href="list_ordonnance.php">
+                    <span class="nav-icon"><i class="fa-solid fa-file-prescription"></i></span>
+                    Ordonnances
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="add_ordonnance.php">
                     <span class="nav-icon"><i class="fa-solid fa-plus"></i></span>
                     Ajouter
                 </a>
@@ -222,7 +234,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         const maintenant = new Date();
 
         if (dateChoisie <= maintenant) {
-            // Date passée → activer les champs
             diag.disabled = false;
             notes.disabled = false;
             diag.placeholder = "Entrez le diagnostique...";
@@ -230,7 +241,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             hintDiag.textContent = "(min. 10 caractères)";
             hintNotes.textContent = "(min. 5 caractères)";
         } else {
-            // Date future → désactiver les champs
             diag.disabled = true;
             diag.value = '';
             notes.disabled = true;
@@ -263,7 +273,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             valide = false;
         }
 
-        // Valider diagnostique et notes seulement si date passée
         const dateChoisie = new Date(date);
         const maintenant = new Date();
         if (date && dateChoisie <= maintenant) {
@@ -285,7 +294,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         return valide;
     }
 
-    // Vérifier au chargement de la page
     verifierDate();
 </script>
 </body>

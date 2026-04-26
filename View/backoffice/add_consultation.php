@@ -91,6 +91,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     Ajouter
                 </a>
             </div>
+            <div class="nav-section-label">Ordonnance</div>
+            <div class="nav-item">
+                <a href="list_ordonnance.php">
+                    <span class="nav-icon"><i class="fa-solid fa-file-prescription"></i></span>
+                    Ordonnances
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="add_ordonnance.php">
+                    <span class="nav-icon"><i class="fa-solid fa-plus"></i></span>
+                    Ajouter
+                </a>
+            </div>
         </nav>
     </aside>
 
@@ -226,7 +239,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         const maintenant = new Date();
 
         if (dateChoisie <= maintenant) {
-            // Date passée → activer tout
             diag.disabled = false;
             notes.disabled = false;
             diag.placeholder = "Entrez le diagnostique...";
@@ -235,7 +247,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             hintNotes.textContent = "(min. 5 caractères)";
             optTerminee.disabled = false;
         } else {
-            // Date future → désactiver diagnostic, notes et option "terminée"
             diag.disabled = true;
             diag.value = '';
             notes.disabled = true;

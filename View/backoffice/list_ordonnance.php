@@ -115,6 +115,9 @@ $ordonnances = $model->getAll();
                             <td><?= $o['duree_traitement'] ?> jours</td>
                             <td>
                                 <div class="actions">
+                                    <a href="ordonnance_pdf.php?id=<?= $o['id_ordonnance'] ?>" class="btn btn-primary btn-sm" target="_blank">
+                                        <i class="fa-solid fa-file-pdf"></i> PDF
+                                    </a>
                                     <a href="edit_ordonnance.php?id=<?= $o['id_ordonnance'] ?>" class="btn btn-outline btn-sm">
                                         <i class="fa-solid fa-pen"></i> Modifier
                                     </a>
