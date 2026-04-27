@@ -6,10 +6,9 @@ $reponseC = new ReponseController();
 $id_post = isset($_GET['id_post']) ? (int)$_GET['id_post'] : null;
 
 if ($id_post) {
-    // Récupère les réponses d’un post spécifique
+    // Récupère les réponses d'un post spécifique
     $reponses = $reponseC->listrep($id_post);
     $titrePage = "Réponses du post #$id_post";
-
 }
 ?>
 
@@ -47,6 +46,43 @@ if ($id_post) {
         .btn-back:hover {
             background: var(--dark);
         }
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        .btn-dashboard {
+            background: var(--primary);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 30px;
+            text-decoration: none;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-dashboard:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        .btn-post {
+            background: var(--accent);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 30px;
+            text-decoration: none;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-post:hover {
+            background: var(--accent-dark);
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
@@ -56,15 +92,22 @@ if ($id_post) {
         <div class="navbar-logo"></div>
         <div class="navbar-name">ASC<span>LEPIA</span></div>
     </a>
-    <div class="nav-links">
-        <a href="index.html">Accueil</a>
-        <a href="postlist.php">Forum</a>
-        <a href="listrep.php">Réponses</a>
+    <div class="nav-links" id="navLinks">
+        <a href="../frontoffice/index.html#accueil" class="nav-link">Accueil</a>
+        <a href="../frontoffice/index.html#services" class="nav-link">Services</a>
+        <a href="../frontoffice/index.html#pharmacies" class="nav-link">Pharmacies</a>
+        <a href="../frontoffice/index.html#assurances" class="nav-link">Assurances</a>
+        <a href="../Frontoffice/postlist.php" class="nav-link active">Communauté</a>
+        <a href="../frontoffice/index.html#avis" class="nav-link">Avis</a>
     </div>
     <div class="nav-actions">
-        <a href="login.html" class="btn btn-outline-white btn-sm">Se connecter</a>
-        <a href="login.html" class="btn btn-primary btn-sm">S'inscrire</a>
+        <a href="../frontoffice/login.html" class="btn btn-outline-white btn-sm">Se connecter</a>
+        <a href="../frontoffice/login.html" class="btn btn-primary btn-sm">S'inscrire</a>
+        <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+            <span></span><span></span><span></span>
+        </div>
     </div>
+
 </nav>
 
 <section class="section-padding">
@@ -73,6 +116,29 @@ if ($id_post) {
             <div class="section-tag"><i class="fa-solid fa-reply-all"></i> Communauté</div>
             <h2 class="section-title"><?= $titrePage ?></h2>
         </div>
+        
+        <div class="button-group">
+            <!-- Bouton Retour au Dashboard (Backoffice) -->
+            <a href="../Backoffice/dashboard.php" class="btn-dashboard">
+                <i class="fas fa-tachometer-alt"></i>  Retour 
+            </a>
+          
+            <?php if ($id_post): ?>
+                <a href="../Backoffice/showpost.php?id=<?= $id_post ?>" class="btn-post">
+                    <i class="fas fa-eye"></i> 📝 Voir le post #<?= $id_post ?>
+                </a>
+            <?php endif; ?>
+        </div>
+        
+    
+        <?php if (!$id_post): ?>
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="postlist.php" class="btn btn-outline">
+                    <i class="fas fa-arrow-left"></i> Voir tous les posts
+                </a>
+            </div>
+        <?php endif; ?>
+    </div>
 
         <div class="table-container">
             <table class="table">
@@ -98,11 +164,14 @@ if ($id_post) {
                                 </td>
                                 <td><span class="badge-post">Post #<?= $rep['id_post'] ?></span></td>
                                 <td><?= date('d/m/Y H:i', strtotime($rep['date_rep'])) ?></td>
-                                <td>
-                                    <a href="showpost.php?id=<?= $rep['id_post'] ?>" class="btn btn-primary btn-sm">
-                                        <i class="fas fa-eye"></i> Voir le post
-                                    </a>
-                                </td>
+                                 <td class="table-actions">
+                <a href="../Backoffice/deleteReponse.php?id=<?= $rep['id_rep'] ?>&id_post=<?= $rep['id_post'] ?>" 
+                   class="btn btn-danger btn-sm" 
+                   onclick="return confirm('Supprimer cette réponse ?')"
+                   title="Supprimer la réponse">
+                    <i class="fas fa-trash"></i> Supprimer
+                </a>
+            </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
@@ -112,12 +181,7 @@ if ($id_post) {
             </table>
         </div>
 
-        <div style="text-align: center; margin-top: 20px;">
-            <a href="postlist.php" class="btn btn-outline">
-                <i class="fas fa-arrow-left"></i> Retour au forum
-            </a>
-        </div>
-    </div>
+        
 </section>
 
 </body>

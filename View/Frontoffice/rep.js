@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         form.addEventListener('submit', function(event) {
             const textarea = form.querySelector('textarea[name="texte_rep"]');
-            if (!textarea) return; // Pas de textarea réponse, on ignore
+            if (!textarea) return; 
             
             const texte = textarea.value;
             

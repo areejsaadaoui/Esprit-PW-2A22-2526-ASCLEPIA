@@ -296,10 +296,6 @@ p[style*="text-align: center"] {
             
         </div>
     <?php endforeach; ?>
-<?php else: ?>
-    <p style="text-align: center; color: var(--text-muted); padding: 40px;">
-        Soyez le premier à répondre !
-    </p>
 <?php endif; ?>
                      <!-- Bouton retour -->
                     <div style="margin-top: 32px; text-align: center;">
