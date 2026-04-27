@@ -493,7 +493,8 @@ for ($i = 11; $i >= 0; $i--) {
                 </div>
                 <div style="overflow-x:auto;">
                     <table class="table">
-                        <thead><tr><th>ID</th><th>Contenu</th><th>Image</th><th>Date</th><th>Actions</th></tr></thead>
+                        <thead><tr><th>ID</th><th>Contenu</th><th>Image</th><th>Date</th><th>Commentaires</th><th>Actions</th></tr></thead>
+                        <th>ID</th>
                         <tbody>
                             <?php if (empty($latestPosts)): ?>
                                 <tr><td colspan="5" style="text-align:center">Aucun post</td></tr>
@@ -504,6 +505,13 @@ for ($i = 11; $i >= 0; $i--) {
                                         <td style="max-width:400px"><?= htmlspecialchars(substr($post->getContenu(),0,80)) ?>…</td>
                                         <td style="text-align:center"><?= !empty($post->getImage()) ? '<i class="fas fa-check-circle" style="color:var(--accent)"></i>' : '<i class="fas fa-times-circle" style="color:var(--gray-light)"></i>' ?></td>
                                         <td><?= date('d/m/Y', strtotime($post->getDatePost())) ?></td>
+                                        <td class="table-actions">
+    <a href="../Frontoffice/listrep.php?id_post=<?= $post->getIdPost() ?>" 
+       class="btn btn-info btn-sm" 
+       title="Voir les réponses de ce post">
+        <i class="fas fa-comments"></i> Voir réponses
+    </a>
+</td>
                                         <td class="table-actions">
                                             <a href="showpost.php?id=<?= $post->getIdPost() ?>" class="btn btn-outline btn-sm"><i class="fas fa-eye"></i></a>
                                             <a href="deletepost.php?id=<?= $post->getIdPost() ?>" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ?')"><i class="fas fa-trash"></i></a>
@@ -516,6 +524,7 @@ for ($i = 11; $i >= 0; $i--) {
                 </div>
             </div>
         </div>
+       
     </main>
 </div>
 
