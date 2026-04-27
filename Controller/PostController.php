@@ -4,7 +4,6 @@ include(__DIR__ . '/../Model/Post.php');
 
 class PostController {
 
-    // ajouter un post
     public function addPost(Post $post) {
         $sql = "INSERT INTO post (contenu, date_post, image, id_utilisateur) VALUES (:contenu, :date_post, :image, :id_utilisateur)";
         $db = config::getConnexion();
@@ -25,7 +24,6 @@ class PostController {
         }
     }
 
-    //lire tous les posts
     public function listPosts() {
         $sql = "SELECT * FROM post ORDER BY date_post DESC";
         $db = config::getConnexion();
@@ -46,7 +44,6 @@ class PostController {
         return $posts;
     }
 
-    // lire un post par son ID
     public function getPostById($id_post) {
         $sql = "SELECT * FROM post WHERE id_post = :id_post";
         $db = config::getConnexion();
@@ -66,7 +63,6 @@ class PostController {
         return null;
     }
 
-    // modifier un post
     public function updatePost(Post $post, $id_post) {
         try {
             $db = config::getConnexion();
@@ -91,7 +87,6 @@ class PostController {
         }
     }
 
-    // supprimer un post
     public function deletePost($id_post) {
     $sql = "DELETE FROM post WHERE id_post = :id";
     $db = config::getConnexion();

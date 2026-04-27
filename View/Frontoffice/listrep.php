@@ -6,9 +6,9 @@ $reponseC = new ReponseController();
 $id_post = isset($_GET['id_post']) ? (int)$_GET['id_post'] : null;
 
 if ($id_post) {
-    // Récupère les réponses d'un post spécifique
+   
     $reponses = $reponseC->listrep($id_post);
-    $titrePage = "Réponses du post #$id_post";
+    
 }
 ?>
 
@@ -16,7 +16,7 @@ if ($id_post) {
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>ASCLEPIA - <?= $titrePage ?></title>
+    <title>ASCLEPIA </title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/style.css">
@@ -114,15 +114,13 @@ if ($id_post) {
     <div class="container">
         <div class="section-header">
             <div class="section-tag"><i class="fa-solid fa-reply-all"></i> Communauté</div>
-            <h2 class="section-title"><?= $titrePage ?></h2>
+            
         </div>
         
         <div class="button-group">
-            <!-- Bouton Retour au Dashboard (Backoffice) -->
             <a href="../Backoffice/dashboard.php" class="btn-dashboard">
                 <i class="fas fa-tachometer-alt"></i>  Retour 
-            </a>
-          
+            </a>       
             <?php if ($id_post): ?>
                 <a href="../Backoffice/showpost.php?id=<?= $id_post ?>" class="btn-post">
                     <i class="fas fa-eye"></i> 📝 Voir le post #<?= $id_post ?>
