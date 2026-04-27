@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const texte = textarea.value;
             
-            // Contrôle 1 : champ vide
             if (texte.trim() === '') {
                 alert('❌ La réponse ne peut pas être vide.');
                 event.preventDefault();

@@ -24,7 +24,7 @@ class Reponse {
     public function getDateRep()        { return $this->date_rep; }
     public function getIdUtilisateur()  { return $this->id_utilisateur; }
     public function getIdPost()         { return $this->id_post; }
-    public function getAuteur() { return $this->auteur ?? 'Anonyme'; }
+public function getAuteur() { return $this->auteur ?? 'User 1'; }
     // setters
     public function setTexteRep(?string $texte_rep) { $this->texte_rep = $texte_rep; }
     public function setIdPost(?int $id_post)        { $this->id_post = $id_post; }

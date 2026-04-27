@@ -19,7 +19,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Retour vers le post
 $id_post = (int)$_POST['id_post'];
 header('Location: showpost.php?id=' . $id_post);
 exit;

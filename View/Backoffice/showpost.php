@@ -233,6 +233,9 @@ p[style*="text-align: center"] {
                                    class="btn btn-danger btn-sm" >
                                     <i class="fa-solid fa-trash"></i> Supprimer
                                 </a>
+                                 <a href="../Backoffice/modifpost.php?id=<?php echo $post->getIdPost(); ?>" class="btn btn-primary btn-sm">
+                        <i class="fas fa-pen"></i> Modifier
+    </a>
                     </div>
                   
                     <!-- Formulaire pour ajouter une réponse -->
@@ -296,6 +299,7 @@ p[style*="text-align: center"] {
             
         </div>
     <?php endforeach; ?>
+
 <?php endif; ?>
                      <!-- Bouton retour -->
                     <div style="margin-top: 32px; text-align: center;">
