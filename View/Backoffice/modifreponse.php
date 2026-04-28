@@ -1,6 +1,5 @@
 <?php
 
-session_start();
 require_once '../../Controller/ReponseController.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

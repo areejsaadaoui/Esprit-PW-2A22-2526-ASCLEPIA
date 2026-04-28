@@ -10,8 +10,6 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 
 $id_rep = (int)$_GET['id'];
 $reponseC = new ReponseController();
-
-// Optionnel : récupérer l'id_post pour rediriger correctement
 $reponse = $reponseC->getReponseById($id_rep);
 if ($reponse) {
     $id_post = $reponse['id_post'];

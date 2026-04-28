@@ -369,7 +369,6 @@ for ($i = 11; $i >= 0; $i--) {
                 </div>
             </div>
             <div class="nav-item"><a href="addpost.php"><i class="fas fa-plus-circle nav-icon"></i><span>Nouveau post</span></a></div>
-            <div class="nav-item"><a href="showpost.php"><i class="fas fa-eye nav-icon"></i><span>Tous les posts</span></a></div>
             <div class="nav-section-label">Autres</div>
             <div class="nav-item"><a href="../Frontoffice/index.html"><i class="fas fa-globe nav-icon"></i><span>Voir le site</span></a></div>
         </nav>

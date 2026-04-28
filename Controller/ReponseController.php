@@ -52,6 +52,7 @@ class ReponseController {
         $req->bindValue(':id', $id_rep, PDO::PARAM_INT);
         return $req->execute();
     }
+    
  public function getReponsesByPost($id_post) {
         try {
             $db = config::getConnexion();
@@ -79,13 +80,12 @@ class ReponseController {
             return [];
         }
     }
+
     public function listrep($id_post) {
-    $sql = "SELECT r.*, u.nom as auteur 
-            FROM reponse r 
-            LEFT JOIN utilisateur u ON r.id_utilisateur = u.id_user 
-            WHERE r.id_post = :id_post 
-            ORDER BY r.date_rep DESC";
-    
+    $sql = "SELECT reponse.*, post.contenu AS contenu_post 
+FROM reponse 
+JOIN post ON reponse.id_post = post.id_post 
+WHERE reponse.id_post = :id_post";
     $db = config::getConnexion();
     $req = $db->prepare($sql);
     $req->bindValue(':id_post', $id_post, PDO::PARAM_INT);
