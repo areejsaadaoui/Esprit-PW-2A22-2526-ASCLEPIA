@@ -83,9 +83,10 @@ class ReponseController {
 
     public function listrep($id_post) {
     $sql = "SELECT reponse.*, post.contenu AS contenu_post 
-FROM reponse 
-JOIN post ON reponse.id_post = post.id_post 
-WHERE reponse.id_post = :id_post";
+    FROM reponse 
+    JOIN post 
+    ON reponse.id_post = post.id_post 
+    WHERE reponse.id_post = :id_post";
     $db = config::getConnexion();
     $req = $db->prepare($sql);
     $req->bindValue(':id_post', $id_post, PDO::PARAM_INT);
