@@ -59,7 +59,7 @@ $typePop    = $count > 0 ? array_search(max($typeCount), $typeCount) : 'N/A';
                 </a>
             </div>
             <div class="nav-item">
-                <a href="#">
+                <a href="contrat/contratList.php">
                     <span class="nav-icon"><i class="fa-solid fa-file-contract"></i></span>
                     Contrats
                 </a>
@@ -177,6 +177,10 @@ $typePop    = $count > 0 ? array_search(max($typeCount), $typeCount) : 'N/A';
                             <td><?= $a['taux_remboursement'] ?>%</td>
                             <td>
                                 <div class="actions">
+                                    <a href="contrat/contratsParAssurance.php?id=<?= $a['id_assurance'] ?>"
+                                       class="btn btn-primary btn-sm">
+                                        <i class="fa-solid fa-file-contract"></i> Contrats
+                                    </a>
                                     <form method="POST" action="updateAssurance.php" style="display:inline">
                                         <input type="hidden" name="id" value="<?= $a['id_assurance'] ?>">
                                         <button type="submit" class="btn btn-outline btn-sm">

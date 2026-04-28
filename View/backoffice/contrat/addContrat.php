@@ -8,6 +8,9 @@ $assurances = $contratC->listAssurances();
 $assurancesList = [];
 foreach ($assurances as $a) { $assurancesList[] = $a; }
 
+// id_assurance passé depuis contratsParAssurance
+$preselect = isset($_GET['id_assurance']) ? (int)$_GET['id_assurance'] : 0;
+
 if (isset($_POST['date_d'], $_POST['id_assurance'], $_POST['montant'], $_POST['statut'])) {
     if (!empty($_POST['date_d']) && !empty($_POST['id_assurance']) && !empty($_POST['montant']) && !empty($_POST['statut'])) {
         $contrat = new Contrat(
@@ -19,7 +22,7 @@ if (isset($_POST['date_d'], $_POST['id_assurance'], $_POST['montant'], $_POST['s
             $_POST['statut']
         );
         $contratC->addContrat($contrat);
-        header('Location: contratList.php');
+        header('Location: contratsParAssurance.php?id=' . (int)$_POST['id_assurance']);
         exit;
     } else {
         $error = "Veuillez remplir tous les champs obligatoires.";
@@ -75,7 +78,12 @@ if (isset($_POST['date_d'], $_POST['id_assurance'], $_POST['montant'], $_POST['s
                 <div>
                     <div class="page-title">Nouveau Contrat</div>
                     <div class="breadcrumb">
-                        <a href="contratList.php">Contrats</a><span>/</span><span>Ajouter</span>
+                        <?php if ($preselect): ?>
+                            <a href="contratsParAssurance.php?id=<?= $preselect ?>">Contrats</a>
+                        <?php else: ?>
+                            <a href="contratList.php">Contrats</a>
+                        <?php endif; ?>
+                        <span>/</span><span>Ajouter</span>
                     </div>
                 </div>
             </div>
@@ -98,7 +106,10 @@ if (isset($_POST['date_d'], $_POST['id_assurance'], $_POST['montant'], $_POST['s
                         <select name="id_assurance" id="id_assurance" class="form-control">
                             <option value="">-- Choisir une assurance --</option>
                             <?php foreach ($assurancesList as $a): ?>
-                                <option value="<?= $a['id_assurance'] ?>"><?= htmlspecialchars($a['nom_assurance']) ?></option>
+                                <option value="<?= $a['id_assurance'] ?>"
+                                    <?= $preselect == $a['id_assurance'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($a['nom_assurance']) ?>
+                                </option>
                             <?php endforeach; ?>
                         </select>
                         <span class="form-error" id="err_assurance">Veuillez choisir une assurance.</span>
@@ -147,7 +158,11 @@ if (isset($_POST['date_d'], $_POST['id_assurance'], $_POST['montant'], $_POST['s
                         <button type="submit" class="btn btn-primary">
                             <i class="fa-solid fa-plus"></i> Ajouter
                         </button>
-                        <a href="contratList.php" class="btn btn-outline">Annuler</a>
+                        <?php if ($preselect): ?>
+                            <a href="contratsParAssurance.php?id=<?= $preselect ?>" class="btn btn-outline">Annuler</a>
+                        <?php else: ?>
+                            <a href="contratList.php" class="btn btn-outline">Annuler</a>
+                        <?php endif; ?>
                     </div>
                 </form>
             </div>

@@ -19,13 +19,17 @@ if (isset($_POST['id'], $_POST['date_d'], $_POST['id_assurance'], $_POST['montan
         $_POST['statut']
     );
     $contratC->updateContrat($contrat, $_POST['id']);
-    header('Location: contratList.php');
+    // Redirect vers contratsParAssurance avec l'id de l'assurance
+    header('Location: contratsParAssurance.php?id=' . (int)$_POST['id_assurance']);
     exit;
 }
 
 if (isset($_POST['id'])) {
     $contrat = $contratC->showContrat($_POST['id']);
 }
+
+// Récupérer id_assurance_retour passé depuis contratsParAssurance
+$id_assurance_retour = isset($_POST['id_assurance_retour']) ? (int)$_POST['id_assurance_retour'] : 0;
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -76,7 +80,12 @@ if (isset($_POST['id'])) {
                 <div>
                     <div class="page-title">Modifier Contrat</div>
                     <div class="breadcrumb">
-                        <a href="contratList.php">Contrats</a><span>/</span><span>Modifier</span>
+                        <?php if ($id_assurance_retour): ?>
+                            <a href="contratsParAssurance.php?id=<?= $id_assurance_retour ?>">Contrats</a>
+                        <?php else: ?>
+                            <a href="contratList.php">Contrats</a>
+                        <?php endif; ?>
+                        <span>/</span><span>Modifier</span>
                     </div>
                 </div>
             </div>
@@ -90,6 +99,7 @@ if (isset($_POST['id'])) {
 
                 <form action="" method="POST" id="formUpdate" onsubmit="return validerFormulaire()">
                     <input type="hidden" name="id" value="<?= $_POST['id'] ?? ($contrat['id_contrat'] ?? '') ?>">
+                    <input type="hidden" name="id_assurance_retour" value="<?= $id_assurance_retour ?: ($contrat['id_assurance'] ?? 0) ?>">
 
                     <div class="form-group">
                         <label class="form-label">Assurance <span style="color:var(--danger)">*</span></label>
@@ -148,7 +158,11 @@ if (isset($_POST['id'])) {
                         <button type="submit" class="btn btn-primary">
                             <i class="fa-solid fa-floppy-disk"></i> Mettre à jour
                         </button>
-                        <a href="contratList.php" class="btn btn-outline">Annuler</a>
+                        <?php if ($id_assurance_retour): ?>
+                            <a href="contratsParAssurance.php?id=<?= $id_assurance_retour ?>" class="btn btn-outline">Annuler</a>
+                        <?php else: ?>
+                            <a href="contratList.php" class="btn btn-outline">Annuler</a>
+                        <?php endif; ?>
                     </div>
                 </form>
             </div>

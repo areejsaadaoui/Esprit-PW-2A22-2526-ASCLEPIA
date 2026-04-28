@@ -1,5 +1,5 @@
 <?php
-include(__DIR__ . '/../config.php');
+require_once(__DIR__ . '/../config.php');
 include(__DIR__ . '/../Model/Contrat.php');
 
 class ContratController {
@@ -15,6 +15,20 @@ class ContratController {
             die('Error: ' . $e->getMessage());
         }
     }
+    public function getContratsByAssurance($id_assurance)
+{
+    $sql = "SELECT c.*, a.nom_assurance 
+            FROM contrat c 
+            JOIN assurance a ON c.id_assurance = a.id_assurance
+            WHERE c.id_assurance = :id";
+
+    $db = config::getConnexion();
+    $query = $db->prepare($sql);
+    $query->execute([':id' => $id_assurance]);
+
+    return $query->fetchAll();
+}
+
 
     public function addContrat(Contrat $contrat) {
         $sql = "INSERT INTO contrat VALUES (NULL, :date_d, :date_f, :id_assurance, :montant, :statut)";
