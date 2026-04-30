@@ -1,11 +1,8 @@
-
-// COMPTEUR DE CARACTÈRES
-
+// ===== COMPTEUR DE CARACTÈRES =====
 const textarea = document.getElementById('postContent');
 const nbchar = document.getElementById('nbchar');
 
 if (textarea && nbchar) {
-    
     const initialLen = textarea.value.length;
     nbchar.textContent = initialLen + ' / 2000 caractères (minimum 10 requis)';
     
@@ -31,7 +28,7 @@ if (textarea && nbchar) {
     });
 }
 
-// GESTION DE L'APERÇU D'IMAGE
+// ===== GESTION DE L'APERÇU D'IMAGE (UPLOAD) =====
 const imageInput = document.getElementById('imageUpload');
 const previewContainer = document.getElementById('imagePreviewContainer');
 let c = null;
@@ -40,7 +37,6 @@ if (imageInput && previewContainer) {
     imageInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
-            // Vérifier la taille (max 5MB)
             if (file.size > 5 * 1024 * 1024) {
                 alert('❌ L\'image ne doit pas dépasser 5MB.');
                 imageInput.value = '';
@@ -70,8 +66,8 @@ if (imageInput && previewContainer) {
         }
     });
 }
-// VALIDATION DU FORMULAIRE AVANT ENVOI
 
+// ===== VALIDATION DU FORMULAIRE AVANT ENVOI =====
 const postForm = document.getElementById('postForm');
 if (postForm) {
     postForm.addEventListener('submit', function(e) {
@@ -89,8 +85,9 @@ if (postForm) {
         }
         return true;
     });
+}
 
-// supprimer l'aperçu
+// ===== SUPPRIMER L'APERÇU DE L'IMAGE UPLOADÉE =====
 function removeImage() {
     const imageInput = document.getElementById('imageUpload');
     const previewContainer = document.getElementById('imagePreviewContainer');
@@ -99,30 +96,15 @@ function removeImage() {
     c = null;
 }
 
+// ===== GIPHY INTEGRATION (à placer APRES la déclaration des constantes GIPHY) =====
+// Les constantes comme gifUrlInput, gifModal doivent être définies AVANT
+// Normalement, ces variables sont dans ton HTML (addpost.php)
 
-
-
-// BOUTON RESET
-
-const resetBtn = document.getElementById('resetBtn');
-if (resetBtn) {
-    resetBtn.addEventListener('click', function() {
-        if (confirm('Effacer tout le formulaire ?')) {
-            const textarea = document.getElementById('postContent');
-            const nbchar = document.getElementById('nbchar');
-            
-            if (textarea) {
-                textarea.value = '';
-                if (nbchar) {
-                    nbchar.textContent = '0 / 2000 caractères (minimum 10 requis)';
-                    nbchar.style.color = '#64748b';
-                }
-            }
-            removeImage();
-        }
-    });
-}
-
-
-
+// Supprimer le GIF (et vider l’aperçu)
+function removeGif() {
+    document.getElementById('gifUrl').value = '';
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    if (previewContainer) {
+        previewContainer.innerHTML = ''; // Efface l’aperçu
+    }
 }

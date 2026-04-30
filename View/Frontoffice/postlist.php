@@ -2,6 +2,43 @@
 include '../../Controller/PostController.php';
 $postC = new PostController();
 $posts = $postC->listPosts();
+// ========== GESTION DU TRI ==========
+$orderBy = $_GET['order'] ?? 'date_desc';
+
+switch ($orderBy) {
+    case 'date_asc':
+        usort($posts, function($a, $b) {
+            return strtotime($a->getDatePost()) - strtotime($b->getDatePost());
+        });
+        break;
+    case 'length_desc':
+        usort($posts, function($a, $b) {
+            return strlen($b->getContenu()) - strlen($a->getContenu());
+        });
+        break;
+    case 'length_asc':
+        usort($posts, function($a, $b) {
+            return strlen($a->getContenu()) - strlen($b->getContenu());
+        });
+        break;
+    default: // date_desc
+        usort($posts, function($a, $b) {
+            return strtotime($b->getDatePost()) - strtotime($a->getDatePost());
+        });
+}
+// ========== PAGINATION ==========
+$postsParPage = 9;
+$totalPosts = count($posts);
+$nombreDePages = ceil($totalPosts / $postsParPage);
+
+$pageActuelle = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($pageActuelle < 1) $pageActuelle = 1;
+if ($pageActuelle > $nombreDePages && $nombreDePages > 0) $pageActuelle = $nombreDePages;
+
+$premierIndex = ($pageActuelle - 1) * $postsParPage;
+$postsAPaginer = array_slice($posts, $premierIndex, $postsParPage);
+
+
 ?>
 
 <!DOCTYPE html>
@@ -91,6 +128,185 @@ $posts = $postC->listPosts();
                 display: flex;
             }
         }
+        .sort-select {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.sort-select:hover {
+    border-color: var(--primary);
+}
+
+/* ===== DARK MODE – VERSION POSTLIST ===== */
+
+body.dark-mode {
+    background: #1a1a2e !important;
+}
+
+/* Fond des sections principales */
+body.dark-mode .section-padding,
+body.dark-mode .container {
+    background: transparent !important;
+}
+
+/* Cartes (posts) */
+body.dark-mode .card,
+body.dark-mode .post-card,
+body.dark-mode .quick-card {
+    background: #16213e !important;
+    border-color: #2d2d44 !important;
+}
+
+/* Navbar */
+body.dark-mode .navbar {
+    background: #0f0f1a !important;
+    border-bottom: 1px solid #2d2d44 !important;
+}
+
+body.dark-mode .navbar .navbar-name,
+body.dark-mode .navbar .nav-link {
+    color: #e0e0e0 !important;
+}
+
+body.dark-mode .navbar .nav-link:hover,
+body.dark-mode .navbar .nav-link.active {
+    color: #0ea5e9 !important;
+}
+
+/* Footer */
+body.dark-mode .footer {
+    background: #0f0f1a !important;
+    border-top: 1px solid #2d2d44 !important;
+}
+
+body.dark-mode .footer p,
+body.dark-mode .footer .footer-section h4,
+body.dark-mode .footer .footer-links a {
+    color: #c0c0d0 !important;
+}
+
+/* Barre de tri */
+body.dark-mode .sort-select {
+    background: #16213e !important;
+    color: white !important;
+    border-color: #2d2d44 !important;
+}
+
+body.dark-mode .sort-select option {
+    background: #16213e !important;
+    color: white !important;
+}
+
+/* Indicateur du nombre de posts */
+body.dark-mode .sort-bar div:last-child,
+body.dark-mode .sort-bar div:last-child i,
+body.dark-mode .sort-bar .fa-chart-line {
+    color: white !important;
+}
+
+/* Texte "Filtre" et icône */
+body.dark-mode .sort-bar span,
+body.dark-mode .sort-bar i.fa-sort {
+    color: white !important;
+}
+
+/* Métadonnées du post */
+body.dark-mode .post-meta .post-author,
+body.dark-mode .post-meta .post-date,
+body.dark-mode .post-date i,
+body.dark-mode .post-date {
+    color: #c0c0d0 !important;
+}
+
+body.dark-mode .post-content p {
+    color: #e0e0e0 !important;
+}
+
+/* Boutons dans les cartes */
+body.dark-mode .btn-outline {
+    border-color: #475569 !important;
+    color: #cbd5e1 !important;
+}
+
+body.dark-mode .btn-outline:hover {
+    background: #334155 !important;
+    color: white !important;
+}
+
+body.dark-mode .btn-primary {
+    background: #0ea5e9 !important;
+    color: white !important;
+}
+
+body.dark-mode .btn-danger {
+    background: #dc2626 !important;
+    color: white !important;
+}
+
+/* Pagination */
+body.dark-mode .pagination a,
+body.dark-mode .pagination span {
+    background: #16213e !important;
+    color: #c0c0d0 !important;
+    border-color: #2d2d44 !important;
+}
+
+body.dark-mode .pagination .active {
+    background: #0ea5e9 !important;
+    color: white !important;
+}
+
+body.dark-mode .pagination a:hover {
+    background: #1a2a4a !important;
+    color: white !important;
+}
+
+/* Section header */
+body.dark-mode .section-header .section-title,
+body.dark-mode .section-header .section-desc,
+body.dark-mode .section-tag {
+    color: white !important;
+}
+
+body.dark-mode .section-tag i {
+    color: #0ea5e9 !important;
+}
+
+/* Avatar dans les posts */
+body.dark-mode .post-avatar {
+    background: linear-gradient(135deg, #0ea5e9, #3b82f6) !important;
+}
+
+/* Bouton Nouvelle discussion */
+body.dark-mode .btn-primary {
+    background: #0ea5e9 !important;
+    border: none !important;
+}
+
+/* Mot "Filtre" en blanc */
+body.dark-mode .fa-sort span {
+    color: white !important;
+}
+/* Bouton toggle flottant */
+.theme-toggle {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #0ea5e9;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 1.3rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    transition: all 0.3s;
+    z-index: 9999;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+}
     </style>
 </head>
 <body>
@@ -136,70 +352,130 @@ $posts = $postC->listPosts();
                 Nouvelle discussion
             </a>
         </div>
-
-        <div class="posts-grid">
-            <?php foreach ($posts as $post): ?>
-                <div class="grid-item">
-                    <div class="card post-card">
-                        <?php 
-                        $imagePath = $post->getImage();
-                        if (!empty($imagePath) && file_exists(__DIR__ . '/../Backoffice/' . $imagePath)):
-                        ?>
-                            <img src="../Backoffice/<?php echo $imagePath; ?>" 
-                                 alt="Image du post" 
-                                 class="post-image"
-                                 onclick="window.location.href='../Backoffice/showpost.php?id=<?php echo $post->getIdPost(); ?>'">
-                        <?php endif; ?>
-                        
-                        <div class="post-meta">
-                            <div class="post-avatar" style="background: var(--gradient-primary);">
-                                <?php echo strtoupper(substr($post->getIdUtilisateur() ?? 'U', 0, 2)); ?>
-                            </div>
-                            <div>
-                                <div class="post-author">Utilisateur #<?php echo $post->getIdUtilisateur(); ?></div>
-                                <div class="post-date">
-                                    <i class="fa-regular fa-calendar"></i>
-                                    <?php 
-                                        $date = new DateTime($post->getDatePost());
-                                        echo $date->format('d/m/Y à H:i');
-                                    ?>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="post-content">
-                            <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 16px;">
-                                <?php echo nl2br(htmlspecialchars(substr($post->getContenu(), 0, 150))); ?>
-                                <?php if (strlen($post->getContenu()) > 150): ?>...<?php endif; ?>
-                            </p>
-                        </div>
-                        
-                        <div class="post-footer">
-                            <div class="post-stat">
-                                <i class="fa-regular fa-heart"></i> 
-                                <?php echo rand(0, 50); ?> J'aime
-                            </div>
-                            <div class="post-stat">
-                                <i class="fa-regular fa-comment"></i> 
-                                <?php echo rand(0, 20); ?> Réponses
-                            </div>
-                            <a href="../Backoffice/showpost.php?id=<?php echo $post->getIdPost(); ?>" class="btn btn-outline btn-sm">
-                                Lire la suite
-                            </a>
-                        </div>
-                        
-                        <div class="post-actions">
-
-    <a href="../Backoffice/modifpost.php?id=<?php echo $post->getIdPost(); ?>" 
-       class="btn btn-primary btn-sm">
-        <i class="fa-solid fa-pen"></i> Modifier
-    </a>
+        <!-- Barre de tri -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <i class="fas fa-sort"></i>
+        <span style="font-weight: 500;">Filtre </span>
+        
+        <form method="GET" action="" id="orderForm" style="display: inline;">
+            <select name="order" class="sort-select" onchange="this.form.submit()" style="padding: 8px 15px; border-radius: 30px; border: 1px solid var(--border); background: white;">
+                <option value="date_desc" <?= ($orderBy == 'date_desc') ? 'selected' : '' ?>>📅 Date décroissante</option>
+                <option value="date_asc" <?= ($orderBy == 'date_asc') ? 'selected' : '' ?>>📅 Date croissante</option>
+                <option value="length_desc" <?= ($orderBy == 'length_desc') ? 'selected' : '' ?>>📄 Plus long </option>
+                <option value="length_asc" <?= ($orderBy == 'length_asc') ? 'selected' : '' ?>>📄 Plus court </option>
+                
+            </select>
+        </form>
+    </div>
+    
+    <!-- Indicateur du nombre de posts -->
+    <div style="color: var(--text-muted); font-size: 0.85rem;">
+        <i class="fas fa-chart-line"></i> <?= count($posts) ?> discussions au total
+    </div>
 </div>
+
+       <div class="posts-grid">
+    <?php foreach ($postsAPaginer as $post): ?>
+        <div class="grid-item">
+            <div class="card post-card">
+                
+
+                <!-- Image ou GIF -->
+<?php 
+$mediaPath = $post->getImage();
+if (!empty($mediaPath)):
+    $isGif = (strpos($mediaPath, '.gif') !== false || strpos($mediaPath, 'giphy.com') !== false);
+    
+    // Ajoute ../Backoffice/ uniquement pour les images uploadées (pas pour les URL GIPHY)
+    if (!$isGif && !filter_var($mediaPath, FILTER_VALIDATE_URL)) {
+        $mediaPath = '../Backoffice/' . $mediaPath;
+    }
+    
+    $imgStyle = $isGif ? 'object-fit: contain; max-height: 180px;' : 'object-fit: cover; height: 180px;';
+?>
+    <img src="<?= $mediaPath ?>" 
+         alt="Post media" 
+         class="post-image"
+         style="width: 100%; <?= $imgStyle ?> border-radius: 12px; margin-bottom: 12px; cursor: pointer;"
+         onclick="window.location.href='../Backoffice/showpost.php?id=<?= $post->getIdPost() ?>'">
+<?php endif; ?>
+                
+                <!-- Post meta -->
+                <div class="post-meta">
+                    <div class="post-avatar" style="background: var(--gradient-primary);">
+                        <?= strtoupper(substr($post->getIdUtilisateur() ?? 'U', 0, 2)) ?>
+                    </div>
+                    <div>
+                        <div class="post-author">Utilisateur #<?= $post->getIdUtilisateur() ?></div>
+                        <div class="post-date">
+                            <i class="fa-regular fa-calendar"></i>
+                            <?= (new DateTime($post->getDatePost()))->format('d/m/Y à H:i') ?>
+                        </div>
                     </div>
                 </div>
-            <?php endforeach; ?>
+                
+                <!-- Post contenu -->
+                <div class="post-content">
+                    <p style="font-size: 0.88rem; line-height: 1.6; margin-bottom: 16px; color: var(--text-muted);">
+                        <?= nl2br(htmlspecialchars(substr($post->getContenu(), 0, 150))) ?>
+                        <?php if (strlen($post->getContenu()) > 150): ?>...<?php endif; ?>
+                    </p>
+                </div>
+                
+                <!-- Post footer -->
+                <div class="post-footer">
+                    <a href="../Backoffice/showpost.php?id=<?= $post->getIdPost() ?>" class="btn btn-outline btn-sm">
+                        Lire la suite
+                    </a>
+                    <div class="post-actions">
+                        <a href="../Backoffice/modifpost.php?id=<?= $post->getIdPost() ?>" class="btn btn-primary btn-sm">
+                            <i class="fa-solid fa-pen"></i>
+                        </a>
+                        <a href="../Backoffice/deletepost.php?id=<?= $post->getIdPost() ?>" 
+                           class="btn btn-danger btn-sm" 
+                           onclick="return confirm('Supprimer ce post ?')">
+                            <i class="fa-solid fa-trash"></i>
+                        </a>
+                    </div>
+                </div>
+                
+            </div>
         </div>
+    <?php endforeach; ?>
+</div>
+   <!-- PAGINATION -->
+<?php if ($nombreDePages > 1): ?>
+    <div style="display: flex; justify-content: center; gap: 8px; margin-top: 40px; flex-wrap: wrap;">
+        <!-- Précédent -->
+        <?php if ($pageActuelle > 1): ?>
+            <a href="?order=<?= $orderBy ?>&page=<?= $pageActuelle - 1 ?>" class="btn btn-outline btn-sm">
+                ◀ Précédent
+            </a>
+        <?php else: ?>
+            <span class="btn btn-outline btn-sm disabled" style="opacity:0.5;">◀ Précédent</span>
+        <?php endif; ?>
+
+        <!-- Numéros de pages -->
+        <?php for ($i = 1; $i <= $nombreDePages; $i++): ?>
+            <?php if ($i == $pageActuelle): ?>
+                <span class="btn btn-primary btn-sm"><?= $i ?></span>
+            <?php else: ?>
+                <a href="?order=<?= $orderBy ?>&page=<?= $i ?>" class="btn btn-outline btn-sm"><?= $i ?></a>
+            <?php endif; ?>
+        <?php endfor; ?>
+
+        <!-- Suivant -->
+        <?php if ($pageActuelle < $nombreDePages): ?>
+            <a href="?order=<?= $orderBy ?>&page=<?= $pageActuelle + 1 ?>" class="btn btn-outline btn-sm">
+                Suivant ▶
+            </a>
+        <?php else: ?>
+            <span class="btn btn-outline btn-sm disabled" style="opacity:0.5;">Suivant ▶</span>
+        <?php endif; ?>
     </div>
+<?php endif; ?>
+
 </section>
 
 <footer class="footer">
@@ -249,6 +525,41 @@ $posts = $postC->listPosts();
 </footer>
 
 <script src="list.js"></script>
+<button class="theme-toggle" id="themeToggle">
+    <i class="fas fa-moon"></i>
+</button>
 
+<script>
+// Dark Mode - seul l'arrière-plan change
+(function() {
+    const themeToggle = document.getElementById('themeToggle');
+    if (!themeToggle) return;
+    
+    const body = document.body;
+    
+    // Charger le thème sauvegardé
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        body.classList.add('dark-mode');
+        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+    } else {
+        body.classList.remove('dark-mode');
+        themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+    }
+    
+    // Basculement
+    themeToggle.addEventListener('click', () => {
+        body.classList.toggle('dark-mode');
+        
+        if (body.classList.contains('dark-mode')) {
+            localStorage.setItem('theme', 'dark');
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        } else {
+            localStorage.setItem('theme', 'light');
+            themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+        }
+    });
+})();
+</script>
 </body>
 </html>

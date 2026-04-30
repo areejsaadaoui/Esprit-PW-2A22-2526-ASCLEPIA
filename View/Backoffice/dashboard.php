@@ -45,6 +45,32 @@ for ($i = 11; $i >= 0; $i--) {
         if (date('Y-m', strtotime($post->getDatePost())) == $month) $count++;
     }
     $monthlyCounts[] = $count;
+
+// ================= GESTION DU TRI =================
+$orderBy = $_GET['order'] ?? 'date_desc';
+switch ($orderBy) {
+    case 'date_asc':
+        usort($posts, function($a, $b) {
+            return strtotime($a->getDatePost()) - strtotime($b->getDatePost());
+        });
+        break;
+    case 'length_desc':
+        usort($posts, function($a, $b) {
+            return strlen($b->getContenu()) - strlen($a->getContenu());
+        });
+        break;
+    case 'length_asc':
+        usort($posts, function($a, $b) {
+            return strlen($a->getContenu()) - strlen($b->getContenu());
+        });
+        break;
+    default: // date_desc
+        usort($posts, function($a, $b) {
+            return strtotime($b->getDatePost()) - strtotime($a->getDatePost());
+        });
+}
+$latestPosts = $posts; // met à jour les posts triés
+// =================================================
 }
 
 ?>
@@ -92,80 +118,6 @@ for ($i = 11; $i >= 0; $i--) {
             animation: fadeInLeft 0.6s ease forwards;
             opacity: 0;
         }
-
-        /* Cartes statistiques */
-      
-.stats-grid {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 24px;
-    margin-bottom: 40px;
-}
-
-.stat-circle {
-    text-align: center;
-    padding: 24px 20px;
-    background: var(--white);
-    border-radius: 24px;
-    box-shadow: var(--shadow);
-    transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-    border: 1px solid rgba(0,0,0,0.03);
-    position: relative;
-    overflow: hidden;
-    min-width: 200px;
-    flex: 0 1 auto;
-}
-        .stat-circle::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: var(--gradient-primary);
-            transform: scaleX(0);
-            transition: transform 0.4s ease;
-        }
-        .stat-circle:hover::before {
-            transform: scaleX(1);
-        }
-        .stat-circle:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 30px -12px rgba(0,0,0,0.15);
-        }
-        .circle {
-            width: 85px;
-            height: 85px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 18px;
-            font-size: 2rem;
-            font-weight: 800;
-            color: white;
-            transition: transform 0.3s;
-        }
-        .stat-circle:hover .circle {
-            transform: scale(1.05);
-        }
-        .circle.blue { background: linear-gradient(135deg, #3b82f6, #1e40af); }
-        .circle.green { background: linear-gradient(135deg, #10b981, #047857); }
-        .circle.orange { background: linear-gradient(135deg, #f59e0b, #b45309); }
-        .circle.purple { background: linear-gradient(135deg, #8b5cf6, #5b21b6); }
-        .stat-circle h3 {
-            font-size: 2rem;
-            margin-bottom: 6px;
-            font-weight: 800;
-        }
-        .stat-circle p {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            margin-bottom: 8px;
-        }
-
         /* Barre de recherche améliorée */
         .search-wrapper {
             position: relative;
@@ -336,6 +288,372 @@ for ($i = 11; $i >= 0; $i--) {
         .toast-notify.show {
             transform: translateX(0);
         }
+/* ===== CERCLE CAMEMBERT (donut) ANIMÉ ===== */
+.stats-single {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 50px;
+}
+
+.stat-main-circle {
+    text-align: center;
+    background: white;
+    padding: 30px;
+    border-radius: 40px;
+    box-shadow: var(--shadow);
+    transition: all 0.3s;
+}
+
+.stat-main-circle:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.pie-chart {
+    width: 220px;
+    height: 220px;
+    margin: 0 auto;
+}
+
+.pie-green {
+    transition: all 1.2s ease-out;
+}
+.pie-red {
+    transition: all 1.2s ease-out;
+}
+
+.pie-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.pie-segment {
+    transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pie-total {
+    dominant-baseline: middle;
+}
+
+.pie-label {
+    dominant-baseline: middle;
+}
+
+.pie-legend {
+    margin-top: 25px;
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+}
+
+.legend-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+}
+
+.legend-color.green { background: #10b981; box-shadow: 0 0 5px rgba(16,185,129,0.5); }
+.legend-color.red { background: #ef4444; box-shadow: 0 0 5px rgba(239,68,68,0.5); }
+
+.legend-text {
+    color: var(--text-muted);
+}
+
+.legend-percent {
+    font-weight: 600;
+    color: var(--dark);
+}
+.pie-tooltip {
+    position: absolute;
+    background: #0f172a;
+    color: white;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, -120%);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    z-index: 1000;
+}
+
+.pie-tooltip.show {
+    opacity: 1;
+}
+
+.pie-chart {
+    position: relative;
+}
+/* Animation de pulsation au survol */
+.stat-main-circle:hover .pie-chart {
+    animation: pulseGlow 1.5s infinite;
+}
+
+@keyframes pulseGlow {
+    0% { filter: drop-shadow(0 0 0 rgba(14,165,233,0)); }
+    50% { filter: drop-shadow(0 0 15px rgba(14,165,233,0.4)); }
+    100% { filter: drop-shadow(0 0 0 rgba(14,165,233,0)); }
+}
+
+/* ===== BARRE DE TRI ===== */
+.sort-bar {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 28px;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+.sort-select {
+    padding: 8px 15px;
+    border-radius: 40px;
+    border: 1px solid var(--border);
+}
+
+/* ===== SIDEBAR TOGGLE ===== */
+@media (max-width: 1024px) {
+    .sidebar {
+        transform: translateX(-260px);
+        transition: transform 0.3s ease;
+    }
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    .sidebar-toggle {
+        display: flex;
+    }
+}
+.sidebar-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+    margin-right: 15px;
+}
+/* ===== DARK MODE ASCLEPIA - SEULEMENT LE FOND DE LA PAGE ===== */
+
+/* ===== DARK MODE – VERSION FINALE COMPLÈTE ===== */
+
+body.dark-mode {
+    background-color: #1a1a2e !important;
+}
+
+/* Sidebar */
+body.dark-mode .sidebar {
+    background: #0f0f1a !important;
+    border-right: 1px solid #2d2d44 !important;
+}
+
+body.dark-mode .sidebar-brand,
+body.dark-mode .sidebar-user {
+    background: #0f0f1a !important;
+    border-bottom-color: #2d2d44 !important;
+}
+
+body.dark-mode .sidebar-title,
+body.dark-mode .sidebar-user .name {
+    color: white !important;
+}
+
+body.dark-mode .sidebar-user .role {
+    color: #a0a0c0 !important;
+}
+
+body.dark-mode .sidebar-nav a {
+    color: #c0c0d0 !important;
+}
+
+body.dark-mode .sidebar-nav a:hover,
+body.dark-mode .sidebar-nav a.active {
+    background: #1a1a2e !important;
+    color: white !important;
+}
+
+/* Conteneurs */
+body.dark-mode .main-content,
+body.dark-mode .page-content {
+    background-color: #1a1a2e !important;
+}
+
+body.dark-mode .card,
+body.dark-mode .stat-card,
+body.dark-mode .stat-main-circle,
+body.dark-mode .quick-card,
+body.dark-mode .bar-chart-container,
+body.dark-mode .table-container,
+body.dark-mode .sort-bar,
+body.dark-mode .search-wrapper,
+body.dark-mode .search-wrapper input {
+    background: #16213e !important;
+    border-color: #2d2d44 !important;
+}
+
+/* ===== TRIER PAR (label et icône) ===== */
+body.dark-mode .sort-bar span:first-child,
+body.dark-mode .sort-bar i.fa-sort,
+body.dark-mode .sort-bar .fa-sort + span {
+    color: white !important;
+}
+
+/* ===== COMPTEUR DE POSTS ===== */
+body.dark-mode .sort-bar div:last-child,
+body.dark-mode .sort-bar div:last-child i,
+body.dark-mode .sort-bar div:last-child span {
+    color: white !important;
+}
+
+/* ===== CHIFFRES DES STATS ===== */
+body.dark-mode .stat-number,
+body.dark-mode .counter,
+body.dark-mode .big-counter,
+body.dark-mode .bar-value {
+    color: white !important;
+}
+
+/* ===== CAMEMBERT (TOTAL POSTS) ===== */
+body.dark-mode .pie-total {
+    fill: white !important;
+}
+
+body.dark-mode .pie-label {
+    fill: #a0a0c0 !important;
+}
+
+/* Liens rapides */
+body.dark-mode .quick-card span {
+    color: white !important;
+}
+
+body.dark-mode .quick-card i {
+    color: #0ea5e9 !important;
+}
+
+body.dark-mode .quick-card:hover {
+    background: #1a2a4a !important;
+    border-color: #0ea5e9 !important;
+}
+
+/* Tableau */
+body.dark-mode .table th {
+    background: #0f0f1f !important;
+    color: #e0e0e0 !important;
+}
+
+body.dark-mode .table td {
+    border-bottom-color: #2d2d44 !important;
+    color: #c0c0d0 !important;
+}
+
+/* Textes généraux */
+body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, body.dark-mode h4,
+body.dark-mode .page-title, body.dark-mode .post-author,
+body.dark-mode .breadcrumb span, body.dark-mode .stat-info h3, body.dark-mode .card h3,
+body.dark-mode .post-meta strong, body.dark-mode .post-meta .post-author {
+    color: #ffffff !important;
+}
+
+body.dark-mode .text-muted, body.dark-mode .post-stat, body.dark-mode .section-desc,
+body.dark-mode .bar-label, body.dark-mode small, body.dark-mode .legend-text,
+body.dark-mode .result-count {
+    color: #a0a0c0 !important;
+}
+
+/* Recherche */
+body.dark-mode .search-wrapper input {
+    color: white !important;
+    background: #16213e !important;
+}
+
+body.dark-mode .search-wrapper input::placeholder {
+    color: #a0a0c0 !important;
+}
+
+body.dark-mode .search-wrapper i {
+    color: #a0a0c0 !important;
+}
+
+body.dark-mode .post-result {
+    background: #16213e !important;
+    border-bottom-color: #2d2d44 !important;
+}
+
+body.dark-mode .post-result h4,
+body.dark-mode .post-result p,
+body.dark-mode .post-result small {
+    color: #ffffff !important;
+}
+
+/* Topbar reste blanche */
+body.dark-mode .topbar {
+    background: white !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+body.dark-mode .topbar .page-title,
+body.dark-mode .topbar .breadcrumb span,
+body.dark-mode .topbar-user .name {
+    color: #1e293b !important;
+}
+
+/* Boutons */
+body.dark-mode .btn-primary {
+    background: #0ea5e9 !important;
+    color: white !important;
+}
+
+body.dark-mode .btn-outline {
+    border-color: #475569 !important;
+    color: #cbd5e1 !important;
+}
+
+body.dark-mode .btn-outline:hover {
+    background: #334155 !important;
+    color: white !important;
+}
+
+/* Footer */
+body.dark-mode .footer {
+    background: #0f0f1a !important;
+    border-top-color: #2d2d44 !important;
+    color: #a0a0c0 !important;
+}
+
+/* Bouton toggle */
+.theme-toggle {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 1.3rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    transition: all 0.3s;
+    z-index: 9999;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+}
     </style>
 </head>
 <body>
@@ -388,26 +706,54 @@ for ($i = 11; $i >= 0; $i--) {
         </div>
 
         <div class="page-content" >
-            <!-- Statistiques en cercles -->
-            <div id="stats" class="stats-grid" >
-                <div class="stat-circle animate-fadeUp" style="animation-delay:0.1s">
-                    <div class="circle blue"><?= $totalPosts ?></div>
-                    <h3><?= $totalPosts ?></h3>
-                    <p>Total posts</p>
-                </div>
-                <div class="stat-circle animate-fadeUp" style="animation-delay:0.2s" >
-                    <div class="circle green"><?= $postsWithImages ?></div>
-                    <h3><?= $postsWithImages ?></h3>
-                    <p>Avec image</p>
-                    <small>🖼️ <?= $totalPosts ? round(($postsWithImages/$totalPosts)*100) : 0 ?>% du total</small>
-                </div>
-                <div class="stat-circle animate-fadeUp" style="animation-delay:0.4s">
-                    <div class="circle purple"><?= count($latestPosts) ?></div>
-                    <h3><?= count($latestPosts) ?></h3>
-                    <p>Au total</p>
-                    <small>Tous les posts</small>
-                </div>
+       <!-- Statistiques : camembert animé (posts avec/sans image) -->
+<div id="stats" class="stats-single">
+    <div class="stat-main-circle">
+       <div class="pie-chart" id="pieChart">
+    <svg viewBox="0 0 100 100" class="pie-svg" style="transform: rotate(-90deg);">
+        <!-- Cercle de fond -->
+        <circle cx="50" cy="50" r="45" fill="none" stroke="#e2e8f0" stroke-width="10"/>
+        
+        <!-- Partie ROUGE (posts sans image) -->
+        <circle class="pie-segment pie-red" 
+                cx="50" cy="50" r="45" 
+                fill="none" stroke="#ef4444" 
+                stroke-width="10" 
+                stroke-dasharray="283" 
+                stroke-dashoffset="283"
+                stroke-linecap="round"/>
+        
+        <!-- Partie VERTE (posts avec image) -->
+        <circle class="pie-segment pie-green" 
+                cx="50" cy="50" r="45" 
+                fill="none" stroke="#10b981" 
+                stroke-width="10" 
+                stroke-dasharray="283" 
+                stroke-dashoffset="283"
+                stroke-linecap="round"/>
+        
+        <!-- TEXTE (non roté) -->
+        <g style="transform: rotate(90deg); transform-origin: 50px 50px;">
+            <text x="50" y="45" text-anchor="middle" class="pie-total" font-size="22" font-weight="800"><?= $totalPosts ?></text>
+<text x="50" y="62" text-anchor="middle" class="pie-label" font-size="8">TOTAL POSTS</text>
+        </g>
+    </svg>
+</div>
+        
+        <div class="pie-legend">
+            <div class="legend-item">
+                <span class="legend-color green"></span>
+                <span class="legend-text"><?= $postsWithImages ?> posts avec image</span>
+                <span class="legend-percent"><?= round(($postsWithImages/$totalPosts)*100) ?>%</span>
             </div>
+            <div class="legend-item">
+                <span class="legend-color red"></span>
+                <span class="legend-text"><?= ($totalPosts - $postsWithImages) ?> posts sans image</span>
+                <span class="legend-percent"><?= round((($totalPosts - $postsWithImages)/$totalPosts)*100) ?>%</span>
+            </div>
+        </div>
+    </div>
+</div>
 
             <!-- Graphique à barres (au lieu de courbe) -->
             <div class="bar-chart-container animate-fadeLeft" style="animation-delay:0.2s">
@@ -440,6 +786,7 @@ for ($i = 11; $i >= 0; $i--) {
                     <span>🌍 Voir le forum public</span>
                 </a>
             </div>
+           
 
             <!-- Barre de recherche avec bouton "Voir" -->
             <div id="search" class="card" style="padding: 24px; margin-bottom: 30px; border-radius: 32px;">
@@ -482,6 +829,18 @@ for ($i = 11; $i >= 0; $i--) {
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>
+                 <!-- Barre de tri -->
+<div>
+    <span><i class="fas fa-sort"></i> Filtre :</span>
+    <form method="GET" action="" id="orderForm">
+        <select name="order" class="sort-select" onchange="this.form.submit()">
+            <option value="date_desc" <?= ($orderBy ?? 'date_desc') == 'date_desc' ? 'selected' : '' ?>>📅 Date décroissante</option>
+            <option value="date_asc" <?= ($orderBy ?? '') == 'date_asc' ? 'selected' : '' ?>>📅 Date croissante</option>
+            <option value="length_desc" <?= ($orderBy ?? '') == 'length_desc' ? 'selected' : '' ?>>📄 Plus long </option>
+            <option value="length_asc" <?= ($orderBy ?? '') == 'length_asc' ? 'selected' : '' ?>>📄 Plus court </option>
+        </select>
+    </form>
+</div>
             </div>
 
             <!-- Tableau de tous les posts -->
@@ -618,6 +977,118 @@ for ($i = 11; $i >= 0; $i--) {
         toast.classList.add('show');
         setTimeout(() => toast.classList.remove('show'), 3000);
     }
+    // ===== ANIMATION DES COMPTEURS =====
+function animateCounter(element, target, duration = 2000) {
+    let start = 0;
+    const increment = target / (duration / 16);
+    const timer = setInterval(() => {
+        start += increment;
+        if (start >= target) {
+            element.textContent = target;
+            clearInterval(timer);
+        } else {
+            element.textContent = Math.floor(start);
+        }
+    }, 16);
+}
+
+// Détecter quand les compteurs deviennent visibles
+const observerOptions = {
+    threshold: 0.3,
+    rootMargin: "0px 0px -50px 0px"
+};
+
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const counters = entry.target.querySelectorAll('.counter');
+            counters.forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-target'));
+                if (target > 0 && !counter.classList.contains('animated')) {
+                    counter.classList.add('animated');
+                    animateCounter(counter, target);
+                }
+            });
+        }
+    });
+}, observerOptions);
+
+    // Sidebar toggle (bouton ☰)
+    function toggleSidebar() {
+        document.querySelector('.sidebar').classList.toggle('open');
+    }
+
+    // Sous-menus déroulants
+    function toggleSubMenu(element) {
+        const parent = element.closest('.has-sub');
+        parent.classList.toggle('open');
+        const subMenu = parent.querySelector('.sub-menu');
+        if (subMenu) subMenu.classList.toggle('open');
+    }
+
+  // ===== ANIMATION DU CAMEMBERT =====
+// Animation + clic du camembert
+const total = <?= $totalPosts ?>;
+const withImg = <?= $postsWithImages ?>;
+const withoutImg = total - withImg;
+const percentGreen = total ? (withImg / total) : 0;      // Partie VERTE
+const percentRed = total ? (withoutImg / total) : 0;    // Partie ROUGE
+
+const circumference = 2 * Math.PI * 45; // ≈ 283
+
+const greenCircle = document.querySelector('.pie-green');
+const redCircle = document.querySelector('.pie-red');
+
+if (greenCircle && redCircle) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                // Le vert est par-dessus, le rouge en dessous
+                greenCircle.style.strokeDashoffset = circumference * (1 - percentGreen);
+                redCircle.style.strokeDashoffset = circumference * (1 - (percentGreen + percentRed));
+                observer.disconnect();
+            }
+        });
+    }, { threshold: 0.3 });
+    observer.observe(document.querySelector('.stat-main-circle'));
+}
+</script>
+<button class="theme-toggle" id="themeToggle">
+    <i class="fas fa-moon"></i>
+</button>
+
+<script>
+// ===== DARK / LIGHT MODE GLOBAL =====
+// Dark Mode - seul l'arrière-plan change
+(function() {
+    const themeToggle = document.getElementById('themeToggle');
+    if (!themeToggle) return;
+    
+    const body = document.body;
+    
+    // Charger le thème sauvegardé
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        body.classList.add('dark-mode');
+        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+    } else {
+        body.classList.remove('dark-mode');
+        themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+    }
+    
+    // Basculement
+    themeToggle.addEventListener('click', () => {
+        body.classList.toggle('dark-mode');
+        
+        if (body.classList.contains('dark-mode')) {
+            localStorage.setItem('theme', 'dark');
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        } else {
+            localStorage.setItem('theme', 'light');
+            themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+        }
+    });
+})();
 </script>
 </body>
 </html>

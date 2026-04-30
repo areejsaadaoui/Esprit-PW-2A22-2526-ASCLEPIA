@@ -14,6 +14,7 @@ if (isset($_GET['id']) && !empty($_GET['id'])) {
     $post     = $postC->getPostById($id_post);
     $reponses = $reponseC->getReponsesByPost($id_post); 
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -154,6 +155,182 @@ p[style*="text-align: center"] {
     border-radius: 60px;
     padding: 20px;
 }
+/* ===== DARK MODE – VERSION SHOWPOST ===== */
+
+body.dark-mode {
+    background: #1a1a2e !important;
+}
+
+/* Section principale */
+body.dark-mode .section-padding {
+    background: #1a1a2e !important;
+}
+
+/* Carte principale du post */
+body.dark-mode .card {
+    background: #16213e !important;
+    border-color: #2d2d44 !important;
+}
+
+/* Textes principaux */
+body.dark-mode .post-author,
+body.dark-mode .post-date,
+body.dark-mode .post-content-full {
+    color: #e0e0e0 !important;
+}
+
+body.dark-mode .post-date i,
+body.dark-mode .post-date {
+    color: #a0a0c0 !important;
+}
+
+/* Avatar */
+body.dark-mode .post-avatar {
+    background: linear-gradient(135deg, #0ea5e9, #3b82f6) !important;
+}
+
+/* Image */
+body.dark-mode .detail-image {
+    filter: brightness(0.9);
+}
+
+/* Boutons d'action */
+body.dark-mode .action-buttons .btn-outline {
+    border-color: #475569 !important;
+    color: #cbd5e1 !important;
+}
+
+body.dark-mode .action-buttons .btn-outline:hover {
+    background: #334155 !important;
+    color: white !important;
+}
+
+body.dark-mode .btn-primary {
+    background: #0ea5e9 !important;
+    color: white !important;
+}
+
+body.dark-mode .btn-danger {
+    background: #dc2626 !important;
+    color: white !important;
+}
+
+/* Formulaire de réponse */
+body.dark-mode .form-control {
+    background: #0f0f1a !important;
+    border-color: #2d2d44 !important;
+    color: white !important;
+}
+
+body.dark-mode .form-control:focus {
+    border-color: #0ea5e9 !important;
+    box-shadow: 0 0 0 3px rgba(14,165,233,0.2) !important;
+}
+
+body.dark-mode .form-control::placeholder {
+    color: #a0a0c0 !important;
+}
+
+/* Cartes de réponses */
+body.dark-mode .card[style*="background: var(--bg)"] {
+    background: #16213e !important;
+    border-color: #2d2d44 !important;
+}
+
+body.dark-mode .card[style*="background: var(--bg)"] strong {
+    color: white !important;
+}
+
+body.dark-mode .card[style*="background: var(--bg)"] p {
+    color: #e0e0e0 !important;
+}
+
+body.dark-mode .card[style*="background: var(--bg)"] small {
+    color: #a0a0c0 !important;
+}
+
+body.dark-mode .card[style*="background: var(--bg)"]:hover {
+    background: #1a2a4a !important;
+}
+
+/* Boutons dans les réponses */
+body.dark-mode .btn-outline.btn-sm {
+    border-color: #475569 !important;
+    color: #cbd5e1 !important;
+}
+
+body.dark-mode .btn-outline.btn-sm:hover {
+    background: #334155 !important;
+    color: white !important;
+}
+
+/* Bouton retour */
+body.dark-mode .btn-outline {
+    border-color: #475569 !important;
+    color: #cbd5e1 !important;
+}
+
+body.dark-mode .btn-outline:hover {
+    background: #334155 !important;
+    color: white !important;
+}
+
+/* Navbar */
+body.dark-mode .navbar {
+    background: #0f0f1a !important;
+    border-bottom: 1px solid #2d2d44 !important;
+}
+
+body.dark-mode .navbar .navbar-name,
+body.dark-mode .navbar .nav-link {
+    color: #e0e0e0 !important;
+}
+
+body.dark-mode .navbar .nav-link:hover,
+body.dark-mode .navbar .nav-link.active {
+    color: #0ea5e9 !important;
+}
+
+/* Footer */
+body.dark-mode .footer {
+    background: #0f0f1a !important;
+    border-top: 1px solid #2d2d44 !important;
+}
+
+body.dark-mode .footer p,
+body.dark-mode .footer .footer-section h4,
+body.dark-mode .footer .footer-links a {
+    color: #c0c0d0 !important;
+}
+
+/* Message "Soyez le premier" */
+body.dark-mode p[style*="text-align: center"] {
+    background: #16213e !important;
+    color: #a0a0c0 !important;
+    border: 1px solid #2d2d44 !important;
+}
+
+/* Bouton toggle flottant */
+.theme-toggle {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #0ea5e9;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 1.3rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    transition: all 0.3s;
+    z-index: 9999;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+}
     </style>
 </head>
 <body>
@@ -203,17 +380,24 @@ p[style*="text-align: center"] {
                         </div>
                     </div>
                     
-                    <!-- Image si elle existe -->
-                    <?php 
-                    $imagePath = $post->getImage();
-                    if (!empty($imagePath) && file_exists(__DIR__ . '/' . $imagePath)):
-                    ?>
-                        <div style="text-align: center;">
-                            <img src="<?php echo $imagePath; ?>" 
-                                 alt="Image du post" 
-                                 class="detail-image">
-                        </div>
-                    <?php endif; ?>
+                    <!-- Image ou GIF -->
+<!-- Image ou GIF -->
+<?php 
+$mediaPath = $post->getImage();
+if (!empty($mediaPath)):
+    $isGif = (strpos($mediaPath, '.gif') !== false || strpos($mediaPath, 'giphy.com') !== false);
+    
+    if (!$isGif && !filter_var($mediaPath, FILTER_VALIDATE_URL)) {
+        $mediaPath = '../Backoffice/' . $mediaPath;
+    }
+?>
+    <div style="text-align: center;">
+        <img src="<?= $mediaPath ?>" 
+             alt="Post media" 
+             class="detail-image"
+             style="max-width: 100%; border-radius: 20px; <?= $isGif ? 'max-height: 400px; object-fit: contain;' : '' ?>">
+    </div>
+<?php endif; ?>
                     
                     <!-- Contenu complet -->
                     <div class="post-content-full">
@@ -222,10 +406,6 @@ p[style*="text-align: center"] {
                     
                     <!-- Boutons d'action -->
                     <div class="action-buttons">
-                        <button class="btn btn-outline">
-                            <i class="fa-regular fa-heart"></i> J'aime
-                        </button>
-                        
                         <button class="btn btn-outline" >
                             <i class="fa-regular fa-share-from-square"></i> Partager
                         </button>
@@ -360,5 +540,39 @@ p[style*="text-align: center"] {
 </footer>
 
 <script src="../Frontoffice/rep.js"></script>
+
+<button class="theme-toggle" id="themeToggle">
+    <i class="fas fa-moon"></i>
+</button>
+<script>
+// Dark Mode - showpost.php
+(function() {
+    const themeToggle = document.getElementById('themeToggle');
+    if (!themeToggle) return;
+    
+    const body = document.body;
+    
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        body.classList.add('dark-mode');
+        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+    } else {
+        body.classList.remove('dark-mode');
+        themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+    }
+    
+    themeToggle.addEventListener('click', () => {
+        body.classList.toggle('dark-mode');
+        
+        if (body.classList.contains('dark-mode')) {
+            localStorage.setItem('theme', 'dark');
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        } else {
+            localStorage.setItem('theme', 'light');
+            themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+        }
+    });
+})();
+</script>
 </body>
 </html>
