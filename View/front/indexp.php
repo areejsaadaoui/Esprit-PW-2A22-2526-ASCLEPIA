@@ -2,11 +2,34 @@
 // indexp.php - Dans View/front/
 session_start();
 
+require_once '../../config.php';
+
+// Utiliser la classe config pour la connexion
+$conn = config::getConnexion();
+
 $isLoggedIn = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
 $userNom = $_SESSION['user_nom'] ?? '';
 $userEmail = $_SESSION['user_email'] ?? '';
 $userRole = $_SESSION['user_role'] ?? '';
+$userId = $_SESSION['user_id'] ?? null;
+
+// Récupérer l'avatar de l'utilisateur
+$userAvatar = 'default';
+if ($isLoggedIn && $userId) {
+    try {
+        $sql = "SELECT avatar_style FROM utilisateur WHERE id_user = :id_user";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([':id_user' => $userId]);
+        $row = $stmt->fetch();
+        if ($row && !empty($row['avatar_style'])) {
+            $userAvatar = $row['avatar_style'];
+        }
+    } catch (Exception $e) {
+        $userAvatar = 'default';
+    }
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -22,6 +45,7 @@ $userRole = $_SESSION['user_role'] ?? '';
   <!-- Styles -->
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="stylesheet" href="../assets/css/frontoffice.css">
+  <link rel="stylesheet" href="../assets/css/avatar.css">
 </head>
 
 <body>
@@ -48,13 +72,22 @@ $userRole = $_SESSION['user_role'] ?? '';
   <div class="nav-actions">
     <?php if ($isLoggedIn): ?>
       <div style="display: flex; align-items: center; gap: 12px;">
-        <i class="fa-solid fa-user-circle" style="font-size: 1.2rem; color: var(--primary);"></i>
+        <div class="avatar-css avatar-<?php echo $userAvatar; ?> small"></div>
         <span style="color: white; font-weight: 500;">Bonjour, <?php echo htmlspecialchars($userNom); ?></span>
+        
+        <!-- Afficher le bouton Profile seulement si ce n'est pas un admin -->
+        <?php if ($userRole !== 'admin'): ?>
+          <a href="profile.php" class="btn btn-outline-white btn-sm">
+            <i class="fa-solid fa-face-smile"></i> Profile
+          </a>
+        <?php endif; ?>
+        
         <?php if ($userRole === 'admin'): ?>
           <a href="../back/dashboard.php" class="btn btn-outline-white btn-sm">
             <i class="fa-solid fa-shield-haltered"></i> Admin
           </a>
         <?php endif; ?>
+        
         <a href="../back/logout.php" class="btn btn-outline-white btn-sm">
           <i class="fa-solid fa-sign-out-alt"></i> Déconnexion
         </a>
@@ -70,7 +103,7 @@ $userRole = $_SESSION['user_role'] ?? '';
 </nav>
 
 <!-- ================================================
-     HERO SECTION (identique à index.html)
+     HERO SECTION
      ================================================ -->
 <section class="hero" id="accueil">
   <div class="hero-glow hero-glow-1"></div>
@@ -132,7 +165,6 @@ $userRole = $_SESSION['user_role'] ?? '';
 
       <!-- Right Visual -->
       <div class="hero-visual d-none-mobile" style="flex: 0 0 400px;">
-        <!-- Floating card 1 -->
         <div class="hero-card-float hero-card-1">
           <div style="display: flex; align-items: center; gap: 10px;">
             <div style="width: 36px; height: 36px; background: var(--gradient-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem;">✅</div>
@@ -143,7 +175,6 @@ $userRole = $_SESSION['user_role'] ?? '';
           </div>
         </div>
 
-        <!-- Main card -->
         <div class="hero-main-card">
           <div style="text-align: center; margin-bottom: 24px;">
             <div style="font-size: 3rem; margin-bottom: 8px;">🏥</div>
@@ -167,7 +198,6 @@ $userRole = $_SESSION['user_role'] ?? '';
           </div>
         </div>
 
-        <!-- Floating card 2 -->
         <div class="hero-card-float hero-card-2">
           <div style="display: flex; align-items: center; gap: 10px;">
             <div style="font-size: 1.5rem;">💊</div>
@@ -184,7 +214,7 @@ $userRole = $_SESSION['user_role'] ?? '';
 </section>
 
 <!-- ================================================
-     SERVICES SECTION (identique à index.html)
+     SERVICES SECTION
      ================================================ -->
 <section class="section-padding services-section" id="services">
   <div class="container">
@@ -214,7 +244,7 @@ $userRole = $_SESSION['user_role'] ?? '';
               S'inscrire <i class="fa-solid fa-arrow-right"></i>
             </a>
           <?php else: ?>
-            <a href="#" class="btn btn-outline btn-sm mt-3">
+            <a href="profile.php" class="btn btn-outline btn-sm mt-3">
               Mon profil <i class="fa-solid fa-arrow-right"></i>
             </a>
           <?php endif; ?>
@@ -288,7 +318,7 @@ $userRole = $_SESSION['user_role'] ?? '';
               Créer un compte <i class="fa-solid fa-arrow-right"></i>
             </a>
           <?php else: ?>
-            <a href="#" class="btn btn-outline-white btn-sm mt-3">
+            <a href="profile.php" class="btn btn-outline-white btn-sm mt-3">
               Accéder à mon espace <i class="fa-solid fa-arrow-right"></i>
             </a>
           <?php endif; ?>
@@ -300,7 +330,7 @@ $userRole = $_SESSION['user_role'] ?? '';
 </section>
 
 <!-- ================================================
-     PHARMACIES SECTION (identique à index.html)
+     PHARMACIES SECTION
      ================================================ -->
 <section class="section-padding" id="pharmacies" style="background: white;">
   <div class="container">
@@ -313,7 +343,6 @@ $userRole = $_SESSION['user_role'] ?? '';
       <p class="section-desc">Trouvez les médicaments dont vous avez besoin dans notre réseau de pharmacies vérifiées.</p>
     </div>
 
-    <!-- Search bar -->
     <div style="max-width: 480px; margin: 0 auto 48px; position: relative;">
       <i class="fa-solid fa-search" style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--gray-light);"></i>
       <input type="text" placeholder="Rechercher une pharmacie ou médicament..." id="pharmSearch"
@@ -322,7 +351,6 @@ $userRole = $_SESSION['user_role'] ?? '';
     </div>
 
     <div class="row" id="pharmaciesGrid">
-
       <div class="col-4">
         <div class="card pharmacie-card" style="gap: 16px; flex-direction: column; padding: 24px;">
           <div class="d-flex align-center" style="gap: 16px;">
@@ -415,13 +443,12 @@ $userRole = $_SESSION['user_role'] ?? '';
           </a>
         </div>
       </div>
-
     </div>
   </div>
 </section>
 
 <!-- ================================================
-     ASSURANCES SECTION (identique à index.html)
+     ASSURANCES SECTION
      ================================================ -->
 <section class="section-padding" id="assurances" style="background: var(--bg);">
   <div class="container">
@@ -435,7 +462,6 @@ $userRole = $_SESSION['user_role'] ?? '';
     </div>
 
     <div class="row">
-
       <div class="col-4">
         <div class="card assurance-card">
           <div class="icon-box icon-box-lg" style="margin: 0 auto 20px; background: linear-gradient(135deg,#f59e0b,#d97706);">
@@ -492,13 +518,12 @@ $userRole = $_SESSION['user_role'] ?? '';
           </a>
         </div>
       </div>
-
     </div>
   </div>
 </section>
 
 <!-- ================================================
-     FORUM SECTION (identique à index.html)
+     FORUM SECTION
      ================================================ -->
 <section class="section-padding" id="forum" style="background: white;">
   <div class="container">
@@ -512,7 +537,6 @@ $userRole = $_SESSION['user_role'] ?? '';
     </div>
 
     <div class="row">
-
       <div class="col-4">
         <div class="card post-card">
           <div class="post-meta">
@@ -572,7 +596,6 @@ $userRole = $_SESSION['user_role'] ?? '';
           </div>
         </div>
       </div>
-
     </div>
 
     <div style="text-align: center; margin-top: 40px;">
@@ -585,7 +608,7 @@ $userRole = $_SESSION['user_role'] ?? '';
 </section>
 
 <!-- ================================================
-     AVIS SECTION (identique à index.html)
+     AVIS SECTION
      ================================================ -->
 <section class="section-padding avis-section" id="avis">
   <div class="container" style="position: relative; z-index: 1;">
@@ -596,7 +619,6 @@ $userRole = $_SESSION['user_role'] ?? '';
     </div>
 
     <div class="row">
-
       <div class="col-4">
         <div class="avis-card">
           <div class="avis-quote">"</div>
@@ -647,10 +669,10 @@ $userRole = $_SESSION['user_role'] ?? '';
           </div>
         </div>
       </div>
-
     </div>
   </div>
 </section>
+
 <!-- ================================================
      MEDECINS SECTION
      ================================================ -->
@@ -669,8 +691,9 @@ $userRole = $_SESSION['user_role'] ?? '';
     </div>
   </div>
 </section>
+
 <!-- ================================================
-     CTA SECTION (identique à index.html)
+     CTA SECTION
      ================================================ -->
 <section class="cta-section">
   <div class="container">
@@ -692,9 +715,9 @@ $userRole = $_SESSION['user_role'] ?? '';
             Se connecter
           </a>
         <?php else: ?>
-          <a href="#" class="btn btn-primary btn-lg">
+          <a href="profile.php" class="btn btn-primary btn-lg">
             <i class="fa-solid fa-calendar-check"></i>
-            Prendre rendez-vous
+            Mon profil
           </a>
           <a href="#" class="btn btn-outline-white btn-lg">
             <i class="fa-solid fa-file-prescription"></i>
@@ -707,13 +730,12 @@ $userRole = $_SESSION['user_role'] ?? '';
 </section>
 
 <!-- ================================================
-     FOOTER (identique à index.html)
+     FOOTER
      ================================================ -->
 <footer class="footer">
   <div class="container">
     <div class="row" style="gap: 48px;">
 
-      <!-- Brand -->
       <div style="flex: 0 0 260px;">
         <div class="footer-brand">
           <div class="navbar-brand" style="margin-bottom: 16px;">
@@ -730,7 +752,6 @@ $userRole = $_SESSION['user_role'] ?? '';
         </div>
       </div>
 
-      <!-- Services -->
       <div class="col">
         <div class="footer-section">
           <h4>Services</h4>
@@ -744,7 +765,6 @@ $userRole = $_SESSION['user_role'] ?? '';
         </div>
       </div>
 
-      <!-- Liens -->
       <div class="col">
         <div class="footer-section">
           <h4>Liens utiles</h4>
@@ -754,6 +774,8 @@ $userRole = $_SESSION['user_role'] ?? '';
               <li><a href="loginuser.html"><i class="fa-solid fa-user-plus"></i> S'inscrire</a></li>
               <li><a href="login.html"><i class="fa-solid fa-sign-in-alt"></i> Se connecter</a></li>
             <?php else: ?>
+              <li><a href="profile.php"><i class="fa-solid fa-user"></i> Mon profil</a></li>
+              <li><a href="choose_avatar.php"><i class="fa-solid fa-face-smile"></i> Changer avatar</a></li>
               <li><a href="../back/logout.php"><i class="fa-solid fa-sign-out-alt"></i> Déconnexion</a></li>
             <?php endif; ?>
             <li><a href="#avis"><i class="fa-solid fa-star"></i> Témoignages</a></li>
@@ -762,7 +784,6 @@ $userRole = $_SESSION['user_role'] ?? '';
         </div>
       </div>
 
-      <!-- Contact -->
       <div class="col">
         <div class="footer-section">
           <h4>Contact</h4>
@@ -794,9 +815,6 @@ $userRole = $_SESSION['user_role'] ?? '';
   </div>
 </footer>
 
-<!-- ================================================
-     SCRIPTS (identiques à index.html)
-     ================================================ -->
 <script>
   // Navbar scroll effect
   const navbar = document.getElementById('navbar');
@@ -868,8 +886,9 @@ $userRole = $_SESSION['user_role'] ?? '';
     card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
     cardObserver.observe(card);
   });
+
   // Charger les médecins depuis la BD
-fetch('index.php')
+  fetch('index.php')
     .then(response => response.json())
     .then(data => {
         const grid = document.getElementById('medecinsGrid');
