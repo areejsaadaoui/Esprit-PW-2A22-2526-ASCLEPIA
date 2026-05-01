@@ -18,12 +18,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $mot_de_passe = $_POST['mot_de_passe'] ?? '';
     $remember = isset($_POST['remember']);
+    $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
 
     // Validation
     if (empty($email) || empty($mot_de_passe)) {
         header('Location: login.html?error=1');
         exit();
     }
+    
+    // ========== VÉRIFICATION reCAPTCHA ==========
+    if (empty($recaptcha_response)) {
+        header('Location: login.html?error=3');
+        exit();
+    }
+    
+    // Vérifier avec Google
+    $secret_key = '6LcxldQsAAAAAEi2Ym74vAW4Em9Lam5Wd-PaFrHm'; // À remplacer par votre SECRET KEY
+    $verify_url = 'https://www.google.com/recaptcha/api/siteverify';
+    $post_data = http_build_query([
+        'secret' => $secret_key,
+        'response' => $recaptcha_response,
+        'remoteip' => $_SERVER['REMOTE_ADDR']
+    ]);
+    
+    $options = [
+        'http' => [
+            'method' => 'POST',
+            'header' => 'Content-Type: application/x-www-form-urlencoded',
+            'content' => $post_data
+        ]
+    ];
+    
+    $context = stream_context_create($options);
+    $result = file_get_contents($verify_url, false, $context);
+    $captcha_result = json_decode($result, true);
+    
+    if (!$captcha_result['success']) {
+        header('Location: login.html?error=3');
+        exit();
+    }
+    // =========================================
 
     // Chercher l'utilisateur
     $stmt = $pdo->prepare("SELECT id_user, nom, email, mot_de_passe, role FROM utilisateur WHERE email = :email");
@@ -52,14 +86,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($remember) {
         $token = bin2hex(random_bytes(32));
         setcookie('remember_token', $token, time() + (86400 * 30), "/");
+        // Optionnel : sauvegarder le token en base
+        $updateToken = $pdo->prepare("UPDATE utilisateur SET remember_token = :token WHERE id_user = :id");
+        $updateToken->execute([':token' => $token, ':id' => $user['id_user']]);
     }
 
     // === REDIRECTION SELON LE RÔLE ===
     if ($user['role'] === 'admin') {
-        // Admin → dashboard.php dans le dossier back/
         header('Location: ../back/dashboard.php');
     } else {
-        // Patient ou médecin → indexp.php dans le dossier front/
         header('Location: indexp.php');
     }
     exit();
