@@ -261,14 +261,7 @@ $avatars = [
         <div class="navbar-name">ASC<span>LEPIA</span></div>
     </a>
 
-    <div class="nav-links" id="navLinks">
-        <a href="indexp.php#accueil" class="nav-link">Accueil</a>
-        <a href="indexp.php#services" class="nav-link">Services</a>
-        <a href="indexp.php#pharmacies" class="nav-link">Pharmacies</a>
-        <a href="indexp.php#assurances" class="nav-link">Assurances</a>
-        <a href="indexp.php#forum" class="nav-link">Post&Reponse</a>
-        <a href="indexp.php#avis" class="nav-link">Avis</a>
-    </div>
+    
 
     <div class="nav-actions">
         <div style="display: flex; align-items: center; gap: 12px;">

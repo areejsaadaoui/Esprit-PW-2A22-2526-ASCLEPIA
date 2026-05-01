@@ -367,13 +367,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="navbar-logo"></div>
         <div class="navbar-name">ASC<span>LEPIA</span></div>
     </a>
-    <div class="nav-links" id="navLinks">
-        <a href="indexp.php" class="nav-link">Accueil</a>
-        <a href="indexp.php#services" class="nav-link">Services</a>
-        <a href="indexp.php#pharmacies" class="nav-link">Pharmacies</a>
-        <a href="indexp.php#assurances" class="nav-link">Assurances</a>
-        <a href="forum.php" class="nav-link">Forum</a>
-    </div>
+    
     <div class="nav-actions">
         <div style="display: flex; align-items: center; gap: 12px;">
             <div class="avatar-css avatar-<?php echo $current_avatar_style; ?> small"></div>
