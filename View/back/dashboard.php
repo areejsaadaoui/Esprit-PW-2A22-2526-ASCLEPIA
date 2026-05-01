@@ -209,6 +209,68 @@ $adminEmail = $_SESSION['user_email'] ?? '';
             white-space: normal;
             word-wrap: break-word;
         }
+
+        /* Styles pour le menu de tri */
+        .sort-menu {
+            position: relative;
+            display: inline-block;
+        }
+
+        .sort-menu-content {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 5px;
+            background: var(--white);
+            min-width: 200px;
+            border-radius: var(--radius);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .sort-option {
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+            color: var(--text);
+        }
+
+        .sort-option:hover {
+            background: rgba(14,165,233,0.1);
+            color: var(--primary);
+        }
+
+        .sort-option i {
+            width: 20px;
+            font-size: 0.9rem;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .btn-outline:hover i {
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -337,9 +399,31 @@ $adminEmail = $_SESSION['user_email'] ?? '';
             <!-- Tableau Patients -->
             <div id="patientsTab" class="tab-content active">
                 <div class="filter-bar">
-                    <div class="search-bar" style="max-width: 300px;">
-                        <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gray-light);"></i>
-                        <input type="text" id="searchPatient" placeholder="Rechercher un patient..." style="padding-left: 38px;">
+                    <div style="display: flex; gap: 10px; align-items: center; flex: 1;">
+                        <div class="search-bar" style="max-width: 300px; position: relative; margin-bottom: 0;">
+                            <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gray-light);"></i>
+                            <input type="text" id="searchPatient" placeholder="Rechercher un patient..." style="padding-left: 38px;">
+                        </div>
+                        <button class="btn btn-outline btn-sm" onclick="toggleSortMenu('patients')" title="Trier" style="display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-arrow-down-wide-short"></i> Trier
+                            <i class="fas fa-chevron-down" style="font-size: 0.7rem;"></i>
+                        </button>
+                        <div id="sortMenuPatients" class="sort-menu" style="display: none;">
+                            <div class="sort-menu-content">
+                                <div class="sort-option" onclick="sortTable('patients', 'nom', 'asc')">
+                                    <i class="fas fa-sort-alpha-down"></i> Nom (A → Z)
+                                </div>
+                                <div class="sort-option" onclick="sortTable('patients', 'nom', 'desc')">
+                                    <i class="fas fa-sort-alpha-up"></i> Nom (Z → A)
+                                </div>
+                                <div class="sort-option" onclick="sortTable('patients', 'date', 'asc')">
+                                    <i class="fas fa-calendar-plus"></i> Date (plus ancien)
+                                </div>
+                                <div class="sort-option" onclick="sortTable('patients', 'date', 'desc')">
+                                    <i class="fas fa-calendar-minus"></i> Date (plus récent)
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <button class="btn btn-primary btn-sm" onclick="openAddModal('patient')">
                         <i class="fas fa-plus"></i> Ajouter un patient
@@ -374,9 +458,31 @@ $adminEmail = $_SESSION['user_email'] ?? '';
             <!-- Tableau Médecins -->
             <div id="medecinsTab" class="tab-content">
                 <div class="filter-bar">
-                    <div class="search-bar" style="max-width: 300px;">
-                        <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gray-light);"></i>
-                        <input type="text" id="searchMedecin" placeholder="Rechercher un médecin..." style="padding-left: 38px;">
+                    <div style="display: flex; gap: 10px; align-items: center; flex: 1;">
+                        <div class="search-bar" style="max-width: 300px; position: relative; margin-bottom: 0;">
+                            <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gray-light);"></i>
+                            <input type="text" id="searchMedecin" placeholder="Rechercher un médecin..." style="padding-left: 38px;">
+                        </div>
+                        <button class="btn btn-outline btn-sm" onclick="toggleSortMenu('medecins')" title="Trier" style="display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-arrow-down-wide-short"></i> Trier
+                            <i class="fas fa-chevron-down" style="font-size: 0.7rem;"></i>
+                        </button>
+                        <div id="sortMenuMedecins" class="sort-menu" style="display: none;">
+                            <div class="sort-menu-content">
+                                <div class="sort-option" onclick="sortTable('medecins', 'nom', 'asc')">
+                                    <i class="fas fa-sort-alpha-down"></i> Nom (A → Z)
+                                </div>
+                                <div class="sort-option" onclick="sortTable('medecins', 'nom', 'desc')">
+                                    <i class="fas fa-sort-alpha-up"></i> Nom (Z → A)
+                                </div>
+                                <div class="sort-option" onclick="sortTable('medecins', 'date', 'asc')">
+                                    <i class="fas fa-calendar-plus"></i> Date (plus ancien)
+                                </div>
+                                <div class="sort-option" onclick="sortTable('medecins', 'date', 'desc')">
+                                    <i class="fas fa-calendar-minus"></i> Date (plus récent)
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <button class="btn btn-primary btn-sm" onclick="openAddModal('medecin')">
                         <i class="fas fa-plus"></i> Ajouter un médecin
@@ -489,6 +595,14 @@ $adminEmail = $_SESSION['user_email'] ?? '';
 
 <script>
     let currentTab = 'patients';
+    
+    // Variables pour le tri
+    let patientsData = [];
+    let medecinsData = [];
+    let currentSort = {
+        patients: { column: 'id', direction: 'desc' },
+        medecins: { column: 'id', direction: 'desc' }
+    };
 
     document.addEventListener('DOMContentLoaded', function() {
         loadUsers();
@@ -499,9 +613,11 @@ $adminEmail = $_SESSION['user_email'] ?? '';
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    patientsData = data.patients;
+                    medecinsData = data.medecins;
                     updateStats(data);
-                    renderPatientsTable(data.patients);
-                    renderMedecinsTable(data.medecins);
+                    renderPatientsTable(patientsData);
+                    renderMedecinsTable(medecinsData);
                 }
             })
             .catch(error => {
@@ -515,10 +631,103 @@ $adminEmail = $_SESSION['user_email'] ?? '';
         document.getElementById('totalUsers').textContent = data.patients.length + data.medecins.length;
     }
     
+    // Fonction pour afficher/masquer le menu de tri
+    function toggleSortMenu(tableType) {
+        const menu = document.getElementById(`sortMenu${tableType.charAt(0).toUpperCase() + tableType.slice(1)}`);
+        if (menu.style.display === 'none' || menu.style.display === '') {
+            // Fermer tous les autres menus
+            document.querySelectorAll('.sort-menu').forEach(m => m.style.display = 'none');
+            menu.style.display = 'block';
+            
+            // Fermer le menu au clic en dehors
+            setTimeout(() => {
+                document.addEventListener('click', function closeMenu(e) {
+                    if (!menu.contains(e.target) && !e.target.closest('.btn-outline')) {
+                        menu.style.display = 'none';
+                        document.removeEventListener('click', closeMenu);
+                    }
+                });
+            }, 100);
+        } else {
+            menu.style.display = 'none';
+        }
+    }
+    
+    // Fonction de tri
+    function sortTable(tableType, column, direction) {
+        currentSort[tableType] = { column, direction };
+        
+        let sortedData = [];
+        if (tableType === 'patients') {
+            sortedData = [...patientsData];
+        } else {
+            sortedData = [...medecinsData];
+        }
+        
+        sortedData.sort((a, b) => {
+            let valueA, valueB;
+            
+            if (column === 'nom') {
+                valueA = (a.nom || '').toLowerCase();
+                valueB = (b.nom || '').toLowerCase();
+            } else if (column === 'date') {
+                valueA = new Date(a.date_creation);
+                valueB = new Date(b.date_creation);
+            } else if (column === 'id') {
+                valueA = a.id_user;
+                valueB = b.id_user;
+            }
+            
+            if (direction === 'asc') {
+                if (valueA < valueB) return -1;
+                if (valueA > valueB) return 1;
+                return 0;
+            } else {
+                if (valueA < valueB) return 1;
+                if (valueA > valueB) return -1;
+                return 0;
+            }
+        });
+        
+        // Mettre à jour l'affichage
+        if (tableType === 'patients') {
+            renderPatientsTable(sortedData);
+            updateSortButtonIcon('patients', column, direction);
+        } else {
+            renderMedecinsTable(sortedData);
+            updateSortButtonIcon('medecins', column, direction);
+        }
+        
+        // Fermer le menu
+        const menu = document.getElementById(`sortMenu${tableType.charAt(0).toUpperCase() + tableType.slice(1)}`);
+        if (menu) menu.style.display = 'none';
+        
+        // Réappliquer la recherche
+        if (tableType === 'patients') {
+            filterPatients();
+        } else {
+            filterMedecins();
+        }
+    }
+    
+    // Mettre à jour l'icône du bouton de tri
+    function updateSortButtonIcon(tableType, column, direction) {
+        const button = document.querySelector(`#${tableType}Tab .btn-outline`);
+        if (button) {
+            const icon = button.querySelector('i:first-child');
+            if (direction === 'asc') {
+                icon.className = 'fas fa-arrow-up-wide-short';
+            } else {
+                icon.className = 'fas fa-arrow-down-wide-short';
+            }
+        }
+    }
+    
     function filterPatients() {
         const searchTerm = document.getElementById('searchPatient').value.toLowerCase();
-        const rows = document.querySelectorAll('#patientsTable tr:not(.no-data)');
+        const rows = document.querySelectorAll('#patientsTable tr');
         rows.forEach(row => {
+            if (row.classList.contains('no-data')) return;
             const text = row.textContent.toLowerCase();
             row.style.display = text.includes(searchTerm) ? '' : 'none';
         });
@@ -526,8 +735,9 @@ $adminEmail = $_SESSION['user_email'] ?? '';
     
     function filterMedecins() {
         const searchTerm = document.getElementById('searchMedecin').value.toLowerCase();
-        const rows = document.querySelectorAll('#medecinsTable tr:not(.no-data)');
+        const rows = document.querySelectorAll('#medecinsTable tr');
         rows.forEach(row => {
+            if (row.classList.contains('no-data')) return;
             const text = row.textContent.toLowerCase();
             row.style.display = text.includes(searchTerm) ? '' : 'none';
         });
@@ -750,12 +960,22 @@ $adminEmail = $_SESSION['user_email'] ?? '';
         setTimeout(() => alertDiv.remove(), 3000);
     }
     
+    // Écouteurs d'événements
     document.getElementById('resetPassword').addEventListener('change', function() {
         document.getElementById('passwordField').style.display = this.checked ? 'block' : 'none';
     });
     
     document.getElementById('searchPatient').addEventListener('input', filterPatients);
     document.getElementById('searchMedecin').addEventListener('input', filterMedecins);
+    
+    // Fermer le menu au clic en dehors
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.sort-menu') && !e.target.closest('.btn-outline')) {
+            document.querySelectorAll('.sort-menu').forEach(menu => {
+                menu.style.display = 'none';
+            });
+        }
+    });
     
     window.onclick = function(event) {
         if (event.target.classList.contains('modal')) {

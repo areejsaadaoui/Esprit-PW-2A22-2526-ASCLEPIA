@@ -1,26 +1,16 @@
 <?php
 session_start();
 
-/**
- * Vérifie si l'utilisateur est connecté
- * @return bool
- */
+
 function isLoggedIn() {
     return isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
 }
 
-/**
- * Vérifie si l'utilisateur est administrateur
- * @return bool
- */
 function isAdmin() {
     return isLoggedIn() && isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
 }
 
-/**
- * Redirige vers la page de connexion si non connecté
- * @param string $redirectTo Page de redirection
- */
+
 function requireLogin($redirectTo = 'login.html') {
     if (!isLoggedIn()) {
         header('Location: ' . $redirectTo);
@@ -28,10 +18,7 @@ function requireLogin($redirectTo = 'login.html') {
     }
 }
 
-/**
- * Redirige vers l'accueil si non admin
- * @param string $redirectTo Page de redirection
- */
+
 function requireAdmin($redirectTo = 'index.html') {
     if (!isAdmin()) {
         header('Location: ' . $redirectTo);
@@ -39,10 +26,7 @@ function requireAdmin($redirectTo = 'index.html') {
     }
 }
 
-/**
- * Retourne les infos de l'utilisateur connecté
- * @return array|null
- */
+
 function getCurrentUser() {
     if (!isLoggedIn()) {
         return null;
@@ -56,9 +40,7 @@ function getCurrentUser() {
     ];
 }
 
-/**
- * Déconnecte l'utilisateur
- */
+
 function logout() {
     $_SESSION = array();
     
