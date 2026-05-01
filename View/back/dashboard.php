@@ -34,6 +34,13 @@ $adminEmail = $_SESSION['user_email'] ?? '';
             gap: 12px;
             border-bottom: 2px solid var(--border);
             padding-bottom: 12px;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .tabs-left {
+            display: flex;
+            gap: 12px;
         }
         
         .tab-btn {
@@ -91,33 +98,377 @@ $adminEmail = $_SESSION['user_email'] ?? '';
             font-size: 0.85rem;
         }
         
-        .role-badge {
-            display: inline-flex;
+        .filter-bar {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 6px;
-            padding: 4px 12px;
-            border-radius: var(--radius-full);
-            font-size: 0.75rem;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        .stat-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-summary-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 20px;
+            border: 1px solid var(--border);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .stat-summary-card .number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+        
+        .stat-summary-card .label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+        
+        /* Modal Stats avec animations */
+        .stats-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .stats-overlay.active {
+            display: flex;
+        }
+        
+        .stats-modal {
+            background: var(--white);
+            border-radius: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            opacity: 0;
+            transform: scale(0.9) translateY(30px);
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+        }
+        
+        .stats-overlay.active .stats-modal {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+        
+        .stats-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 30px 30px 0 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stats-header h2 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        
+        .stats-header p {
+            margin: 10px 0 0;
+            opacity: 0.9;
+        }
+        
+        .stats-header .close-stats {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .stats-header .close-stats:hover {
+            background: rgba(255,255,255,0.3);
+            transform: rotate(90deg);
+        }
+        
+        .stats-body {
+            padding: 30px;
+        }
+        
+        .donut-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .donut-chart {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        .donut-inner {
+            position: absolute;
+            width: 140px;
+            height: 140px;
+            background: var(--white);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            animation: pulseInner 2s infinite;
+        }
+        
+        @keyframes pulseInner {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .donut-inner .total-number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+        
+        .donut-inner .total-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        
+        .stats-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .stat-item {
+            background: linear-gradient(135deg, #f5f7fa 0%, #f0f2f5 100%);
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+            transition: all 0.3s;
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: slideIn 0.5s ease forwards;
+        }
+        
+        .stat-item:nth-child(2) {
+            animation-delay: 0.2s;
+            transform: translateX(20px);
+        }
+        
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .stat-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .stat-item-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 1.8rem;
+        }
+        
+        .stat-item-icon.patients {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .stat-item-icon.medecins {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .stat-item-number {
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 10px 0;
+        }
+        
+        .stat-item-percent {
+            font-size: 1.2rem;
             font-weight: 600;
+            color: var(--primary);
         }
         
-        .role-badge.patient {
-            background: #d1fae5;
-            color: #065f46;
+        .progress-bar-container {
+            margin-top: 30px;
+            background: #f0f2f5;
+            border-radius: 10px;
+            padding: 20px;
         }
         
-        .role-badge.medecin {
-            background: #dbeafe;
-            color: #1e40af;
+        .progress-item {
+            margin-bottom: 20px;
+            opacity: 0;
+            animation: fadeInUp 0.5s ease forwards;
         }
         
-        .role-badge.admin {
-            background: #fee2e2;
-            color: #991b1b;
+        .progress-item:first-child {
+            animation-delay: 0.3s;
+        }
+        
+        .progress-item:last-child {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .progress-bar-bg {
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 30px;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 10px;
+            width: 0%;
+        }
+        
+        .progress-bar-fill.patients {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+        
+        .progress-bar-fill.medecins {
+            background: linear-gradient(90deg, #f093fb, #f5576c);
+        }
+        
+        .sort-menu {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .sort-menu-content {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 5px;
+            background: var(--white);
+            min-width: 200px;
+            border-radius: var(--radius);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+            z-index: 1000;
+            overflow: hidden;
+        }
+        
+        .sort-option {
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+            color: var(--text);
+        }
+        
+        .sort-option:hover {
+            background: rgba(14,165,233,0.1);
+            color: var(--primary);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .btn-outline:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .adresse-cell {
+            max-width: 200px;
+            white-space: normal;
+            word-wrap: break-word;
         }
         
         .search-bar {
-            margin-bottom: 20px;
+            margin-bottom: 0;
         }
         
         .modal {
@@ -144,18 +495,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
             width: 90%;
             max-height: 90vh;
             overflow-y: auto;
-            animation: slideUp 0.3s ease;
-        }
-        
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
         
         .table-actions {
@@ -166,110 +505,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
         .btn-icon {
             padding: 6px 10px;
             font-size: 0.8rem;
-        }
-        
-        .filter-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-        
-        .stat-summary {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .stat-summary-card {
-            background: var(--white);
-            border-radius: var(--radius);
-            padding: 20px;
-            border: 1px solid var(--border);
-            text-align: center;
-        }
-        
-        .stat-summary-card .number {
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--primary);
-        }
-        
-        .stat-summary-card .label {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-top: 5px;
-        }
-
-        .adresse-cell {
-            max-width: 200px;
-            white-space: normal;
-            word-wrap: break-word;
-        }
-
-        /* Styles pour le menu de tri */
-        .sort-menu {
-            position: relative;
-            display: inline-block;
-        }
-
-        .sort-menu-content {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            margin-top: 5px;
-            background: var(--white);
-            min-width: 200px;
-            border-radius: var(--radius);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            border: 1px solid var(--border);
-            z-index: 1000;
-            overflow: hidden;
-        }
-
-        .sort-option {
-            padding: 10px 16px;
-            cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.85rem;
-            color: var(--text);
-        }
-
-        .sort-option:hover {
-            background: rgba(14,165,233,0.1);
-            color: var(--primary);
-        }
-
-        .sort-option i {
-            width: 20px;
-            font-size: 0.9rem;
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 6px 12px;
-            font-size: 0.85rem;
-            border-radius: var(--radius);
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .btn-outline:hover {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: white;
-        }
-
-        .btn-outline:hover i {
-            color: white;
         }
     </style>
 </head>
@@ -323,7 +558,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
                 </a>
             </div>
             
-            <!-- DÉCONNEXION MODIFIÉE -->
             <div class="nav-item">
                 <a href="logout.php">
                     <i class="fas fa-sign-out-alt nav-icon"></i>
@@ -384,14 +618,19 @@ $adminEmail = $_SESSION['user_email'] ?? '';
                 </div>
             </div>
             
-            <!-- Tabs -->
+            <!-- Tabs avec bouton STATS - MÊME STYLE que les boutons Ajouter -->
             <div class="tabs-container">
                 <div class="tabs">
-                    <button class="tab-btn active" onclick="switchTab('patients')">
-                        <i class="fas fa-user"></i> Patients
-                    </button>
-                    <button class="tab-btn" onclick="switchTab('medecins')">
-                        <i class="fas fa-user-md"></i> Médecins
+                    <div class="tabs-left">
+                        <button class="tab-btn active" onclick="switchTab('patients')">
+                            <i class="fas fa-user"></i> Patients
+                        </button>
+                        <button class="tab-btn" onclick="switchTab('medecins')">
+                            <i class="fas fa-user-md"></i> Médecins
+                        </button>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="showStatsModal()" style="display: inline-flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-chart-pie"></i> Statistiques
                     </button>
                 </div>
             </div>
@@ -400,11 +639,11 @@ $adminEmail = $_SESSION['user_email'] ?? '';
             <div id="patientsTab" class="tab-content active">
                 <div class="filter-bar">
                     <div style="display: flex; gap: 10px; align-items: center; flex: 1;">
-                        <div class="search-bar" style="max-width: 300px; position: relative; margin-bottom: 0;">
+                        <div class="search-bar" style="max-width: 300px; position: relative;">
                             <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gray-light);"></i>
                             <input type="text" id="searchPatient" placeholder="Rechercher un patient..." style="padding-left: 38px;">
                         </div>
-                        <button class="btn btn-outline btn-sm" onclick="toggleSortMenu('patients')" title="Trier" style="display: flex; align-items: center; gap: 8px;">
+                        <button class="btn-outline btn-sm" onclick="toggleSortMenu('patients')" title="Trier" style="display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-arrow-down-wide-short"></i> Trier
                             <i class="fas fa-chevron-down" style="font-size: 0.7rem;"></i>
                         </button>
@@ -459,11 +698,11 @@ $adminEmail = $_SESSION['user_email'] ?? '';
             <div id="medecinsTab" class="tab-content">
                 <div class="filter-bar">
                     <div style="display: flex; gap: 10px; align-items: center; flex: 1;">
-                        <div class="search-bar" style="max-width: 300px; position: relative; margin-bottom: 0;">
+                        <div class="search-bar" style="max-width: 300px; position: relative;">
                             <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gray-light);"></i>
                             <input type="text" id="searchMedecin" placeholder="Rechercher un médecin..." style="padding-left: 38px;">
                         </div>
-                        <button class="btn btn-outline btn-sm" onclick="toggleSortMenu('medecins')" title="Trier" style="display: flex; align-items: center; gap: 8px;">
+                        <button class="btn-outline btn-sm" onclick="toggleSortMenu('medecins')" title="Trier" style="display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-arrow-down-wide-short"></i> Trier
                             <i class="fas fa-chevron-down" style="font-size: 0.7rem;"></i>
                         </button>
@@ -516,6 +755,80 @@ $adminEmail = $_SESSION['user_email'] ?? '';
             </div>
         </div>
     </main>
+</div>
+
+<!-- Modal Stats Innovant avec animations -->
+<div id="statsModal" class="stats-overlay">
+    <div class="stats-modal">
+        <div class="stats-header">
+            <button class="close-stats" onclick="closeStatsModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2>
+                <i class="fas fa-chart-line"></i> Statistiques Globales
+            </h2>
+            <p>Analyse détaillée de la répartition des utilisateurs</p>
+        </div>
+        <div class="stats-body">
+            <div class="donut-container">
+                <div class="donut-chart" id="donutChart">
+                    <svg width="200" height="200" viewBox="0 0 200 200" id="donutSvg">
+                        <circle cx="100" cy="100" r="80" fill="none" stroke="#e0e0e0" stroke-width="30"/>
+                        <circle cx="100" cy="100" r="80" fill="none" stroke="#667eea" stroke-width="30" id="patientsArc" stroke-dasharray="0 502.4" stroke-linecap="round" transform="rotate(-90 100 100)"/>
+                        <circle cx="100" cy="100" r="80" fill="none" stroke="#f5576c" stroke-width="30" id="medecinsArc" stroke-dasharray="0 502.4" stroke-linecap="round" transform="rotate(-90 100 100)"/>
+                    </svg>
+                    <div class="donut-inner">
+                        <div class="total-number" id="modalTotalUsers">0</div>
+                        <div class="total-label">Total</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stats-details">
+                <div class="stat-item">
+                    <div class="stat-item-icon patients">
+                        <i class="fas fa-user-injured"></i>
+                    </div>
+                    <div class="stat-item-number" id="modalPatientsCount">0</div>
+                    <div class="stat-item-percent" id="patientsPercent">0%</div>
+                    <div style="margin-top: 10px; font-size: 0.85rem; color: var(--text-muted);">des utilisateurs</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-item-icon medecins">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                    <div class="stat-item-number" id="modalMedecinsCount">0</div>
+                    <div class="stat-item-percent" id="medecinsPercent">0%</div>
+                    <div style="margin-top: 10px; font-size: 0.85rem; color: var(--text-muted);">des utilisateurs</div>
+                </div>
+            </div>
+            
+            <div class="progress-bar-container">
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span><i class="fas fa-user-injured"></i> Patients</span>
+                        <span id="progressPatientsPercent">0%</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill patients" id="progressPatients">
+                            0%
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span><i class="fas fa-user-md"></i> Médecins</span>
+                        <span id="progressMedecinsPercent">0%</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill medecins" id="progressMedecins">
+                            0%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Modals (Ajout/Modification) -->
@@ -626,20 +939,136 @@ $adminEmail = $_SESSION['user_email'] ?? '';
     }
     
     function updateStats(data) {
-        document.getElementById('totalPatients').textContent = data.patients.length;
-        document.getElementById('totalMedecins').textContent = data.medecins.length;
-        document.getElementById('totalUsers').textContent = data.patients.length + data.medecins.length;
+        const totalPatients = data.patients.length;
+        const totalMedecins = data.medecins.length;
+        const totalUsers = totalPatients + totalMedecins;
+        
+        document.getElementById('totalPatients').textContent = totalPatients;
+        document.getElementById('totalMedecins').textContent = totalMedecins;
+        document.getElementById('totalUsers').textContent = totalUsers;
+    }
+    
+    // Fonction pour mettre à jour le donut chart
+    function updateDonutChart(patientsPercent, medecinsPercent) {
+        const circumference = 2 * Math.PI * 80; // 502.6548
+        
+        const patientsArc = document.getElementById('patientsArc');
+        const medecinsArc = document.getElementById('medecinsArc');
+        
+        if (patientsArc) {
+            const patientsOffset = circumference - (patientsPercent / 100) * circumference;
+            patientsArc.style.strokeDasharray = `${circumference} ${circumference}`;
+            patientsArc.style.strokeDashoffset = patientsOffset;
+        }
+        
+        if (medecinsArc) {
+            const medecinsOffset = circumference - (medecinsPercent / 100) * circumference;
+            medecinsArc.style.strokeDasharray = `${circumference} ${circumference}`;
+            medecinsArc.style.strokeDashoffset = medecinsOffset + (circumference - (patientsPercent / 100) * circumference);
+        }
+    }
+    
+    // Réinitialiser les animations du modal
+    function resetModalAnimations() {
+        const statItems = document.querySelectorAll('.stat-item');
+        const progressItems = document.querySelectorAll('.progress-item');
+        
+        statItems.forEach(item => {
+            item.style.animation = 'none';
+            item.offsetHeight;
+            item.style.animation = 'slideIn 0.5s ease forwards';
+        });
+        
+        progressItems.forEach((item, index) => {
+            item.style.animation = 'none';
+            item.offsetHeight;
+            item.style.animation = `fadeInUp 0.5s ease forwards ${0.3 + index * 0.1}s`;
+        });
+    }
+    
+    // Fonction pour afficher le modal des stats
+    function showStatsModal() {
+        const totalPatients = parseInt(document.getElementById('totalPatients').textContent) || 0;
+        const totalMedecins = parseInt(document.getElementById('totalMedecins').textContent) || 0;
+        const totalUsers = totalPatients + totalMedecins;
+        
+        if (totalUsers === 0) {
+            showNotification('Aucune donnée disponible pour afficher les statistiques', 'error');
+            return;
+        }
+        
+        const patientsPercent = ((totalPatients / totalUsers) * 100).toFixed(1);
+        const medecinsPercent = ((totalMedecins / totalUsers) * 100).toFixed(1);
+        
+        // Mettre à jour les valeurs dans le modal
+        document.getElementById('modalTotalUsers').textContent = totalUsers;
+        document.getElementById('modalPatientsCount').textContent = totalPatients;
+        document.getElementById('modalMedecinsCount').textContent = totalMedecins;
+        document.getElementById('patientsPercent').textContent = patientsPercent + '%';
+        document.getElementById('medecinsPercent').textContent = medecinsPercent + '%';
+        document.getElementById('progressPatientsPercent').textContent = patientsPercent + '%';
+        document.getElementById('progressMedecinsPercent').textContent = medecinsPercent + '%';
+        
+        // Réinitialiser les barres de progression à 0%
+        const progressPatients = document.getElementById('progressPatients');
+        const progressMedecins = document.getElementById('progressMedecins');
+        
+        if (progressPatients) {
+            progressPatients.style.width = '0%';
+            progressPatients.textContent = '0%';
+        }
+        
+        if (progressMedecins) {
+            progressMedecins.style.width = '0%';
+            progressMedecins.textContent = '0%';
+        }
+        
+        // Animer les barres de progression après un court délai
+        setTimeout(() => {
+            if (progressPatients) {
+                progressPatients.style.width = patientsPercent + '%';
+                setTimeout(() => {
+                    progressPatients.textContent = patientsPercent + '%';
+                }, 500);
+            }
+            
+            if (progressMedecins) {
+                progressMedecins.style.width = medecinsPercent + '%';
+                setTimeout(() => {
+                    progressMedecins.textContent = medecinsPercent + '%';
+                }, 500);
+            }
+        }, 200);
+        
+        // Mettre à jour le donut chart
+        updateDonutChart(parseFloat(patientsPercent), parseFloat(medecinsPercent));
+        
+        // Réinitialiser et relancer les animations
+        resetModalAnimations();
+        
+        // Afficher le modal
+        const modal = document.getElementById('statsModal');
+        if (modal) {
+            modal.classList.add('active');
+        }
+    }
+    
+    function closeStatsModal() {
+        const modal = document.getElementById('statsModal');
+        if (modal) {
+            modal.classList.remove('active');
+        }
     }
     
     // Fonction pour afficher/masquer le menu de tri
     function toggleSortMenu(tableType) {
         const menu = document.getElementById(`sortMenu${tableType.charAt(0).toUpperCase() + tableType.slice(1)}`);
+        if (!menu) return;
+        
         if (menu.style.display === 'none' || menu.style.display === '') {
-            // Fermer tous les autres menus
             document.querySelectorAll('.sort-menu').forEach(m => m.style.display = 'none');
             menu.style.display = 'block';
             
-            // Fermer le menu au clic en dehors
             setTimeout(() => {
                 document.addEventListener('click', function closeMenu(e) {
                     if (!menu.contains(e.target) && !e.target.closest('.btn-outline')) {
@@ -673,9 +1102,8 @@ $adminEmail = $_SESSION['user_email'] ?? '';
             } else if (column === 'date') {
                 valueA = new Date(a.date_creation);
                 valueB = new Date(b.date_creation);
-            } else if (column === 'id') {
-                valueA = a.id_user;
-                valueB = b.id_user;
+            } else {
+                return 0;
             }
             
             if (direction === 'asc') {
@@ -689,38 +1117,16 @@ $adminEmail = $_SESSION['user_email'] ?? '';
             }
         });
         
-        // Mettre à jour l'affichage
         if (tableType === 'patients') {
             renderPatientsTable(sortedData);
-            updateSortButtonIcon('patients', column, direction);
-        } else {
-            renderMedecinsTable(sortedData);
-            updateSortButtonIcon('medecins', column, direction);
-        }
-        
-        // Fermer le menu
-        const menu = document.getElementById(`sortMenu${tableType.charAt(0).toUpperCase() + tableType.slice(1)}`);
-        if (menu) menu.style.display = 'none';
-        
-        // Réappliquer la recherche
-        if (tableType === 'patients') {
             filterPatients();
         } else {
+            renderMedecinsTable(sortedData);
             filterMedecins();
         }
-    }
-    
-    // Mettre à jour l'icône du bouton de tri
-    function updateSortButtonIcon(tableType, column, direction) {
-        const button = document.querySelector(`#${tableType}Tab .btn-outline`);
-        if (button) {
-            const icon = button.querySelector('i:first-child');
-            if (direction === 'asc') {
-                icon.className = 'fas fa-arrow-up-wide-short';
-            } else {
-                icon.className = 'fas fa-arrow-down-wide-short';
-            }
-        }
+        
+        const menu = document.getElementById(`sortMenu${tableType.charAt(0).toUpperCase() + tableType.slice(1)}`);
+        if (menu) menu.style.display = 'none';
     }
     
     function filterPatients() {
@@ -745,6 +1151,8 @@ $adminEmail = $_SESSION['user_email'] ?? '';
     
     function renderPatientsTable(patients) {
         const tbody = document.getElementById('patientsTable');
+        if (!tbody) return;
+        
         if (!patients || patients.length === 0) {
             tbody.innerHTML = '<tr class="no-data"><td colspan="6" style="text-align: center; padding: 40px;"><i class="fas fa-inbox"></i> Aucun patient trouvé</td></tr>';
             return;
@@ -775,6 +1183,8 @@ $adminEmail = $_SESSION['user_email'] ?? '';
     
     function renderMedecinsTable(medecins) {
         const tbody = document.getElementById('medecinsTable');
+        if (!tbody) return;
+        
         if (!medecins || medecins.length === 0) {
             tbody.innerHTML = '<tr class="no-data"><td colspan="7" style="text-align: center; padding: 40px;"><i class="fas fa-inbox"></i> Aucun médecin trouvé</td></tr>';
             return;
@@ -893,13 +1303,17 @@ $adminEmail = $_SESSION['user_email'] ?? '';
     
     function switchTab(tab) {
         currentTab = tab;
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        const tabs = document.querySelectorAll('.tab-btn');
+        const contents = document.querySelectorAll('.tab-content');
+        
+        tabs.forEach(btn => btn.classList.remove('active'));
+        contents.forEach(content => content.classList.remove('active'));
+        
         if (tab === 'patients') {
-            document.querySelector('.tab-btn:first-child').classList.add('active');
+            tabs[0].classList.add('active');
             document.getElementById('patientsTab').classList.add('active');
         } else {
-            document.querySelector('.tab-btn:last-child').classList.add('active');
+            tabs[1].classList.add('active');
             document.getElementById('medecinsTab').classList.add('active');
         }
     }
@@ -918,28 +1332,35 @@ $adminEmail = $_SESSION['user_email'] ?? '';
     }
     
     function toggleSidebar() {
-        document.querySelector('.sidebar').classList.toggle('open');
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) sidebar.classList.toggle('open');
     }
     
     function toggleSubMenu(element) {
+        if (!element) return;
         const parent = element.closest('.has-sub');
-        parent.classList.toggle('open');
-        const subMenu = parent.querySelector('.sub-menu');
-        if (subMenu) subMenu.classList.toggle('open');
+        if (parent) {
+            parent.classList.toggle('open');
+            const subMenu = parent.querySelector('.sub-menu');
+            if (subMenu) subMenu.classList.toggle('open');
+        }
     }
     
     function closeModal() {
-        document.getElementById('userModal').classList.remove('active');
+        const modal = document.getElementById('userModal');
+        if (modal) modal.classList.remove('active');
     }
     
     function openDeleteModal(id, role) {
         document.getElementById('deleteUserId').value = id;
         document.getElementById('deleteUserRole').value = role;
-        document.getElementById('deleteModal').classList.add('active');
+        const deleteModal = document.getElementById('deleteModal');
+        if (deleteModal) deleteModal.classList.add('active');
     }
     
     function closeDeleteModal() {
-        document.getElementById('deleteModal').classList.remove('active');
+        const deleteModal = document.getElementById('deleteModal');
+        if (deleteModal) deleteModal.classList.remove('active');
     }
     
     function refreshData() {
@@ -955,20 +1376,40 @@ $adminEmail = $_SESSION['user_email'] ?? '';
         alertDiv.style.right = '20px';
         alertDiv.style.zIndex = '9999';
         alertDiv.style.maxWidth = '300px';
-        alertDiv.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i> ${message}`;
+        alertDiv.style.padding = '12px 16px';
+        alertDiv.style.borderRadius = '8px';
+        alertDiv.style.backgroundColor = type === 'success' ? '#d1fae5' : type === 'error' ? '#fee2e2' : '#dbeafe';
+        alertDiv.style.color = type === 'success' ? '#065f46' : type === 'error' ? '#991b1b' : '#1e40af';
+        alertDiv.style.fontSize = '0.875rem';
+        alertDiv.style.fontWeight = '500';
+        alertDiv.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.1)';
+        alertDiv.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}" style="margin-right: 8px;"></i> ${message}`;
         document.body.appendChild(alertDiv);
         setTimeout(() => alertDiv.remove(), 3000);
     }
     
     // Écouteurs d'événements
-    document.getElementById('resetPassword').addEventListener('change', function() {
-        document.getElementById('passwordField').style.display = this.checked ? 'block' : 'none';
-    });
+    const resetPasswordCheckbox = document.getElementById('resetPassword');
+    if (resetPasswordCheckbox) {
+        resetPasswordCheckbox.addEventListener('change', function() {
+            const passwordField = document.getElementById('passwordField');
+            if (passwordField) {
+                passwordField.style.display = this.checked ? 'block' : 'none';
+            }
+        });
+    }
     
-    document.getElementById('searchPatient').addEventListener('input', filterPatients);
-    document.getElementById('searchMedecin').addEventListener('input', filterMedecins);
+    const searchPatient = document.getElementById('searchPatient');
+    if (searchPatient) {
+        searchPatient.addEventListener('input', filterPatients);
+    }
     
-    // Fermer le menu au clic en dehors
+    const searchMedecin = document.getElementById('searchMedecin');
+    if (searchMedecin) {
+        searchMedecin.addEventListener('input', filterMedecins);
+    }
+    
+    // Fermer les menus au clic en dehors
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.sort-menu') && !e.target.closest('.btn-outline')) {
             document.querySelectorAll('.sort-menu').forEach(menu => {
@@ -980,6 +1421,9 @@ $adminEmail = $_SESSION['user_email'] ?? '';
     window.onclick = function(event) {
         if (event.target.classList.contains('modal')) {
             event.target.classList.remove('active');
+        }
+        if (event.target.classList.contains('stats-overlay')) {
+            closeStatsModal();
         }
     }
 </script>
