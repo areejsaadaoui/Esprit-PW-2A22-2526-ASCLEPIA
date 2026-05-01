@@ -4,76 +4,79 @@ header('Content-Type: application/json');
 
 require_once '../../config.php';
 
-$data=json_decode(file_get_contents("php://input"),true);
+$data = json_decode(file_get_contents("php://input"), true);
 
-if(!$data){
-
-echo json_encode([
-"success"=>false,
-"message"=>"Aucune donnée"
-]);
-
-exit();
-
+if (!$data) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Aucune donnée"
+    ]);
+    exit();
 }
 
-$user=$data["user"];
+$user = $data["user"];
 
-try{
+try {
+    $pdo = config::getConnexion();
 
-$pdo=config::getConnexion();
+    // Vérifier si l'email existe déjà
+    $check = $pdo->prepare("SELECT COUNT(*) FROM utilisateur WHERE email=?");
+    $check->execute([$user["email"]]);
 
-$check=$pdo->prepare("SELECT COUNT(*) FROM utilisateur WHERE email=?");
+    if ($check->fetchColumn() > 0) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Email existe déjà"
+        ]);
+        exit();
+    }
 
-$check->execute([$user["email"]]);
+    // Hacher le mot de passe
+    $password = password_hash($user["mot_de_passe"], PASSWORD_DEFAULT);
 
-if($check->fetchColumn()>0){
+    // Insérer l'utilisateur
+    $sql = "INSERT INTO utilisateur
+            (nom, email, mot_de_passe, adresse, role, date_naissance, telephone, description, date_creation)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
 
-echo json_encode([
-"success"=>false,
-"message"=>"Email existe déjà"
-]);
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([
+        $user["nom"],
+        $user["email"],
+        $password,
+        $user["adresse"],
+        $user["role"],
+        $user["date_naissance"],
+        $user["telephone"],
+        $user["description"]
+    ]);
 
-exit();
+    // ========== ENVOI DE L'EMAIL DE BIENVENUE (VRAI) ==========
+    require_once __DIR__ . '/send_welcome_email.php';
+    
+    $nom = $user["nom"];
+    $email = $user["email"];
+    $role = $user["role"];
+    
+    $emailSent = sendWelcomeEmail($email, $nom, $role);
+    
+    if ($emailSent) {
+        $message = "Utilisateur ajouté avec succès ! Un email de bienvenue a été envoyé.";
+    } else {
+        $message = "Utilisateur ajouté avec succès ! (Email non envoyé - erreur SMTP)";
+    }
+    // ==================================================
 
-}
+    echo json_encode([
+        "success" => true,
+        "message" => $message
+    ]);
 
-$password=password_hash($user["mot_de_passe"],PASSWORD_DEFAULT);
-
-$sql="INSERT INTO utilisateur
-(nom,email,mot_de_passe,adresse,role,date_naissance,telephone,description,date_creation)
-
-VALUES (?,?,?,?,?,?,?,?,NOW())";
-
-$stmt=$pdo->prepare($sql);
-
-$stmt->execute([
-
-$user["nom"],
-$user["email"],
-$password,
-$user["adresse"],
-$user["role"],
-$user["date_naissance"],
-$user["telephone"],
-$user["description"]
-
-]);
-
-echo json_encode([
-"success"=>true,
-"message"=>"Utilisateur ajouté avec succès"
-]);
-
-}
-
-catch(Exception $e){
-
-echo json_encode([
-"success"=>false,
-"message"=>$e->getMessage()
-]);
-
+} catch (Exception $e) {
+    echo json_encode([
+        "success" => false,
+        "message" => $e->getMessage()
+    ]);
 }
 
 ?>
