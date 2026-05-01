@@ -140,6 +140,99 @@ $adminEmail = $_SESSION['user_email'] ?? '';
             margin-top: 5px;
         }
         
+        /* Pagination styles */
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding: 15px 20px;
+            background: var(--white);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .pagination-info {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .pagination-btn {
+            padding: 6px 12px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.8rem;
+            color: var(--text);
+        }
+        
+        .pagination-btn:hover:not(:disabled) {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .pagination-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        
+        .page-numbers {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .page-number {
+            min-width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 8px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.8rem;
+        }
+        
+        .page-number:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        
+        .page-number.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        
+        .per-page-select {
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--white);
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        
         /* Modal Stats avec animations */
         .stats-overlay {
             display: none;
@@ -618,7 +711,7 @@ $adminEmail = $_SESSION['user_email'] ?? '';
                 </div>
             </div>
             
-            <!-- Tabs avec bouton STATS - MÊME STYLE que les boutons Ajouter -->
+            <!-- Tabs avec bouton STATS -->
             <div class="tabs-container">
                 <div class="tabs">
                     <div class="tabs-left">
@@ -692,6 +785,22 @@ $adminEmail = $_SESSION['user_email'] ?? '';
                         </table>
                     </div>
                 </div>
+                
+                <!-- Pagination Patients -->
+                <div class="pagination-container" id="paginationPatients">
+                    <div class="pagination-info">
+                        Affichage de <span id="patientsStart">0</span> à <span id="patientsEnd">0</span> sur <span id="patientsTotal">0</span> patients
+                    </div>
+                    <div class="pagination-controls">
+                        <select id="patientsPerPage" class="per-page-select" onchange="changePerPage('patients')">
+                            <option value="5">5 par page</option>
+                            <option value="10" selected>10 par page</option>
+                            <option value="20">20 par page</option>
+                            <option value="50">50 par page</option>
+                        </select>
+                        <div class="page-numbers" id="patientsPageNumbers"></div>
+                    </div>
+                </div>
             </div>
             
             <!-- Tableau Médecins -->
@@ -750,6 +859,22 @@ $adminEmail = $_SESSION['user_email'] ?? '';
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+                
+                <!-- Pagination Médecins -->
+                <div class="pagination-container" id="paginationMedecins">
+                    <div class="pagination-info">
+                        Affichage de <span id="medecinsStart">0</span> à <span id="medecinsEnd">0</span> sur <span id="medecinsTotal">0</span> médecins
+                    </div>
+                    <div class="pagination-controls">
+                        <select id="medecinsPerPage" class="per-page-select" onchange="changePerPage('medecins')">
+                            <option value="5">5 par page</option>
+                            <option value="10" selected>10 par page</option>
+                            <option value="20">20 par page</option>
+                            <option value="50">50 par page</option>
+                        </select>
+                        <div class="page-numbers" id="medecinsPageNumbers"></div>
                     </div>
                 </div>
             </div>
@@ -916,6 +1041,14 @@ $adminEmail = $_SESSION['user_email'] ?? '';
         patients: { column: 'id', direction: 'desc' },
         medecins: { column: 'id', direction: 'desc' }
     };
+    
+    // Variables pour la pagination
+    let patientsCurrentPage = 1;
+    let medecinsCurrentPage = 1;
+    let patientsPerPage = 10;
+    let medecinsPerPage = 10;
+    let filteredPatients = [];
+    let filteredMedecins = [];
 
     document.addEventListener('DOMContentLoaded', function() {
         loadUsers();
@@ -929,8 +1062,7 @@ $adminEmail = $_SESSION['user_email'] ?? '';
                     patientsData = data.patients;
                     medecinsData = data.medecins;
                     updateStats(data);
-                    renderPatientsTable(patientsData);
-                    renderMedecinsTable(medecinsData);
+                    applyFiltersAndRender();
                 }
             })
             .catch(error => {
@@ -948,9 +1080,189 @@ $adminEmail = $_SESSION['user_email'] ?? '';
         document.getElementById('totalUsers').textContent = totalUsers;
     }
     
+    function applyFiltersAndRender() {
+        // Filtrer et trier les patients
+        const searchTermPatient = document.getElementById('searchPatient').value.toLowerCase();
+        filteredPatients = [...patientsData];
+        
+        if (searchTermPatient) {
+            filteredPatients = filteredPatients.filter(patient => 
+                (patient.nom || '').toLowerCase().includes(searchTermPatient) ||
+                (patient.email || '').toLowerCase().includes(searchTermPatient)
+            );
+        }
+        
+        // Appliquer le tri
+        if (currentSort.patients.column) {
+            filteredPatients.sort((a, b) => {
+                let valueA, valueB;
+                if (currentSort.patients.column === 'nom') {
+                    valueA = (a.nom || '').toLowerCase();
+                    valueB = (b.nom || '').toLowerCase();
+                } else if (currentSort.patients.column === 'date') {
+                    valueA = new Date(a.date_creation);
+                    valueB = new Date(b.date_creation);
+                }
+                if (currentSort.patients.direction === 'asc') {
+                    return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
+                } else {
+                    return valueA < valueB ? 1 : valueA > valueB ? -1 : 0;
+                }
+            });
+        }
+        
+        // Filtrer et trier les médecins
+        const searchTermMedecin = document.getElementById('searchMedecin').value.toLowerCase();
+        filteredMedecins = [...medecinsData];
+        
+        if (searchTermMedecin) {
+            filteredMedecins = filteredMedecins.filter(medecin => 
+                (medecin.nom || '').toLowerCase().includes(searchTermMedecin) ||
+                (medecin.email || '').toLowerCase().includes(searchTermMedecin)
+            );
+        }
+        
+        if (currentSort.medecins.column) {
+            filteredMedecins.sort((a, b) => {
+                let valueA, valueB;
+                if (currentSort.medecins.column === 'nom') {
+                    valueA = (a.nom || '').toLowerCase();
+                    valueB = (b.nom || '').toLowerCase();
+                } else if (currentSort.medecins.column === 'date') {
+                    valueA = new Date(a.date_creation);
+                    valueB = new Date(b.date_creation);
+                }
+                if (currentSort.medecins.direction === 'asc') {
+                    return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
+                } else {
+                    return valueA < valueB ? 1 : valueA > valueB ? -1 : 0;
+                }
+            });
+        }
+        
+        // Rendre les pages
+        renderPaginatedPatients();
+        renderPaginatedMedecins();
+        renderPaginationControls('patients');
+        renderPaginationControls('medecins');
+    }
+    
+    function renderPaginatedPatients() {
+        const start = (patientsCurrentPage - 1) * patientsPerPage;
+        const end = start + patientsPerPage;
+        const paginatedPatients = filteredPatients.slice(start, end);
+        renderPatientsTable(paginatedPatients);
+        
+        // Mettre à jour les infos de pagination
+        document.getElementById('patientsStart').textContent = filteredPatients.length === 0 ? 0 : start + 1;
+        document.getElementById('patientsEnd').textContent = Math.min(end, filteredPatients.length);
+        document.getElementById('patientsTotal').textContent = filteredPatients.length;
+    }
+    
+    function renderPaginatedMedecins() {
+        const start = (medecinsCurrentPage - 1) * medecinsPerPage;
+        const end = start + medecinsPerPage;
+        const paginatedMedecins = filteredMedecins.slice(start, end);
+        renderMedecinsTable(paginatedMedecins);
+        
+        document.getElementById('medecinsStart').textContent = filteredMedecins.length === 0 ? 0 : start + 1;
+        document.getElementById('medecinsEnd').textContent = Math.min(end, filteredMedecins.length);
+        document.getElementById('medecinsTotal').textContent = filteredMedecins.length;
+    }
+    
+    function renderPaginationControls(type) {
+        const totalPages = Math.ceil((type === 'patients' ? filteredPatients.length : filteredMedecins.length) / (type === 'patients' ? patientsPerPage : medecinsPerPage));
+        const currentPage = type === 'patients' ? patientsCurrentPage : medecinsCurrentPage;
+        const container = document.getElementById(`${type}PageNumbers`);
+        
+        if (!container) return;
+        
+        if (totalPages <= 1) {
+            container.innerHTML = '';
+            return;
+        }
+        
+        let html = '';
+        
+        // Bouton précédent
+        html += `<button class="pagination-btn" onclick="goToPage('${type}', ${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+            <i class="fas fa-chevron-left"></i>
+        </button>`;
+        
+        // Numéros de pages
+        const maxVisible = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+        
+        if (endPage - startPage + 1 < maxVisible) {
+            startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+        
+        if (startPage > 1) {
+            html += `<div class="page-number" onclick="goToPage('${type}', 1)">1</div>`;
+            if (startPage > 2) html += `<div class="page-number">...</div>`;
+        }
+        
+        for (let i = startPage; i <= endPage; i++) {
+            html += `<div class="page-number ${i === currentPage ? 'active' : ''}" onclick="goToPage('${type}', ${i})">${i}</div>`;
+        }
+        
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) html += `<div class="page-number">...</div>`;
+            html += `<div class="page-number" onclick="goToPage('${type}', ${totalPages})">${totalPages}</div>`;
+        }
+        
+        // Bouton suivant
+        html += `<button class="pagination-btn" onclick="goToPage('${type}', ${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+            <i class="fas fa-chevron-right"></i>
+        </button>`;
+        
+        container.innerHTML = html;
+    }
+    
+    function goToPage(type, page) {
+        const totalPages = Math.ceil((type === 'patients' ? filteredPatients.length : filteredMedecins.length) / (type === 'patients' ? patientsPerPage : medecinsPerPage));
+        if (page < 1 || page > totalPages) return;
+        
+        if (type === 'patients') {
+            patientsCurrentPage = page;
+            renderPaginatedPatients();
+            renderPaginationControls('patients');
+        } else {
+            medecinsCurrentPage = page;
+            renderPaginatedMedecins();
+            renderPaginationControls('medecins');
+        }
+    }
+    
+    function changePerPage(type) {
+        const newPerPage = parseInt(document.getElementById(`${type}PerPage`).value);
+        if (type === 'patients') {
+            patientsPerPage = newPerPage;
+            patientsCurrentPage = 1;
+            renderPaginatedPatients();
+            renderPaginationControls('patients');
+        } else {
+            medecinsPerPage = newPerPage;
+            medecinsCurrentPage = 1;
+            renderPaginatedMedecins();
+            renderPaginationControls('medecins');
+        }
+    }
+    
+    function filterPatients() {
+        patientsCurrentPage = 1;
+        applyFiltersAndRender();
+    }
+    
+    function filterMedecins() {
+        medecinsCurrentPage = 1;
+        applyFiltersAndRender();
+    }
+    
     // Fonction pour mettre à jour le donut chart
     function updateDonutChart(patientsPercent, medecinsPercent) {
-        const circumference = 2 * Math.PI * 80; // 502.6548
+        const circumference = 2 * Math.PI * 80;
         
         const patientsArc = document.getElementById('patientsArc');
         const medecinsArc = document.getElementById('medecinsArc');
@@ -968,25 +1280,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
         }
     }
     
-    // Réinitialiser les animations du modal
-    function resetModalAnimations() {
-        const statItems = document.querySelectorAll('.stat-item');
-        const progressItems = document.querySelectorAll('.progress-item');
-        
-        statItems.forEach(item => {
-            item.style.animation = 'none';
-            item.offsetHeight;
-            item.style.animation = 'slideIn 0.5s ease forwards';
-        });
-        
-        progressItems.forEach((item, index) => {
-            item.style.animation = 'none';
-            item.offsetHeight;
-            item.style.animation = `fadeInUp 0.5s ease forwards ${0.3 + index * 0.1}s`;
-        });
-    }
-    
-    // Fonction pour afficher le modal des stats
     function showStatsModal() {
         const totalPatients = parseInt(document.getElementById('totalPatients').textContent) || 0;
         const totalMedecins = parseInt(document.getElementById('totalMedecins').textContent) || 0;
@@ -1000,7 +1293,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
         const patientsPercent = ((totalPatients / totalUsers) * 100).toFixed(1);
         const medecinsPercent = ((totalMedecins / totalUsers) * 100).toFixed(1);
         
-        // Mettre à jour les valeurs dans le modal
         document.getElementById('modalTotalUsers').textContent = totalUsers;
         document.getElementById('modalPatientsCount').textContent = totalPatients;
         document.getElementById('modalMedecinsCount').textContent = totalMedecins;
@@ -1009,58 +1301,38 @@ $adminEmail = $_SESSION['user_email'] ?? '';
         document.getElementById('progressPatientsPercent').textContent = patientsPercent + '%';
         document.getElementById('progressMedecinsPercent').textContent = medecinsPercent + '%';
         
-        // Réinitialiser les barres de progression à 0%
         const progressPatients = document.getElementById('progressPatients');
         const progressMedecins = document.getElementById('progressMedecins');
         
         if (progressPatients) {
             progressPatients.style.width = '0%';
             progressPatients.textContent = '0%';
+            setTimeout(() => {
+                progressPatients.style.width = patientsPercent + '%';
+                setTimeout(() => progressPatients.textContent = patientsPercent + '%', 500);
+            }, 200);
         }
         
         if (progressMedecins) {
             progressMedecins.style.width = '0%';
             progressMedecins.textContent = '0%';
+            setTimeout(() => {
+                progressMedecins.style.width = medecinsPercent + '%';
+                setTimeout(() => progressMedecins.textContent = medecinsPercent + '%', 500);
+            }, 200);
         }
         
-        // Animer les barres de progression après un court délai
-        setTimeout(() => {
-            if (progressPatients) {
-                progressPatients.style.width = patientsPercent + '%';
-                setTimeout(() => {
-                    progressPatients.textContent = patientsPercent + '%';
-                }, 500);
-            }
-            
-            if (progressMedecins) {
-                progressMedecins.style.width = medecinsPercent + '%';
-                setTimeout(() => {
-                    progressMedecins.textContent = medecinsPercent + '%';
-                }, 500);
-            }
-        }, 200);
-        
-        // Mettre à jour le donut chart
         updateDonutChart(parseFloat(patientsPercent), parseFloat(medecinsPercent));
         
-        // Réinitialiser et relancer les animations
-        resetModalAnimations();
-        
-        // Afficher le modal
         const modal = document.getElementById('statsModal');
-        if (modal) {
-            modal.classList.add('active');
-        }
+        if (modal) modal.classList.add('active');
     }
     
     function closeStatsModal() {
         const modal = document.getElementById('statsModal');
-        if (modal) {
-            modal.classList.remove('active');
-        }
+        if (modal) modal.classList.remove('active');
     }
     
-    // Fonction pour afficher/masquer le menu de tri
     function toggleSortMenu(tableType) {
         const menu = document.getElementById(`sortMenu${tableType.charAt(0).toUpperCase() + tableType.slice(1)}`);
         if (!menu) return;
@@ -1082,71 +1354,17 @@ $adminEmail = $_SESSION['user_email'] ?? '';
         }
     }
     
-    // Fonction de tri
     function sortTable(tableType, column, direction) {
         currentSort[tableType] = { column, direction };
-        
-        let sortedData = [];
         if (tableType === 'patients') {
-            sortedData = [...patientsData];
+            patientsCurrentPage = 1;
         } else {
-            sortedData = [...medecinsData];
+            medecinsCurrentPage = 1;
         }
-        
-        sortedData.sort((a, b) => {
-            let valueA, valueB;
-            
-            if (column === 'nom') {
-                valueA = (a.nom || '').toLowerCase();
-                valueB = (b.nom || '').toLowerCase();
-            } else if (column === 'date') {
-                valueA = new Date(a.date_creation);
-                valueB = new Date(b.date_creation);
-            } else {
-                return 0;
-            }
-            
-            if (direction === 'asc') {
-                if (valueA < valueB) return -1;
-                if (valueA > valueB) return 1;
-                return 0;
-            } else {
-                if (valueA < valueB) return 1;
-                if (valueA > valueB) return -1;
-                return 0;
-            }
-        });
-        
-        if (tableType === 'patients') {
-            renderPatientsTable(sortedData);
-            filterPatients();
-        } else {
-            renderMedecinsTable(sortedData);
-            filterMedecins();
-        }
+        applyFiltersAndRender();
         
         const menu = document.getElementById(`sortMenu${tableType.charAt(0).toUpperCase() + tableType.slice(1)}`);
         if (menu) menu.style.display = 'none';
-    }
-    
-    function filterPatients() {
-        const searchTerm = document.getElementById('searchPatient').value.toLowerCase();
-        const rows = document.querySelectorAll('#patientsTable tr');
-        rows.forEach(row => {
-            if (row.classList.contains('no-data')) return;
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(searchTerm) ? '' : 'none';
-        });
-    }
-    
-    function filterMedecins() {
-        const searchTerm = document.getElementById('searchMedecin').value.toLowerCase();
-        const rows = document.querySelectorAll('#medecinsTable tr');
-        rows.forEach(row => {
-            if (row.classList.contains('no-data')) return;
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(searchTerm) ? '' : 'none';
-        });
     }
     
     function renderPatientsTable(patients) {
@@ -1370,7 +1588,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
     
     function showNotification(message, type) {
         const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'}`;
         alertDiv.style.position = 'fixed';
         alertDiv.style.top = '20px';
         alertDiv.style.right = '20px';
@@ -1393,38 +1610,25 @@ $adminEmail = $_SESSION['user_email'] ?? '';
     if (resetPasswordCheckbox) {
         resetPasswordCheckbox.addEventListener('change', function() {
             const passwordField = document.getElementById('passwordField');
-            if (passwordField) {
-                passwordField.style.display = this.checked ? 'block' : 'none';
-            }
+            if (passwordField) passwordField.style.display = this.checked ? 'block' : 'none';
         });
     }
     
     const searchPatient = document.getElementById('searchPatient');
-    if (searchPatient) {
-        searchPatient.addEventListener('input', filterPatients);
-    }
+    if (searchPatient) searchPatient.addEventListener('input', filterPatients);
     
     const searchMedecin = document.getElementById('searchMedecin');
-    if (searchMedecin) {
-        searchMedecin.addEventListener('input', filterMedecins);
-    }
+    if (searchMedecin) searchMedecin.addEventListener('input', filterMedecins);
     
-    // Fermer les menus au clic en dehors
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.sort-menu') && !e.target.closest('.btn-outline')) {
-            document.querySelectorAll('.sort-menu').forEach(menu => {
-                menu.style.display = 'none';
-            });
+            document.querySelectorAll('.sort-menu').forEach(menu => menu.style.display = 'none');
         }
     });
     
     window.onclick = function(event) {
-        if (event.target.classList.contains('modal')) {
-            event.target.classList.remove('active');
-        }
-        if (event.target.classList.contains('stats-overlay')) {
-            closeStatsModal();
-        }
+        if (event.target.classList.contains('modal')) event.target.classList.remove('active');
+        if (event.target.classList.contains('stats-overlay')) closeStatsModal();
     }
 </script>
 </body>
