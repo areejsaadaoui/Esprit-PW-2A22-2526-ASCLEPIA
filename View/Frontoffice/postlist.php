@@ -256,8 +256,8 @@ body.dark-mode .btn-danger {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 10px;
-            gap: 10px;
+            margin-top: 35px;
+            gap: 8px;
         }
 
         .post-actions {
@@ -751,6 +751,29 @@ body.dark-mode .share-option {
     background: #3b82f6;
     transform: scale(1.02);
 }
+/* Carte cliquable */
+.post-card-link {
+    text-decoration: none;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.post-card-link:hover {
+    transform: translateY(-5px);
+}
+
+.post-card-link:hover .post-card {
+    box-shadow: 0 20px 35px -12px rgba(0,0,0,0.2);
+}
+
+/* Empêcher la propagation du hover sur les boutons */
+.post-card-link .btn,
+.post-card-link .like-btn,
+.post-card-link .share-btn,
+.post-card-link .post-actions a {
+    position: relative;
+    z-index: 10;
+}
     </style>
 </head>
 <body>
@@ -831,6 +854,7 @@ body.dark-mode .share-option {
         $contenuAvecYouTube = embedYouTube($contenuOriginal);
     ?>
         <div class="grid-item">
+             <a href="../Backoffice/showpost.php?id=<?= $post->getIdPost() ?>" class="post-card-link" style="text-decoration: none; display: block;">
             <div class="card post-card">
                 <?php if ($hasVideo): ?>
                     <div class="video-badge">
@@ -895,9 +919,6 @@ body.dark-mode .share-option {
 
                 <!-- Post footer -->
                 <div class="post-footer">
-                    <a href="../Backoffice/showpost.php?id=<?= $post->getIdPost() ?>" class="btn btn-outline btn-sm">
-                        Lire la suite
-                    </a>
 <!-- Bouton LIKE avec cœur rouge si déjà liké -->
 <?php 
 // Vérifier si ce post a été liké (via session ou cookie)
