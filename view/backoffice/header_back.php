@@ -1,5 +1,12 @@
 <?php
 require_once '../../Controller/LanguageController.php';
+require_once '../../config.php';
+
+// Logique de Notification Dynamique : Rupture de stock
+$db_notif = config::getConnexion();
+$stmt_notif = $db_notif->query("SELECT nom, stock, id_medicament FROM medicament WHERE stock <= 5 ORDER BY stock ASC");
+$alertes_stock = $stmt_notif->fetchAll();
+$nb_alertes = count($alertes_stock);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -203,11 +210,49 @@ require_once '../../Controller/LanguageController.php';
 
   <div class="nav-actions" style="display: flex; flex-direction: column; gap: 15px; margin-top: auto; padding: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
     
-    <div style="display: flex; justify-content: space-between; align-items: center;">
+    <div style="display: flex; justify-content: space-between; align-items: center; position: relative;">
         <!-- Theme Toggle -->
         <button id="themeToggle" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--white);" title="Activer le mode sombre">
             <i class="fa-solid fa-moon"></i>
         </button>
+
+        <!-- Notification Bell -->
+        <div class="notification-container" style="position: relative;">
+            <button id="notifToggle" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--white); position: relative;" title="Notifications de Stock">
+                <i class="fa-solid fa-bell"></i>
+                <?php if($nb_alertes > 0): ?>
+                    <span class="badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; font-size: 0.65rem; padding: 2px 5px; font-weight: bold;">
+                        <?= $nb_alertes ?>
+                    </span>
+                <?php endif; ?>
+            </button>
+            
+            <!-- Notification Dropdown -->
+            <div id="notifDropdown" class="notif-dropdown" style="display: none; position: absolute; bottom: 100%; left: 0; margin-bottom: 15px; width: 280px; background: var(--bg-card, white); border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 1001; color: var(--text-main);">
+                <div style="padding: 12px 15px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 0.95rem; color: var(--text-main);">
+                    Alertes de Stock (<?= $nb_alertes ?>)
+                </div>
+                <div style="max-height: 250px; overflow-y: auto;">
+                    <?php if($nb_alertes > 0): ?>
+                        <?php foreach($alertes_stock as $alerte): ?>
+                            <a href="editmedicament.php?id_medicament=<?= $alerte['id_medicament'] ?>" style="display: flex; flex-direction: column; padding: 12px 15px; border-bottom: 1px solid var(--border); text-decoration: none; color: inherit; transition: background 0.2s;">
+                                <span style="font-weight: 600; font-size: 0.9rem;"><?= htmlspecialchars($alerte['nom']) ?></span>
+                                <?php if($alerte['stock'] == 0): ?>
+                                    <span style="color: #ef4444; font-size: 0.8rem; font-weight: 500;"><i class="fa-solid fa-circle-exclamation"></i> Rupture de stock (0)</span>
+                                <?php else: ?>
+                                    <span style="color: #f59e0b; font-size: 0.8rem; font-weight: 500;"><i class="fa-solid fa-triangle-exclamation"></i> Stock critique (<?= $alerte['stock'] ?> restants)</span>
+                                <?php endif; ?>
+                            </a>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div style="padding: 20px 15px; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
+                            <i class="fa-solid fa-check-circle" style="color: #10b981; font-size: 1.5rem; margin-bottom: 8px; display: block;"></i>
+                            Tous les stocks sont normaux.
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
 
         <!-- Language Toggle -->
         <div class="lang-toggle" style="display:flex; gap: 5px; align-items:center; font-size: 0.9rem;">
@@ -216,6 +261,34 @@ require_once '../../Controller/LanguageController.php';
             <a href="?lang=en" style="color: <?= $_SESSION['lang'] === 'en' ? 'var(--primary)' : 'rgba(255,255,255,0.5)' ?>; font-weight: 700; text-decoration: none;">EN</a>
         </div>
     </div>
+
+    <!-- Toggle Script for Dropdown -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const notifBtn = document.getElementById('notifToggle');
+            const notifDropdown = document.getElementById('notifDropdown');
+            const notifSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+            
+            if (notifBtn && notifDropdown) {
+                notifBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+
+                    // Jouer le son si le menu s'ouvre
+                    if (notifDropdown.style.display !== 'block') {
+                        notifSound.play().catch(e => console.log("Audio play blocked"));
+                    }
+
+                    notifDropdown.style.display = notifDropdown.style.display === 'none' ? 'block' : 'none';
+                });
+                
+                document.addEventListener('click', function(e) {
+                    if (!notifDropdown.contains(e.target) && e.target !== notifBtn) {
+                        notifDropdown.style.display = 'none';
+                    }
+                });
+            }
+        });
+    </script>
 
     <a href="addpharmacie.php" class="btn btn-primary btn-sm" style="width: 100%; justify-content: center;">
       <i class="fa-solid fa-plus"></i> <?= tr('bo_add_pharmacy') ?>

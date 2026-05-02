@@ -5,7 +5,8 @@ require_once '../../Controller/MedicamentC.php';
 $pc = new pharmacieC();
 $mc = new medicamentC();
 $listePharmacies = $pc->listepharmacie();
-$listeMedicaments = $mc->afficherMedicaments();
+// On récupère tout dans un tableau pour éviter d'épuiser l'itérateur PDO
+$listeMedicaments = $mc->afficherMedicaments()->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -22,6 +23,63 @@ $listeMedicaments = $mc->afficherMedicaments();
   <!-- Styles -->
   <link rel="stylesheet" href="../assets/css/style.css?v=<?= time() ?>">
   <link rel="stylesheet" href="../assets/css/frontoffice.css?v=<?= time() ?>">
+  <style>
+    /* CSS pour les Notifications FrontOffice */
+    .notification-container {
+      position: relative;
+    }
+    .notif-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      width: 280px;
+      background: var(--bg-card, white);
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      z-index: 1100;
+      margin-top: 15px;
+      overflow: hidden;
+      display: none;
+      border: 1px solid var(--border);
+    }
+    [data-theme="dark"] .notif-dropdown {
+      background: #1e293b;
+      border-color: rgba(255,255,255,0.1);
+    }
+    .notif-header {
+      padding: 12px 16px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+    .notif-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: background 0.2s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .notif-item:hover {
+      background: rgba(0,0,0,0.02);
+    }
+    [data-theme="dark"] .notif-item:hover {
+      background: rgba(255,255,255,0.05);
+    }
+    .notif-title {
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+    .notif-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+  </style>
 </head>
 
 <body>
@@ -53,9 +111,51 @@ $listeMedicaments = $mc->afficherMedicaments();
     </div>
 
     <!-- Theme Toggle -->
-    <button id="themeToggle" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text); margin-right: 15px;" title="Activer le mode sombre">
+    <button id="themeToggle" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--white); margin-right: 15px;" title="Activer le mode sombre">
         <i class="fa-solid fa-moon"></i>
     </button>
+
+    <!-- Notification Bell -->
+    <div class="notification-container" style="margin-right: 15px;">
+        <?php 
+          // Récupérer les médicaments en stock limité (ex: entre 1 et 5)
+          $alertesStock = array_filter($listeMedicaments, function($m) {
+              return $m['stock'] > 0 && $m['stock'] <= 5;
+          });
+          $countAlertes = count($alertesStock);
+        ?>
+        <button id="notifToggle" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--white); position: relative;" title="Alertes Stocks">
+            <i class="fa-solid fa-bell"></i>
+            <?php if($countAlertes > 0): ?>
+                <span style="position: absolute; top: -5px; right: -5px; background: var(--primary); color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                    <?= $countAlertes ?>
+                </span>
+            <?php endif; ?>
+        </button>
+        
+        <div id="notifDropdown" class="notif-dropdown">
+            <div class="notif-header">
+                <?= tr('nav_notifications') ?? 'Alertes Stocks' ?>
+            </div>
+            <div style="max-height: 300px; overflow-y: auto;">
+                <?php if($countAlertes > 0): ?>
+                    <?php foreach($alertesStock as $alerte): ?>
+                        <a href="#produits" class="notif-item">
+                            <div class="notif-title"><?= htmlspecialchars($alerte['nom']) ?></div>
+                            <div class="notif-desc" style="color: #f59e0b;">
+                                <i class="fa-solid fa-clock"></i> <?= tr('md_stock_limited') ?? 'Bientôt en rupture !' ?> (<?= $alerte['stock'] ?>)
+                            </div>
+                        </a>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+                        <i class="fa-solid fa-bell-slash" style="font-size: 1.5rem; margin-bottom: 10px; display: block; opacity: 0.5;"></i>
+                        <?= tr('no_notif') ?? 'Aucune alerte pour le moment.' ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
 
     <a href="login.html" class="btn btn-outline-white btn-sm d-none-mobile"><?= tr('btn_login') ?></a>
     <a href="login.html" class="btn btn-primary btn-sm"><?= tr('btn_register') ?></a>
@@ -943,6 +1043,32 @@ $listeMedicaments = $mc->afficherMedicaments();
       noResult.style.display = (visible === 0 && query !== '') ? 'block' : 'none';
     });
   }
+
+  // ---- Notification Toggle ----
+  document.addEventListener('DOMContentLoaded', () => {
+    const notifToggle = document.getElementById('notifToggle');
+    const notifDropdown = document.getElementById('notifDropdown');
+    const notifSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+
+    if(notifToggle) {
+      notifToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        
+        // Jouer le son si le menu s'ouvre
+        const isOpen = notifDropdown.style.display === 'block';
+        if (!isOpen) {
+          notifSound.play().catch(p => console.log("Audio blocked"));
+          notifDropdown.style.display = 'block';
+        } else {
+          notifDropdown.style.display = 'none';
+        }
+      });
+      
+      document.addEventListener('click', () => {
+        if(notifDropdown) notifDropdown.style.display = 'none';
+      });
+    }
+  });
 
 </script>
 

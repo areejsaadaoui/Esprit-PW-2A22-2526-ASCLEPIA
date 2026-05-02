@@ -8,6 +8,9 @@ return [
     'nav_insurances' => 'Assurances',
     'nav_forum' => 'Post&Reponse',
     'nav_reviews' => 'Avis',
+    'nav_notifications' => 'Alertes Stocks',
+    'no_notif' => 'Aucune alerte pour le moment.',
+    'md_stock_limited' => 'Bientôt en rupture !',
     'btn_login' => 'Se connecter',
     'btn_register' => 'S\'inscrire',
     

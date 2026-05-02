@@ -570,3 +570,14 @@
   .filters-bar { padding: 12px; }
   .topbar { padding: 0 16px; }
 }
+
+/* ============================================
+   NOTIFICATION DROPDOWN
+   ============================================ */
+.notif-dropdown a:hover {
+  background: rgba(0,0,0,0.04);
+}
+
+[data-theme="dark"] .notif-dropdown a:hover {
+  background: rgba(255,255,255,0.05);
+}

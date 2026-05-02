@@ -8,6 +8,9 @@ return [
     'nav_insurances' => 'Insurances',
     'nav_forum' => 'Q&A Forum',
     'nav_reviews' => 'Reviews',
+    'nav_notifications' => 'Stock Alerts',
+    'no_notif' => 'No alerts for now.',
+    'md_stock_limited' => 'Stock limited!',
     'btn_login' => 'Login',
     'btn_register' => 'Register',
     
