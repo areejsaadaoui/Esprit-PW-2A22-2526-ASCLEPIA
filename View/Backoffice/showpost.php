@@ -448,8 +448,17 @@ echo embedYouTube($contenu);
                     
                     <!-- Boutons d'action -->
                     <div class="action-buttons">
-                        <button class="btn btn-outline" >
+                        <button class="btn btn-outline" onclick="copierLienPost(<?= $post->getIdPost() ?>)">
                             <i class="fa-regular fa-share-from-square"></i> Partager
+                        </button>
+                        <!-- Badge sentiment -->
+                        <?= $post->getSentimentBadge() ?>
+                        <!-- Bouton signalement AJAX -->
+                        <button class="btn btn-outline btn-sm" id="btnSignal"
+                                style="color:#f59e0b;border-color:#f59e0b;"
+                                onclick="toggleSignal(<?= $post->getIdPost() ?>)">
+                            <i class="fas fa-flag"></i> 
+                            <span id="signalCount">0</span> Signaler
                         </button>
                         <a href="../Backoffice/deletepost.php?id=<?php echo $post->getIdPost(); ?>" 
                                    class="btn btn-danger btn-sm" >
@@ -508,6 +517,26 @@ echo embedYouTube($contenu);
                     <small><?= date('d/m/Y H:i', strtotime($rep->getDateRep())) ?></small>
                 </div>
                 <p style="margin: 10px 0;"><?= nl2br(htmlspecialchars($rep->getTexteRep())) ?></p>
+                
+                <!-- RÉACTIONS EMOJI -->
+                <div class="reactions-bar" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;" 
+                     data-rep-id="<?= $rep->getIdRep() ?>">
+                    <?php
+                    $emojis = ['❤️','😂','🔥','👍','😮','😢','👏'];
+                    foreach ($emojis as $emoji):
+                    ?>
+                    <button class="reaction-btn"
+                            onclick="toggleReaction(this, <?= $rep->getIdRep() ?>, '<?= $emoji ?>')"
+                            style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:20px;
+                                   padding:3px 10px;font-size:0.85rem;cursor:pointer;transition:0.2s;
+                                   display:inline-flex;align-items:center;gap:4px;"
+                            onmouseover="this.style.transform='scale(1.1)'"
+                            onmouseout="this.style.transform='scale(1)'">
+                        <?= $emoji ?> <span class="reaction-count">0</span>
+                    </button>
+                    <?php endforeach; ?>
+                </div>
+                
                 <div style="display: flex; gap: 8px; justify-content: flex-end;">
                     <a href="showpost.php?id=<?= $post->getIdPost() ?>&edit_reponse=<?= $rep->getIdRep() ?>" class="btn btn-primary btn-sm">
                         <i class="fas fa-pen"></i> Modifier
@@ -582,6 +611,107 @@ echo embedYouTube($contenu);
 </footer>
 
 <script src="../Frontoffice/rep.js"></script>
+
+<script>
+// ============ SIGNALEMENT DE POST ============
+let postSignale = JSON.parse(localStorage.getItem('signaled_posts') || '[]');
+const postId = <?= $post->getIdPost() ?>;
+const btnSignal = document.getElementById('btnSignal');
+
+function updateSignalBtn(signale) {
+    if (btnSignal) {
+        btnSignal.style.color    = signale ? '#ef4444' : '#f59e0b';
+        btnSignal.style.borderColor = signale ? '#ef4444' : '#f59e0b';
+        btnSignal.querySelector('i').style.animation = signale ? 'likePop 0.3s ease' : '';
+    }
+}
+
+updateSignalBtn(postSignale.includes(postId));
+
+function toggleSignal(id_post) {
+    const estSignale = postSignale.includes(id_post);
+    const action = estSignale ? 'unsignal' : 'signal';
+
+    fetch('../Frontoffice/signal_post.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'id_post=' + id_post + '&action=' + action
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            if (action === 'signal') {
+                postSignale.push(id_post);
+            } else {
+                postSignale = postSignale.filter(id => id !== id_post);
+            }
+            localStorage.setItem('signaled_posts', JSON.stringify(postSignale));
+            document.getElementById('signalCount').textContent = data.signalements;
+            updateSignalBtn(action === 'signal');
+            showToast(action === 'signal' ? '⚠️ Post signalé' : '✓ Signalement retiré', action === 'signal' ? '#f59e0b' : '#10b981');
+        }
+    })
+    .catch(err => console.error('Erreur signalement:', err));
+}
+
+// ============ RÉACTIONS EMOJI ============
+function toggleReaction(btn, id_rep, emoji) {
+    const countSpan = btn.querySelector('.reaction-count');
+    const current = parseInt(countSpan.textContent) || 0;
+    const isActive = btn.classList.contains('active-reaction');
+    const action = isActive ? 'remove' : 'add';
+
+    // Optimistic UI
+    countSpan.textContent = isActive ? Math.max(0, current - 1) : current + 1;
+    btn.classList.toggle('active-reaction');
+    btn.style.background = isActive ? '#f8fafc' : '#dbeafe';
+    btn.style.borderColor = isActive ? '#e2e8f0' : '#3b82f6';
+
+    fetch('../Frontoffice/reaction_reponse.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `id_rep=${id_rep}&emoji=${encodeURIComponent(emoji)}&action=${action}`
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success && data.reactions) {
+            // Mettre à jour tous les compteurs de cette réponse
+            const bar = btn.closest('.reactions-bar');
+            bar.querySelectorAll('.reaction-btn').forEach(b => {
+                const ej = b.textContent.trim().split(' ')[0];
+                const cnt = b.querySelector('.reaction-count');
+                if (cnt) cnt.textContent = data.reactions[ej] || 0;
+            });
+        }
+    })
+    .catch(err => console.error('Erreur réaction:', err));
+}
+
+// ============ COPIER LIEN ============
+function copierLienPost(postId) {
+    const lien = window.location.origin + window.location.pathname + '?id=' + postId;
+    navigator.clipboard.writeText(lien).then(() => {
+        showToast('✓ Lien copié !', '#10b981');
+    }).catch(() => alert('Lien : ' + lien));
+}
+
+// ============ TOAST NOTIFICATION ============
+function showToast(msg, color = '#0f172a') {
+    const t = document.createElement('div');
+    t.innerHTML = msg;
+    Object.assign(t.style, {
+        position: 'fixed', bottom: '25px', left: '50%',
+        transform: 'translateX(-50%)',
+        background: color, color: 'white',
+        padding: '10px 24px', borderRadius: '30px',
+        zIndex: '99999', fontSize: '0.9rem', fontWeight: '600',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+        animation: 'fadeInScale 0.3s ease'
+    });
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2500);
+}
+</script>
 
 
 

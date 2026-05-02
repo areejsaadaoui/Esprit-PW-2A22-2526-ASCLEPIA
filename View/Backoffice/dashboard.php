@@ -2,16 +2,67 @@
 session_start();
 include '../../Controller/PostController.php';
 require_once __DIR__ . '/../../Model/Post.php';
+include '../../Controller/ReponseController.php';
 include '../../Controller/AvisController.php';
 
-$postC = new PostController();
-$posts = $postC->listPosts();
+$postC    = new PostController();
+$reponseC = new ReponseController();
+$posts    = $postC->listPosts();
 $totalPosts = count($posts);
 
 // Récupérer les avis
-
 $avisC = new AvisController();
 
+// ============ NOUVELLES DONNÉES INNOVANTES ============
+// Top posts podium
+$topPosts = $postC->getTopPosts(3);
+
+// Posts signalés
+$postsSignales = $postC->getPostsSignales(1);
+$nbSignales    = count($postsSignales);
+
+// Stats globales avancées
+try {
+    $statsGlobales = $postC->getStatsGlobales();
+} catch (Exception $e) {
+    $statsGlobales = ['total_posts'=>$totalPosts,'total_likes'=>0,'total_reponses'=>0,'total_signalements'=>0,'posts_today'=>0,'avec_media'=>0,'distribution_horaire'=>[],'sentiments'=>[]];
+}
+
+// Top post par réponses
+$statsRep = $reponseC->getStatsReponses();
+
+// Distribution horaire (heatmap)
+$heatmapData = array_fill(0, 24, 0);
+foreach (($statsGlobales['distribution_horaire'] ?? []) as $h) {
+    $heatmapData[(int)$h['heure']] = (int)$h['nb'];
+}
+
+// Tri popularité
+$postsByPop = [];
+try {
+    $postsByPop = $postC->listPostsByPopularite();
+} catch (Exception $e) {
+    $postsByPop = $posts;
+}
+
+// Hashtags les plus utilisés (extraction depuis les contenus)
+$allHashtags = [];
+foreach ($posts as $p) {
+    $tags = $p->extractHashtags();
+    foreach ($tags as $tag) {
+        $allHashtags[$tag] = ($allHashtags[$tag] ?? 0) + 1;
+    }
+}
+arsort($allHashtags);
+$topHashtags = array_slice($allHashtags, 0, 10, true);
+
+// Analyse sentiment de tous les posts
+$sentimentCount = ['positif' => 0, 'negatif' => 0, 'neutre' => 0, 'toxique' => 0];
+foreach ($posts as $p) {
+    $sent = $p->analyzeSentiment();
+    $sentimentCount[$sent]++;
+}
+// ======================================================
 
 // Recherche
 $searchTerm = '';
@@ -64,6 +115,9 @@ switch ($orderBy) {
             return strlen($a->getContenu()) - strlen($b->getContenu());
         });
         break;
+    case 'popularite':
+        $posts = $postsByPop;
+        break;
     default: // date_desc
         usort($posts, function($a, $b) {
             return strtotime($b->getDatePost()) - strtotime($a->getDatePost());
@@ -71,6 +125,22 @@ switch ($orderBy) {
 }
 $latestPosts = $posts; // met à jour les posts triés
 // =================================================
+// ================= PAGINATION =================
+$postsPerPage = 10;
+$currentPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$totalPostsCount = count($latestPosts);
+$totalPages = ceil($totalPostsCount / $postsPerPage);
+
+// S'assurer que la page courante est valide
+if ($currentPage < 1) $currentPage = 1;
+if ($currentPage > $totalPages && $totalPages > 0) $currentPage = $totalPages;
+
+// Calculer l'offset (décalage)
+$offset = ($currentPage - 1) * $postsPerPage;
+
+// Extraire uniquement les posts de la page courante
+$paginatedPosts = array_slice($latestPosts, $offset, $postsPerPage);
+// =============================================
 }
 
 ?>
@@ -85,7 +155,7 @@ $latestPosts = $posts; // met à jour les posts triés
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/backoffice.css">
-    <style>
+     <style>
         /* ---------- ANIMATIONS GLOBALES ---------- */
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(30px); }
@@ -654,6 +724,36 @@ body.dark-mode .footer {
 .theme-toggle:hover {
     transform: scale(1.1);
 }
+
+/* ===== PAGINATION STYLES ===== */
+.pagination-btn, .pagination-num {
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.pagination-btn:hover, .pagination-num:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    opacity: 1 !important;
+}
+
+.pagination-num {
+    background: var(--primary);
+}
+
+.pagination-num:hover {
+    background: var(--primary-dark);
+}
+
+/* Dark mode pagination */
+body.dark-mode .pagination-btn,
+body.dark-mode .pagination-num {
+    background: #0ea5e9;
+}
+
+body.dark-mode .pagination-btn-disabled {
+    background: #334155 !important;
+}
     </style>
 </head>
 <body>
@@ -686,6 +786,7 @@ body.dark-mode .footer {
                     <a href="#recent">📋 Tous les posts</a>
                 </div>
             </div>
+            
             <div class="nav-item"><a href="addpost.php"><i class="fas fa-plus-circle nav-icon"></i><span>Nouveau post</span></a></div>
             <div class="nav-section-label">Autres</div>
             <div class="nav-item"><a href="../Frontoffice/index.html"><i class="fas fa-globe nav-icon"></i><span>Voir le site</span></a></div>
@@ -738,7 +839,67 @@ body.dark-mode .footer {
 <text x="50" y="62" text-anchor="middle" class="pie-label" font-size="8">TOTAL POSTS</text>
         </g>
     </svg>
+    
+          
 </div>
+  <!-- ============ BLOC INNOVANT 3 : ANALYSE SENTIMENT ============ -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;">
+
+                <!-- Analyse de sentiment -->
+                <div class="bar-chart-container">
+                    <h3 style="margin-bottom:16px;"><i class="fas fa-brain" style="color:#8b5cf6;"></i> Analyse de sentiment</h3>
+                    <div style="font-size:0.8rem;color:#94a3b8;margin-bottom:16px;">Calcul automatique sur tous les posts</div>
+                    <?php
+                    $sentConfig = [
+                        'positif' => ['icon'=>'😊','color'=>'#10b981','bg'=>'#d1fae5'],
+                        'negatif' => ['icon'=>'😟','color'=>'#f59e0b','bg'=>'#fef3c7'],
+                        'neutre'  => ['icon'=>'😐','color'=>'#64748b','bg'=>'#f1f5f9'],
+                        'toxique' => ['icon'=>'⚠️','color'=>'#ef4444','bg'=>'#fee2e2'],
+                    ];
+                    foreach ($sentimentCount as $sent => $nb):
+                        $pct = $totalPosts > 0 ? round($nb / $totalPosts * 100) : 0;
+                        $cfg = $sentConfig[$sent];
+                    ?>
+                    <div style="margin-bottom:12px;">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                            <span style="font-size:0.85rem;font-weight:600;"><?= $cfg['icon'] ?> <?= ucfirst($sent) ?></span>
+                            <span style="font-size:0.85rem;color:#475569;"><?= $nb ?> posts (<?= $pct ?>%)</span>
+                        </div>
+                        <div style="background:#f1f5f9;border-radius:20px;height:10px;overflow:hidden;">
+                            <div style="width:<?= $pct ?>%;background:<?= $cfg['color'] ?>;height:100%;border-radius:20px;transition:width 1s ease;"></div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <!-- Hashtags Trending -->
+                <div class="bar-chart-container">
+                    <h3 style="margin-bottom:16px;"><i class="fas fa-hashtag" style="color:#3b82f6;"></i> Hashtags tendance</h3>
+                    <?php if (!empty($topHashtags)): ?>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                        <?php
+                        $maxHt = max($topHashtags) ?: 1;
+                        $tagColors = ['#0ea5e9','#3b82f6','#8b5cf6','#10b981','#f59e0b','#ef4444','#06b6d4','#ec4899'];
+                        $i = 0;
+                        foreach ($topHashtags as $tag => $count):
+                            $size = 0.75 + ($count / $maxHt) * 0.5; // taille relative
+                            $color = $tagColors[$i % count($tagColors)];
+                        ?>
+                        <a href="?hashtag=<?= urlencode($tag) ?>"
+                           style="background:<?= $color ?>22;color:<?= $color ?>;border:1px solid <?= $color ?>44;
+                                  padding:5px 12px;border-radius:20px;text-decoration:none;
+                                  font-size:<?= round($size, 2) ?>rem;font-weight:600;transition:0.2s;"
+                           onmouseover="this.style.background='<?= $color ?>33'"
+                           onmouseout="this.style.background='<?= $color ?>22'">
+                            #<?= htmlspecialchars($tag) ?> <span style="opacity:0.7;font-size:0.7rem;">(<?= $count ?>)</span>
+                        </a>
+                        <?php $i++; endforeach; ?>
+                    </div>
+                    <?php else: ?>
+                        <p style="color:#94a3b8;text-align:center;margin-top:30px;">Aucun hashtag détecté dans les posts.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
         
         <div class="pie-legend">
             <div class="legend-item">
@@ -830,62 +991,194 @@ body.dark-mode .footer {
                     </div>
                 <?php endif; ?>
                  <!-- Barre de tri -->
-<div>
-    <span><i class="fas fa-sort"></i> Filtre :</span>
-    <form method="GET" action="" id="orderForm">
-        <select name="order" class="sort-select" onchange="this.form.submit()">
-            <option value="date_desc" <?= ($orderBy ?? 'date_desc') == 'date_desc' ? 'selected' : '' ?>>📅 Date décroissante</option>
-            <option value="date_asc" <?= ($orderBy ?? '') == 'date_asc' ? 'selected' : '' ?>>📅 Date croissante</option>
-            <option value="length_desc" <?= ($orderBy ?? '') == 'length_desc' ? 'selected' : '' ?>>📄 Plus long </option>
-            <option value="length_asc" <?= ($orderBy ?? '') == 'length_asc' ? 'selected' : '' ?>>📄 Plus court </option>
-        </select>
-    </form>
-</div>
+
             </div>
 
-            <!-- Tableau de tous les posts -->
-            <div id="recent" class="card" style="padding:0; overflow:hidden; border-radius: 28px;">
-                <div style="padding:20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
-                    <h3><i class="fas fa-table-list"></i> Tous les posts</h3>
-                    <a href="../Frontoffice/postlist.php" class="btn btn-outline btn-sm">Gérer <i class="fas fa-arrow-right"></i></a>
+<!-- Tableau de tous les posts -->
+<div id="recent" class="card" style="padding:0; overflow:hidden; border-radius: 28px;">
+    <div style="padding:20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <h3><i class="fas fa-table-list"></i> Tous les posts</h3>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <div>
+                <span><i class="fas fa-sort"></i> Filtre :</span>
+                <form method="GET" action="" id="orderForm" style="display:inline-block;">
+                    <select name="order" class="sort-select" onchange="this.form.submit()">
+                        <option value="date_desc" <?= ($orderBy ?? 'date_desc') == 'date_desc' ? 'selected' : '' ?>>📅 Date décroissante</option>
+                        <option value="date_asc" <?= ($orderBy ?? '') == 'date_asc' ? 'selected' : '' ?>>📅 Date croissante</option>
+                        <option value="length_desc" <?= ($orderBy ?? '') == 'length_desc' ? 'selected' : '' ?>>📄 Plus long </option>
+                        <option value="length_asc" <?= ($orderBy ?? '') == 'length_asc' ? 'selected' : '' ?>>📄 Plus court </option>
+                        <option value="popularite" <?= ($orderBy ?? '') == 'popularite' ? 'selected' : '' ?>>🔥 Popularité</option>
+                    </select>
+                </form>
+            </div>
+            <a href="../Frontoffice/postlist.php" class="btn btn-outline btn-sm">Gérer <i class="fas fa-arrow-right"></i></a>
+            <a href="export_csv.php" class="btn btn-outline btn-sm" style="border-color:#10b981;color:#10b981;">
+                <i class="fas fa-file-csv"></i> Exporter CSV
+            </a>
+        </div>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="table">
+            <thead>
+                <tr><th>ID</th><th>Contenu</th><th>Média</th><th>Sentiment</th><th>Likes</th><th>Réponses</th><th>Date</th><th>Actions</th</th>
+            </thead>
+            <tbody>
+                <?php 
+                // PAGINATION - Calcul des posts à afficher
+                $postsPerPage = 10;
+                $currentPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+                $totalPostsCount = count($latestPosts);
+                $totalPages = ceil($totalPostsCount / $postsPerPage);
+                
+                // S'assurer que la page courante est valide
+                if ($currentPage < 1) $currentPage = 1;
+                if ($currentPage > $totalPages && $totalPages > 0) $currentPage = $totalPages;
+                
+                // Calculer l'offset
+                $offset = ($currentPage - 1) * $postsPerPage;
+                
+                // Extraire les posts de la page courante
+                $postsToShow = array_slice($latestPosts, $offset, $postsPerPage);
+                ?>
+                
+                <?php if (empty($postsToShow)): ?>
+                    <tr><td colspan="8" style="text-align:center">Aucun post</td></tr>
+                <?php else: ?>
+                    <?php foreach ($postsToShow as $post): ?>
+                        <tr>
+                            <td><?= $post->getIdPost() ?></td>
+                            <td style="max-width:300px"><?= htmlspecialchars(substr($post->getContenu(),0,70)) ?>…</td>
+                            <td style="text-align:center"><?= !empty($post->getImage()) ? '<i class="fas fa-check-circle" style="color:var(--accent)"></i>' : '<i class="fas fa-times-circle" style="color:var(--gray-light)"></i>' ?></td>
+                            <td><?= $post->getSentimentBadge() ?></td>
+                            <td style="text-align:center;font-weight:600;">❤️ <?= $post->getLikes() ?></td>
+                            <td class="table-actions">
+                                <a href="../Frontoffice/listrep.php?id_post=<?= $post->getIdPost() ?>" class="btn btn-info btn-sm" title="Voir les réponses">
+                                    <i class="fas fa-comments"></i> Voir
+                                </a>
+                            </td>
+                            <td><?= date('d/m/Y', strtotime($post->getDatePost())) ?></td>
+                            <td class="table-actions">
+                                <a href="showpost.php?id=<?= $post->getIdPost() ?>" class="btn btn-outline btn-sm"><i class="fas fa-eye"></i></a>
+                                <a href="deletepost.php?id=<?= $post->getIdPost() ?>" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ?')"><i class="fas fa-trash"></i></a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- PAGINATION - Affichage des liens -->
+    <?php if ($totalPages > 1): ?>
+    <div class="pagination-container" style="display: flex; justify-content: center; align-items: center; gap: 8px; padding: 20px; flex-wrap: wrap; border-top: 1px solid var(--border);">
+        
+        <!-- Première page -->
+        <?php if ($currentPage > 1): ?>
+            <a href="?page=1<?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?><?= isset($_GET['ch']) ? '&ch=' . urlencode($_GET['ch']) : '' ?>" class="pagination-btn" style="padding: 8px 12px; border-radius: 8px; background: var(--primary); color: white; text-decoration: none;">
+                <i class="fas fa-angle-double-left"></i>
+            </a>
+        <?php else: ?>
+            <span class="pagination-disabled" style="padding: 8px 12px; border-radius: 8px; background: #cbd5e1; color: white; opacity: 0.5; cursor: not-allowed;">
+                <i class="fas fa-angle-double-left"></i>
+            </span>
+        <?php endif; ?>
+        
+        <!-- Page précédente -->
+        <?php if ($currentPage > 1): ?>
+            <a href="?page=<?= $currentPage - 1 ?><?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?><?= isset($_GET['ch']) ? '&ch=' . urlencode($_GET['ch']) : '' ?>" class="pagination-btn" style="padding: 8px 12px; border-radius: 8px; background: var(--primary); color: white; text-decoration: none;">
+                <i class="fas fa-angle-left"></i> Précédent
+            </a>
+        <?php else: ?>
+            <span class="pagination-disabled" style="padding: 8px 12px; border-radius: 8px; background: #cbd5e1; color: white; opacity: 0.5; cursor: not-allowed;">
+                <i class="fas fa-angle-left"></i> Précédent
+            </span>
+        <?php endif; ?>
+        
+        <!-- Numéros de pages -->
+        <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+            <?php
+            $startPage = max(1, $currentPage - 2);
+            $endPage = min($totalPages, $currentPage + 2);
+            
+            if ($startPage > 1) {
+                echo '<span style="padding: 8px 12px; color: var(--text-muted);">...</span>';
+            }
+            
+            for ($i = $startPage; $i <= $endPage; $i++):
+                $isActive = ($i == $currentPage);
+                $activeStyle = $isActive ? 'background: var(--primary-dark); transform: scale(1.05); font-weight: bold;' : 'background: var(--primary); opacity: 0.8;';
+            ?>
+                <a href="?page=<?= $i ?><?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?><?= isset($_GET['ch']) ? '&ch=' . urlencode($_GET['ch']) : '' ?>" 
+                   class="pagination-num" 
+                   style="padding: 8px 14px; border-radius: 8px; <?= $activeStyle ?> color: white; text-decoration: none; transition: all 0.2s;">
+                    <?= $i ?>
+                </a>
+            <?php endfor;
+            
+            if ($endPage < $totalPages) {
+                echo '<span style="padding: 8px 12px; color: var(--text-muted);">...</span>';
+            }
+            ?>
+        </div>
+        
+        <!-- Page suivante -->
+        <?php if ($currentPage < $totalPages): ?>
+            <a href="?page=<?= $currentPage + 1 ?><?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?><?= isset($_GET['ch']) ? '&ch=' . urlencode($_GET['ch']) : '' ?>" class="pagination-btn" style="padding: 8px 12px; border-radius: 8px; background: var(--primary); color: white; text-decoration: none;">
+                Suivant <i class="fas fa-angle-right"></i>
+            </a>
+        <?php else: ?>
+            <span class="pagination-disabled" style="padding: 8px 12px; border-radius: 8px; background: #cbd5e1; color: white; opacity: 0.5; cursor: not-allowed;">
+                Suivant <i class="fas fa-angle-right"></i>
+            </span>
+        <?php endif; ?>
+        
+        <!-- Dernière page -->
+        <?php if ($currentPage < $totalPages): ?>
+            <a href="?page=<?= $totalPages ?><?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?><?= isset($_GET['ch']) ? '&ch=' . urlencode($_GET['ch']) : '' ?>" class="pagination-btn" style="padding: 8px 12px; border-radius: 8px; background: var(--primary); color: white; text-decoration: none;">
+                <i class="fas fa-angle-double-right"></i>
+            </a>
+        <?php else: ?>
+            <span class="pagination-disabled" style="padding: 8px 12px; border-radius: 8px; background: #cbd5e1; color: white; opacity: 0.5; cursor: not-allowed;">
+                <i class="fas fa-angle-double-right"></i>
+            </span>
+        <?php endif; ?>
+    </div>
+    
+    <!-- Information sur les posts affichés -->
+    <div style="text-align: center; padding: 10px 20px 20px 20px; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid var(--border);">
+        <i class="fas fa-info-circle"></i> Affichage des posts <?= $offset + 1 ?> à <?= min($offset + $postsPerPage, $totalPostsCount) ?> sur un total de <?= $totalPostsCount ?> posts
+    </div>
+    <?php endif; ?>
+</div>
+
+ <!-- ============ BLOC INNOVANT 5 : MODÉRATION (Posts signalés) ============ -->
+            <?php if ($nbSignales > 0): ?>
+            <div class="card" style="padding:0;overflow:hidden;border-radius:28px;border-left:5px solid #ef4444;margin-bottom:28px;">
+                <div style="padding:18px 20px;background:linear-gradient(135deg,#fee2e2,#fef2f2);display:flex;justify-content:space-between;align-items:center;">
+                    <h3 style="color:#dc2626;margin:0;"><i class="fas fa-shield-halved"></i> ⚠️ Modération — Posts signalés</h3>
+                    <span style="background:#ef4444;color:white;padding:4px 14px;border-radius:20px;font-weight:700;"><?= $nbSignales ?> alerte(s)</span>
                 </div>
                 <div style="overflow-x:auto;">
-                    <table class="table">
-                        <thead><tr><th>ID</th><th>Contenu</th><th>Image</th><th>Date</th><th>Commentaires</th><th>Actions</th></tr></thead>
-                        <th>ID</th>
+                    <table class="table" style="margin:0;">
+                        <thead><tr><th>ID</th><th>Contenu</th><th>Signalements</th><th>Likes</th><th>Actions</th></tr></thead>
                         <tbody>
-                            <?php if (empty($latestPosts)): ?>
-                                <tr><td colspan="5" style="text-align:center">Aucun post</td></tr>
-                            <?php else: ?>
-                                <?php foreach ($latestPosts as $post): ?>
-                                    <tr>
-                                        <td><?= $post->getIdPost() ?></td>
-                                        <td style="max-width:400px"><?= htmlspecialchars(substr($post->getContenu(),0,80)) ?>…</td>
-                                        <td style="text-align:center"><?= !empty($post->getImage()) ? '<i class="fas fa-check-circle" style="color:var(--accent)"></i>' : '<i class="fas fa-times-circle" style="color:var(--gray-light)"></i>' ?></td>
-                                        <td><?= date('d/m/Y', strtotime($post->getDatePost())) ?></td>
-                                        <td class="table-actions">
-    <a href="../Frontoffice/listrep.php?id_post=<?= $post->getIdPost() ?>" 
-       class="btn btn-info btn-sm" 
-       title="Voir les réponses de ce post">
-        <i class="fas fa-comments"></i> Voir réponses
-    </a>
-</td>
-                                        <td class="table-actions">
-                                            <a href="showpost.php?id=<?= $post->getIdPost() ?>" class="btn btn-outline btn-sm"><i class="fas fa-eye"></i></a>
-                                            <a href="deletepost.php?id=<?= $post->getIdPost() ?>" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ?')"><i class="fas fa-trash"></i></a>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
+                        <?php foreach ($postsSignales as $ps): ?>
+                            <tr>
+                                <td><?= $ps['id_post'] ?></td>
+                                <td style="max-width:300px;"><?= htmlspecialchars(substr($ps['contenu'], 0, 80)) ?>…</td>
+                                <td><span style="background:#fee2e2;color:#dc2626;padding:3px 10px;border-radius:20px;font-weight:700;">🚩 <?= $ps['signalements'] ?></span></td>
+                                <td>❤️ <?= $ps['likes'] ?></td>
+                                <td>
+                                    <a href="showpost.php?id=<?= $ps['id_post'] ?>" class="btn btn-outline btn-sm"><i class="fas fa-eye"></i></a>
+                                    <a href="deletepost.php?id=<?= $ps['id_post'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ce post signalé ?')"><i class="fas fa-trash"></i></a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
             </div>
-        </div>
-       
-    </main>
-</div>
-
+            <?php endif; ?>
 
 
 

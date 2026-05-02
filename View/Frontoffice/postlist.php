@@ -23,6 +23,12 @@ function detectYouTubeInContent($content) {
 $postC = new PostController();
 $posts = $postC->listPosts();
 
+// ========== FILTRE PAR HASHTAG ==========
+$hashtagFilter = isset($_GET['hashtag']) ? trim($_GET['hashtag']) : '';
+if ($hashtagFilter) {
+    $posts = $postC->getPostsByHashtag($hashtagFilter);
+}
+
 // ========== GESTION DU TRI ==========
 $orderBy = $_GET['order'] ?? 'date_desc';
 
@@ -40,6 +46,11 @@ switch ($orderBy) {
     case 'length_asc':
         usort($posts, function($a, $b) {
             return strlen($a->getContenu()) - strlen($b->getContenu());
+        });
+        break;
+    case 'likes_desc':
+        usort($posts, function($a, $b) {
+            return $b->getLikes() - $a->getLikes();
         });
         break;
     default: // date_desc
@@ -798,12 +809,17 @@ body.dark-mode .share-option {
                         <option value="date_asc" <?= ($orderBy == 'date_asc') ? 'selected' : '' ?>>📅 Date ancienne → récente</option>
                         <option value="length_desc" <?= ($orderBy == 'length_desc') ? 'selected' : '' ?>>📄 Texte plus long</option>
                         <option value="length_asc" <?= ($orderBy == 'length_asc') ? 'selected' : '' ?>>📄 Texte plus court</option>
+                        <option value="likes_desc" <?= ($orderBy == 'likes_desc') ? 'selected' : '' ?>>🔥 Les plus aimés</option>
                     </select>
                 </form>
             </div>
             
             <div class="posts-count">
                 <i class="fas fa-chart-line"></i> <?= $totalPosts ?> discussions au total
+                <?php if ($hashtagFilter): ?>
+                    — filtre <strong>#<?= htmlspecialchars($hashtagFilter) ?></strong>
+                    <a href="?" style="color:#ef4444;margin-left:6px;text-decoration:none;" title="Retirer le filtre">✖</a>
+                <?php endif; ?>
             </div>
         </div>
         <!-- Grille des posts -->
@@ -862,6 +878,19 @@ body.dark-mode .share-option {
                     <?php if ($hasVideo): ?>
                         <?= $contenuAvecYouTube ?>
                     <?php endif; ?>
+                    <!-- Badge hashtags détectés -->
+                    <?php $tags = $post->extractHashtags(); if (!empty($tags)): ?>
+                    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;">
+                        <?php foreach (array_slice($tags, 0, 3) as $tag): ?>
+                        <a href="?hashtag=<?= urlencode($tag) ?>&order=<?= $orderBy ?>"
+                           style="background:#dbeafe;color:#3b82f6;padding:2px 9px;border-radius:20px;font-size:0.7rem;text-decoration:none;font-weight:600;">
+                            #<?= htmlspecialchars($tag) ?>
+                        </a>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php endif; ?>
+                    <!-- Badge sentiment -->
+                    <div style="margin-top:8px;"><?= $post->getSentimentBadge() ?></div>
                 </div>
 
                 <!-- Post footer -->
@@ -892,6 +921,18 @@ $baseUrl = $protocol . $host . '/posts/';
 <button class="share-btn" onclick="copierLien(<?= $post->getIdPost() ?>)">
     <i class="fa-solid fa-share-alt"></i>
     Partager
+</button>
+
+<!-- Bouton SIGNALER (AJAX) -->
+<?php
+$signaledPosts = isset($_COOKIE['signaled_posts']) ? explode(',', $_COOKIE['signaled_posts']) : [];
+$isSignaled = in_array($post->getIdPost(), $signaledPosts);
+?>
+<button class="share-btn signal-btn-<?= $post->getIdPost() ?>"
+        onclick="signalerPost(<?= $post->getIdPost() ?>, this)"
+        style="<?= $isSignaled ? 'color:#ef4444;' : 'color:#64748b;' ?>">
+    <i class="fas fa-flag"></i>
+    <span class="signal-txt"><?= $isSignaled ? 'Signalé' : 'Signaler' ?></span>
 </button>
    
                     
@@ -1188,6 +1229,46 @@ function copierLien(postId) {
     }).catch(function() {
         alert('Lien à copier : ' + lien);
     });
+}
+
+// ============ SIGNALEMENT AJAX ============
+function signalerPost(postId, btn) {
+    let signaled = JSON.parse(localStorage.getItem('signaled_posts_list') || '[]');
+    const isSignaled = signaled.includes(postId);
+    const action = isSignaled ? 'unsignal' : 'signal';
+
+    fetch('signal_post.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'id_post=' + postId + '&action=' + action
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            if (action === 'signal') {
+                signaled.push(postId);
+                btn.style.color = '#ef4444';
+                btn.querySelector('.signal-txt').textContent = 'Signalé';
+            } else {
+                signaled = signaled.filter(id => id !== postId);
+                btn.style.color = '#64748b';
+                btn.querySelector('.signal-txt').textContent = 'Signaler';
+            }
+            localStorage.setItem('signaled_posts_list', JSON.stringify(signaled));
+
+            // Toast
+            const t = document.createElement('div');
+            t.innerHTML = action === 'signal' ? '⚠️ Post signalé aux modérateurs' : '✓ Signalement retiré';
+            Object.assign(t.style, {
+                position:'fixed', bottom:'20px', left:'50%', transform:'translateX(-50%)',
+                background: action === 'signal' ? '#f59e0b' : '#10b981', color:'white',
+                padding:'10px 22px', borderRadius:'30px', zIndex:'9999', fontWeight:'600'
+            });
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2200);
+        }
+    })
+    .catch(err => console.error('Erreur signalement:', err));
 }
 </script>
 

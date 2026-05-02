@@ -119,5 +119,190 @@ public function removeLike($id_post) {
     return $req->execute();
 }
 
+// =====================================================
+// MÉTHODES INNOVANTES — ASCLEPIA v2
+// =====================================================
+
+/**
+ * Signaler un post (flag) — incrément du compteur signalements
+ */
+public function signalerPost($id_post) {
+    $sql = "UPDATE post SET signalements = signalements + 1 WHERE id_post = :id_post";
+    $db = config::getConnexion();
+    $req = $db->prepare($sql);
+    $req->bindValue(':id_post', $id_post, PDO::PARAM_INT);
+    return $req->execute();
+}
+
+/**
+ * Retirer un signalement
+ */
+public function retirerSignalement($id_post) {
+    $sql = "UPDATE post SET signalements = GREATEST(signalements - 1, 0) WHERE id_post = :id_post";
+    $db = config::getConnexion();
+    $req = $db->prepare($sql);
+    $req->bindValue(':id_post', $id_post, PDO::PARAM_INT);
+    return $req->execute();
+}
+
+/**
+ * Mettre à jour le sentiment analysé d'un post
+ */
+public function updateSentiment($id_post, $sentiment) {
+    $allowed = ['positif', 'negatif', 'neutre', 'toxique'];
+    if (!in_array($sentiment, $allowed)) return false;
+    $sql = "UPDATE post SET sentiment = :sentiment WHERE id_post = :id_post";
+    $db = config::getConnexion();
+    $req = $db->prepare($sql);
+    $req->bindValue(':sentiment', $sentiment, PDO::PARAM_STR);
+    $req->bindValue(':id_post', $id_post, PDO::PARAM_INT);
+    return $req->execute();
+}
+
+/**
+ * Mettre à jour les hashtags détectés dans un post
+ */
+public function updateHashtags($id_post, $hashtags) {
+    $sql = "UPDATE post SET hashtags = :hashtags WHERE id_post = :id_post";
+    $db = config::getConnexion();
+    $req = $db->prepare($sql);
+    $req->bindValue(':hashtags', $hashtags, PDO::PARAM_STR);
+    $req->bindValue(':id_post', $id_post, PDO::PARAM_INT);
+    return $req->execute();
+}
+
+/**
+ * Liste des posts par popularité = likes + (nb_réponses * 2)
+ */
+public function listPostsByPopularite() {
+    $sql = "SELECT p.*, 
+                   COUNT(r.id_rep) AS nb_reponses,
+                   (p.likes + COUNT(r.id_rep) * 2) AS score_popularite
+            FROM post p
+            LEFT JOIN reponse r ON p.id_post = r.id_post
+            GROUP BY p.id_post
+            ORDER BY score_popularite DESC";
+    $db = config::getConnexion();
+    $req = $db->prepare($sql);
+    $req->execute();
+    $results = $req->fetchAll(PDO::FETCH_ASSOC);
+
+    $posts = [];
+    foreach ($results as $row) {
+        $post = new Post(
+            $row['id_post'], $row['contenu'], $row['date_post'],
+            $row['image'], $row['id_utilisateur'], $row['likes']
+        );
+        $post->setNbReponses($row['nb_reponses'] ?? 0);
+        $post->setScorePopularite($row['score_popularite'] ?? 0);
+        $posts[] = $post;
+    }
+    return $posts;
+}
+
+/**
+ * Top posts avec le plus de likes (podium)
+ */
+public function getTopPosts($limit = 5) {
+    $sql = "SELECT p.*, COUNT(r.id_rep) AS nb_reponses
+            FROM post p
+            LEFT JOIN reponse r ON p.id_post = r.id_post
+            GROUP BY p.id_post
+            ORDER BY p.likes DESC
+            LIMIT :limit";
+    $db = config::getConnexion();
+    $req = $db->prepare($sql);
+    $req->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $req->execute();
+    return $req->fetchAll(PDO::FETCH_ASSOC);
+}
+
+/**
+ * Posts signalés (modération)
+ */
+public function getPostsSignales($seuil = 1) {
+    $sql = "SELECT p.*, COUNT(r.id_rep) AS nb_reponses
+            FROM post p
+            LEFT JOIN reponse r ON p.id_post = r.id_post
+            WHERE p.signalements >= :seuil
+            GROUP BY p.id_post
+            ORDER BY p.signalements DESC";
+    $db = config::getConnexion();
+    $req = $db->prepare($sql);
+    $req->bindValue(':seuil', $seuil, PDO::PARAM_INT);
+    $req->execute();
+    return $req->fetchAll(PDO::FETCH_ASSOC);
+}
+
+/**
+ * Statistiques globales du forum
+ */
+public function getStatsGlobales() {
+    $db = config::getConnexion();
+
+    // Total posts, likes, signalements
+    $req = $db->query("SELECT 
+        COUNT(*) AS total_posts,
+        SUM(likes) AS total_likes,
+        SUM(signalements) AS total_signalements,
+        COUNT(CASE WHEN DATE(date_post) = CURDATE() THEN 1 END) AS posts_today,
+        COUNT(CASE WHEN image != '' AND image IS NOT NULL THEN 1 END) AS avec_media
+        FROM post");
+    $stats = $req->fetch(PDO::FETCH_ASSOC);
+
+    // Total réponses
+    $req2 = $db->query("SELECT COUNT(*) AS total_reponses FROM reponse");
+    $rep = $req2->fetch(PDO::FETCH_ASSOC);
+    $stats['total_reponses'] = $rep['total_reponses'];
+
+    // Heure de pointe (distribution horaire)
+    $req3 = $db->query("SELECT HOUR(date_post) AS heure, COUNT(*) AS nb FROM post GROUP BY HOUR(date_post) ORDER BY heure");
+    $stats['distribution_horaire'] = $req3->fetchAll(PDO::FETCH_ASSOC);
+
+    // Distribution sentiments
+    $req4 = $db->query("SELECT sentiment, COUNT(*) AS nb FROM post WHERE sentiment IS NOT NULL GROUP BY sentiment");
+    $stats['sentiments'] = $req4->fetchAll(PDO::FETCH_ASSOC);
+
+    return $stats;
+}
+
+/**
+ * Export CSV de tous les posts
+ */
+public function exportCSV() {
+    $sql = "SELECT p.id_post, p.contenu, p.date_post, p.likes, p.signalements,
+                   p.sentiment, COUNT(r.id_rep) AS nb_reponses
+            FROM post p
+            LEFT JOIN reponse r ON p.id_post = r.id_post
+            GROUP BY p.id_post
+            ORDER BY p.date_post DESC";
+    $db = config::getConnexion();
+    $req = $db->prepare($sql);
+    $req->execute();
+    return $req->fetchAll(PDO::FETCH_ASSOC);
+}
+
+/**
+ * Posts par hashtag
+ */
+public function getPostsByHashtag($hashtag) {
+    $hashtag = ltrim($hashtag, '#');
+    $sql = "SELECT * FROM post WHERE contenu LIKE :tag OR hashtags LIKE :tag2 ORDER BY date_post DESC";
+    $db = config::getConnexion();
+    $req = $db->prepare($sql);
+    $req->bindValue(':tag', '%#' . $hashtag . '%', PDO::PARAM_STR);
+    $req->bindValue(':tag2', '%' . $hashtag . '%', PDO::PARAM_STR);
+    $req->execute();
+    $results = $req->fetchAll(PDO::FETCH_ASSOC);
+    $posts = [];
+    foreach ($results as $row) {
+        $posts[] = new Post(
+            $row['id_post'], $row['contenu'], $row['date_post'],
+            $row['image'], $row['id_utilisateur'], $row['likes']
+        );
+    }
+    return $posts;
+}
+
 }
 ?>
