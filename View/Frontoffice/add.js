@@ -1,4 +1,6 @@
 // ===== COMPTEUR DE CARACTÈRES =====
+console.clear();
+console.log("=== ADD.JS RECHARGÉ PROPREMENT ===");
 const textarea = document.getElementById('postContent');
 const nbchar = document.getElementById('nbchar');
 
@@ -105,60 +107,164 @@ function removeGif() {
     }
 }
 
-// ===== SUGGESTION AUTOMATIQUE DE RÉPONSES (AVEC API) =====
-const suggestionTextarea = document.getElementById('postContent') || document.getElementById('texte_rep');
+// add.js
+console.log("✅ add.js chargé avec succès !");
 
-if (suggestionTextarea) {
-    // Créer la boîte de suggestions
-    const suggestionBox = document.createElement('div');
-    suggestionBox.id = 'suggestionsBox';
-    suggestionBox.style.cssText = 'margin-top: 10px; padding: 10px; background: #f0fdf4; border-radius: 12px; display: none; font-size: 0.85rem;';
-    suggestionBox.innerHTML = '<strong>💡 Suggestions de réponses :</strong><div id="suggestionsList"></div>';
-    suggestionTextarea.parentNode.insertBefore(suggestionBox, suggestionTextarea.nextSibling);
+// =============================================
+// ADD.JS - Version propre pour AI Enhance
+// =============================================
+
+console.log("=== ADD.JS CHARGÉ CORRECTEMENT ===");
+
+document.addEventListener('DOMContentLoaded', function() {
+
+    const btn = document.getElementById('btnEnhanceAI');
     
-    let typingTimer;
+    if (btn) {
+        console.log("✅ Bouton Améliorer avec l’IA détecté");
+
+        btn.addEventListener('click', async function() {
+            console.log("🟢 Bouton cliqué !");
+
+            const textarea = document.getElementById('postContent');
+            if (!textarea) {
+                alert("Erreur : Champ texte non trouvé");
+                return;
+            }
+
+            const content = textarea.value.trim();
+
+            if (content.length < 15) {
+                alert("❌ Le texte est trop court pour l'IA.");
+                return;
+            }
+
+            const originalHTML = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Amélioration en cours...';
+            this.disabled = true;
+
+            try {
     
-    suggestionTextarea.addEventListener('input', function() {
-        clearTimeout(typingTimer);
-        const text = this.value.trim();
+const response = await fetch('../Backoffice/ai_enhance.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `id_post=0&contenu=${encodeURIComponent(content)}`
+    });
+
+    console.log("Status HTTP:", response.status);
+
+    if (!response.ok) {
+        console.log("Erreur HTTP:", response.status);
+    }
+
+    const data = await response.json();
+    console.log("Réponse complète:", data);
+
+    if (data.success) {
+        document.getElementById('aiPreviewText').textContent = data.newContent;
+        document.getElementById('aiPreview').style.display = 'block';
+        textarea.style.opacity = '0.6';
+    } else {
+        alert('Erreur : ' + (data.error || 'Erreur inconnue'));
+    }
+} catch (e) {
+    console.error("Erreur fetch:", e);
+    alert('Erreur de connexion avec le serveur IA');
+}
+        });
+
+    } else {
+        console.warn("⚠️ Bouton #btnEnhanceAI non trouvé");
+    }
+});
+
+// ===== FONCTIONS POUR L'IA ENHANCE =====
+function acceptAI() {
+    const aiPreviewText = document.getElementById('aiPreviewText');
+    const textarea = document.getElementById('postContent');
+    const aiPreview = document.getElementById('aiPreview');
+    
+    if (aiPreviewText && textarea) {
+        // Récupérer le texte amélioré
+        const improvedText = aiPreviewText.textContent || aiPreviewText.innerText;
         
-        if (text.length < 8) {
-            suggestionBox.style.display = 'none';
-            return;
+        // Remplacer le contenu du textarea
+        textarea.value = improvedText;
+        
+        // Cacher la prévisualisation
+        if (aiPreview) {
+            aiPreview.style.display = 'none';
         }
         
-        typingTimer = setTimeout(() => {
-            // 🔽 Chemin CORRECT vers le fichier API (dans Backoffice)
-            fetch(`../Backoffice/suggestion_api.php?text=${encodeURIComponent(text)}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.suggestions && data.suggestions.length > 0) {
-                        const suggestionsList = document.getElementById('suggestionsList');
-                        suggestionsList.innerHTML = data.suggestions.map(suggestion => `
-                            <div style="padding: 8px 0; cursor: pointer; color: #166534; border-bottom: 1px solid #d1fae5;" 
-                                 onclick="insertSuggestion('${suggestion.replace(/'/g, "\\'")}')">
-                                💬 ${suggestion}
-                            </div>
-                        `).join('');
-                        suggestionBox.style.display = 'block';
-                    } else {
-                        suggestionBox.style.display = 'none';
-                    }
-                })
-                .catch(error => {
-                    console.error('Erreur API:', error);
-                    suggestionBox.style.display = 'none';
-                });
-        }, 600);
-    });
+        // Remettre l'opacité normale du textarea
+        textarea.style.opacity = '1';
+        
+        // Mettre à jour le compteur de caractères
+        if (typeof updateCharCount === 'function') {
+            updateCharCount();
+        } else if (document.getElementById('nbchar')) {
+            const len = textarea.value.length;
+            const nbchar = document.getElementById('nbchar');
+            nbchar.textContent = len + ' / 2000 caractères (minimum 10 requis)';
+        }
+        
+        // Notification de succès
+        showToast('✅ Texte amélioré accepté !', 'success');
+    }
 }
 
-// ===== INSÉRER LA SUGGESTION DANS LE CHAMP =====
-function insertSuggestion(text) {
-    const textarea = document.getElementById('postContent') || document.getElementById('texte_rep');
-    if (textarea) {
-        textarea.value = text;
-        textarea.dispatchEvent(new Event('input'));
-        document.getElementById('suggestionsBox').style.display = 'none';
+function rejectAI() {
+    const aiPreview = document.getElementById('aiPreview');
+    const textarea = document.getElementById('postContent');
+    
+    if (aiPreview) {
+        aiPreview.style.display = 'none';
     }
+    if (textarea) {
+        textarea.style.opacity = '1';
+    }
+    
+    showToast('❌ Amélioration annulée', 'info');
+}
+
+// Fonction pour afficher un toast (si pas déjà présente)
+function showToast(message, type = 'success') {
+    // Créer le toast s'il n'existe pas
+    let toast = document.getElementById('dynamicToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'dynamicToast';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #10b981;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            z-index: 10000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        `;
+        document.body.appendChild(toast);
+    }
+    
+    if (type === 'error') {
+        toast.style.background = '#ef4444';
+    } else if (type === 'info') {
+        toast.style.background = '#3b82f6';
+    } else {
+        toast.style.background = '#10b981';
+    }
+    
+    toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle')}"></i> ${message}`;
+    toast.style.transform = 'translateX(0)';
+    
+    setTimeout(() => {
+        toast.style.transform = 'translateX(400px)';
+    }, 3000);
 }

@@ -467,6 +467,19 @@ echo embedYouTube($contenu);
                                  <a href="../Backoffice/modifpost.php?id=<?php echo $post->getIdPost(); ?>" class="btn btn-primary btn-sm">
                         <i class="fas fa-pen"></i> Modifier
     </a>
+ <button class="btn btn-outline btn-sm" 
+        data-post-id="<?= $post->getIdPost() ?>"
+        data-content="<?= htmlspecialchars(json_encode($post->getContenu()), ENT_QUOTES, 'UTF-8') ?>"
+        onclick="generateSummary(this)"
+        id="summary-btn-<?= $post->getIdPost() ?>">
+    <i class="fas fa-brain"></i> 🤖 Résumé IA
+</button>
+                    </div>
+                    
+                   
+
+<!-- Conteneur pour le résumé -->
+<div id="summary-<?= $post->getIdPost() ?>" style="display: none; margin-top: 10px;"></div>
                     </div>
                   
                     <!-- Formulaire pour ajouter une réponse -->
@@ -755,7 +768,83 @@ function showToast(msg, color = '#0f172a') {
     console.log("🔍 Test : textarea trouvé ?", document.querySelector('textarea[name="texte_rep"]'));
 </script>
 
+<script>
+// ========== RÉSUMÉ IA SIMPLIFIÉ ==========
+// ========== RÉSUMÉ IA SIMPLIFIÉ ==========
+// ========== RÉSUMÉ IA ==========
+async function generateSummary(button) {
+    const postId = button.getAttribute('data-post-id');
+    let content = button.getAttribute('data-content');
+    
+    // Décoder le JSON
+    try {
+        content = JSON.parse(content);
+    } catch(e) {
+        console.error("Erreur de parsing:", e);
+    }
+    
+    console.log("Génération du résumé pour le post " + postId);
+    
+    const container = document.getElementById(`summary-${postId}`);
+    const btn = document.getElementById(`summary-btn-${postId}`);
+    
+    if (!container) {
+        console.error("Container non trouvé");
+        return;
+    }
+    
+    container.style.display = 'block';
+    container.innerHTML = '<div style="padding: 12px; background: #f0fdf4; border-radius: 12px;">⏳ Génération du résumé...</div>';
+    
+    if (btn) btn.style.display = 'none';
+    
+    try {
+        const formData = new FormData();
+        formData.append('post_id', postId);
+        formData.append('contenu', content);
+        
+        const response = await fetch('summarize_post.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        console.log("Réponse:", data);
+        
+        if (data.success) {
+            container.innerHTML = `
+                <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 12px; border-radius: 8px; margin-top: 10px;">
+                    <strong>🤖 Résumé IA :</strong>
+                    <p style="margin: 8px 0 0 0; font-size: 0.9rem;">${escapeHtml(data.summary)}</p>
+                    <button onclick="hideSummary(${postId})" 
+                            style="margin-top: 8px; background: none; border: none; color: #64748b; cursor: pointer;">
+                        ✖ Fermer
+                    </button>
+                </div>
+            `;
+        } else {
+            container.innerHTML = `<div style="background: #fee2e2; padding: 12px; border-radius: 8px;">❌ ${escapeHtml(data.error || 'Erreur')}</div>`;
+        }
+    } catch(error) {
+        console.error("Erreur:", error);
+        container.innerHTML = `<div style="background: #fee2e2; padding: 12px; border-radius: 8px;">❌ Erreur de connexion: ${escapeHtml(error.message)}</div>`;
+    }
+    
+    if (btn) btn.style.display = 'flex';
+}
 
-<script src="../Frontoffice/sugg.js"></script>
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function hideSummary(postId) {
+    const container = document.getElementById(`summary-${postId}`);
+    const btn = document.getElementById(`summary-btn-${postId}`);
+    if (container) container.style.display = 'none';
+    if (btn) btn.style.display = 'flex';
+}
+</script>
 </body>
 </html>

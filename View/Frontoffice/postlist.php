@@ -958,6 +958,7 @@ $isSignaled = in_array($post->getIdPost(), $signaledPosts);
    
                     
                     <div class="post-actions">
+                        
                         <a href="../Backoffice/modifpost.php?id=<?= $post->getIdPost() ?>" class="btn btn-primary btn-sm">
                             <i class="fa-solid fa-pen"></i>
                         </a>

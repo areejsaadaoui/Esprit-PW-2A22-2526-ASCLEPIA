@@ -304,5 +304,11 @@ public function getPostsByHashtag($hashtag) {
     return $posts;
 }
 
+public function enhancePostWithAI($id_post, $contenu) {
+    // Cette méthode peut être appelée directement depuis le controller si besoin
+    $db = config::getConnexion();
+    $stmt = $db->prepare("UPDATE post SET contenu = :contenu, ai_enhanced = 1 WHERE id_post = :id");
+    return $stmt->execute(['contenu' => $contenu, 'id' => $id_post]);
+}
 }
 ?>

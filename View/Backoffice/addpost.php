@@ -483,6 +483,14 @@ body.dark-mode .gif-modal-header h3 {
                             <div class="form-error" id="contentError"></div>
                             <div class="form-hint" id="nbchar">0 / 2000 caractères (minimum 10 requis)</div>
                         </div>
+                        <div class="ai-enhance-bar" style="margin: 15px 0;">
+    <button type="button" id="btnEnhanceAI" class="btn btn-accent">
+        <i class="fas fa-magic"></i> ✨ Améliorer avec l’IA
+    </button>
+    <small style="color:#64748b; margin-left:10px;">
+        Rend le texte plus professionnel et engageant
+    </small>
+</div>
                         
                         <!-- Champ Upload Image -->
                         <div class="form-group">
@@ -514,7 +522,7 @@ body.dark-mode .gif-modal-header h3 {
                         <!-- Champs cachés -->
                         <input type="hidden" name="date_post" value="<?php echo date('Y-m-d H:i:s'); ?>">
                         <input type="hidden" name="id_utilisateur" value="1">
-                       
+                       <!-- aiPreview EST HORS DU FORM pour éviter la soumission -->
                         <!-- Boutons -->
                         <div style="display: flex; gap: 16px; margin-top: 32px; flex-wrap: wrap;">
                             <button type="submit" id="submitBtn" class="btn btn-primary btn-lg">
@@ -552,6 +560,39 @@ body.dark-mode .gif-modal-header h3 {
         </div>
     </div>
 </section>
+
+<!-- ✨ AI PREVIEW MODAL — EN DEHORS DU FORM -->
+<div id="aiPreview" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+     background:rgba(0,0,0,0.5); z-index:10000; justify-content:center; align-items:center; pointer-events:all;">
+    <div style="background:white; border-radius:20px; padding:28px; max-width:620px; width:90%;
+                box-shadow:0 20px 60px rgba(0,0,0,0.3); animation:fadeInScale 0.3s ease; pointer-events:all;" onclick="event.stopPropagation()">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+            <span style="font-size:1.4rem;">✨</span>
+            <strong style="font-size:1.1rem; color:#065f46;">Version améliorée par l'IA</strong>
+            <span id="aiCorrectionsBadge" style="margin-left:auto; background:#dcfce7; color:#16a34a;
+                   padding:3px 12px; border-radius:20px; font-size:0.75rem; font-weight:600;"></span>
+        </div>
+        <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:12px; padding:14px 16px;
+                    font-size:0.95rem; line-height:1.7; color:#1e293b; white-space:pre-wrap;
+                    max-height:300px; overflow-y:auto;" id="aiPreviewText"></div>
+        <div style="margin-top:18px; display:flex; gap:12px;">
+            <button type="button" onclick="acceptAI()"
+                    style="background:#10b981; color:white; border:none; border-radius:25px;
+                           padding:10px 24px; font-weight:700; cursor:pointer; font-size:0.95rem;
+                           display:flex; align-items:center; gap:8px;">
+                ✅ Accepter — remplacer mon texte
+            </button>
+            <button type="button" onclick="rejectAI()"
+                    style="background:#f1f5f9; color:#475569; border:1px solid #e2e8f0;
+                           border-radius:25px; padding:10px 20px; cursor:pointer; font-size:0.95rem;">
+                ✖ Annuler
+            </button>
+        </div>
+        <p style="margin-top:12px; font-size:0.78rem; color:#94a3b8;">
+            ⚠️ Le texte ne sera <strong>pas publié</strong> automatiquement. Cliquez "Publier" quand vous êtes prêt.
+        </p>
+    </div>
+</div>
 
 <footer class="footer">
     <div class="container">
@@ -599,7 +640,7 @@ body.dark-mode .gif-modal-header h3 {
     </div>
 </footer>
 
-<script src="../Frontoffice/add.js"></script>
+<script src="../Frontoffice/add.js?v=<?= time() ?>"></script>
 <button class="theme-toggle" id="themeToggle">
     <i class="fas fa-moon"></i>
 </button>
@@ -732,6 +773,174 @@ function removeGif() {
         previewContainer.innerHTML = '';
     }
 }
+
+
+// ============================================================
+// ✨ AI POST ENHANCER — amélioration de style (sans API payante)
+// Utilise MyMemory API (gratuit) pour reformuler le texte
+// ============================================================
+(function() {
+    const btn      = document.getElementById('btnEnhanceAI');
+    const preview  = document.getElementById('aiPreview');
+    const previewText = document.getElementById('aiPreviewText');
+    const textarea = document.getElementById('postContent');
+
+    if (!btn || !textarea) return;
+
+    btn.addEventListener('click', async function () {
+        const contenu = textarea.value.trim();
+        if (contenu.length < 5) {
+            showAIToast('⚠️ Écris d\'abord ton post !', '#f59e0b');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Amélioration en cours...';
+
+        try {
+            // === AMÉLIORATION LOCALE INTELLIGENTE ===
+            // Pas d'API externe — traitement 100% JS, toujours disponible
+            let improved = ameliorerTexte(contenu);
+
+            // Afficher le modal avec le résultat
+            const badge = document.getElementById('aiCorrectionsBadge');
+            if (badge) {
+                const nbMots = improved.split(/\s+/).length;
+                badge.textContent = nbMots + ' mots · style amélioré';
+            }
+            previewText.textContent = improved;
+            preview.style.display = 'flex';
+
+        } catch (err) {
+            showAIToast('❌ Erreur : ' + err.message, '#ef4444');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-magic"></i> ✨ Améliorer avec l\'IA';
+        }
+    });
+
+    // ── Moteur d'amélioration local ─────────────────────────────
+    function ameliorerTexte(texte) {
+        let t = texte.trim();
+
+        // 1. Remplacer abréviations / fautes communes médicales
+        const remplacements = [
+            [/\bje veut\b/gi, 'je voudrais'],
+            [/\bje veux\b/gi, 'je souhaite'],
+            [/\bje cherche\b/gi, 'je recherche'],
+            [/\bbonjour\b/gi, 'Bonjour'],
+            [/\bmedcin\b/gi, 'médecin'],
+            [/\bmedecin\b/gi, 'médecin'],
+            [/\bdocteur\b/gi, 'Dr'],
+            [/\bpharmacie\b/gi, 'pharmacie'],
+            [/\bmedicament[s]?\b/gi, 'médicament'],
+            [/\bjai\b/gi, "j'ai"],
+            [/\bjé\b/gi, "j'ai"],
+            [/\bc est\b/gi, "c'est"],
+            [/\bca\b/gi, 'ça'],
+            [/\bpk\b/gi, 'pourquoi'],
+            [/\bpq\b/gi, 'pourquoi'],
+            [/\bsvp\b/gi, 's\'il vous plaît'],
+            [/\bstp\b/gi, 's\'il te plaît'],
+            [/\bpour la grip+e?\b/gi, 'pour la grippe'],
+            [/\bmrci\b/gi, 'merci'],
+            [/\bmerci d avance\b/gi, 'merci d\'avance'],
+            [/\bqqun\b/gi, 'quelqu\'un'],
+            [/\bqq1\b/gi, 'quelqu\'un'],
+            [/\btrés\b/gi, 'très'],
+            [/\bpeutetre\b/gi, 'peut-être'],
+        ];
+
+        for (const [pattern, rep] of remplacements) {
+            t = t.replace(pattern, rep);
+        }
+
+        // 2. Couper en phrases sur les points, ?, !, \n
+        let phrases = t.split(/(?<=[.!?])\s+|\n+/).filter(p => p.trim().length > 0);
+
+        // 3. Améliorer chaque phrase
+        phrases = phrases.map(phrase => {
+            phrase = phrase.trim();
+            if (!phrase) return '';
+
+            // Majuscule au début
+            phrase = phrase.charAt(0).toUpperCase() + phrase.slice(1);
+
+            // Ajouter point final si manquant et phrase assez longue
+            if (phrase.length > 10 && !/[.!?]$/.test(phrase)) {
+                phrase += '.';
+            }
+
+            // Améliorer formulations courtes médicales
+            phrase = phrase
+                .replace(/^(Bonjour[,.]?\s*)?(je souhaite|je recherche|je voudrais)\s+un\s+médecin\.?$/i,
+                    'Bonjour, je recherche les coordonnées d\'un bon médecin dans ma région. Pourriez-vous m\'aider ?')
+                .replace(/^(Bonjour[,.]?\s*)?(je souhaite|je recherche|je voudrais)\s+un\s+bon\s+médecin\.?$/i,
+                    'Bonjour, je recherche les coordonnées d\'un bon médecin. Pourriez-vous me recommander quelqu\'un ?')
+                .replace(/^(Bonjour[,.]?\s*)?je\s+cherche\s+une?\s+(bonne?\s+)?adresse\s+d[eu]\s+(?:bon\s+)?médecin\.?$/i,
+                    'Bonjour, je recherche l\'adresse d\'un bon médecin. Quelqu\'un peut-il me faire une recommandation ?')
+                .replace(/^j['']ai\s+mal\s+à\s+la\s+tête\.?$/i,
+                    'J\'ai des maux de tête persistants. Avez-vous des conseils ou une recommandation médicale ?')
+                .replace(/^(je ne me sens pas bien|je suis pas bien)\.?$/i,
+                    'Je ne me sens pas bien et j\'aurais besoin d\'un avis médical.');
+
+            return phrase;
+        });
+
+        // 4. Ajouter formule de politesse si absente et texte court
+        let result = phrases.join(' ').trim();
+
+        const aBonjour = /^bonjour/i.test(result);
+        const aMerci = /merci/i.test(result);
+
+        if (!aBonjour && result.length > 0) {
+            result = 'Bonjour, ' + result.charAt(0).toLowerCase() + result.slice(1);
+        }
+        if (!aMerci && result.split(' ').length > 5) {
+            result += ' Merci d\'avance pour votre aide.';
+        }
+
+        return result;
+    }
+
+    // Accepter → coller dans le textarea, fermer le modal, NE PAS publier
+    window.acceptAI = function () {
+        const improved = previewText.textContent;
+        if (improved) {
+            textarea.value = improved;
+            textarea.dispatchEvent(new Event('input'));
+        }
+        preview.style.display = 'none';
+        showAIToast('✅ Texte amélioré ! Relisez puis cliquez "Publier".', '#10b981');
+    };
+
+    // Annuler → juste fermer le modal
+    window.rejectAI = function () {
+        preview.style.display = 'none';
+    };
+
+    // Fermer modal en cliquant le fond
+    if (preview) {
+        preview.addEventListener('click', function(e) {
+            if (e.target === preview) rejectAI();
+        });
+    }
+
+    function showAIToast(msg, color) {
+        const t = document.createElement('div');
+        t.textContent = msg;
+        Object.assign(t.style, {
+            position: 'fixed', bottom: '24px', left: '50%',
+            transform: 'translateX(-50%)',
+            background: color, color: '#fff',
+            padding: '10px 24px', borderRadius: '30px',
+            zIndex: '99999', fontWeight: '600', fontSize: '0.9rem',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+        });
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 3000);
+    }
+})();
 
 </script>
 
