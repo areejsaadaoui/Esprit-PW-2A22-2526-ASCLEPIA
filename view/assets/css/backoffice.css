@@ -6,13 +6,13 @@
 .admin-wrapper {
   display: flex;
   min-height: 100vh;
-  background: #f0f4f8;
+  background: var(--bg);
 }
 
 /* ---- SIDEBAR ---- */
 .sidebar {
   width: 260px;
-  background: var(--dark);
+  background: #0f172a;
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -50,7 +50,7 @@
 .sidebar-title {
   font-size: 1.1rem;
   font-weight: 800;
-  color: var(--white);
+  color: var(--text);
   letter-spacing: -0.01em;
 }
 

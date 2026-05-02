@@ -46,7 +46,7 @@ class medicament
         {
             return $this->images;
         }
-
+//traja3a id pharmacie
         public function getIdPharmacie()
         {
             return $this->id_pharmacie;
