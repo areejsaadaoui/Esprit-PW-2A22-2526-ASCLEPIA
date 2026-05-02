@@ -3,6 +3,7 @@ session_start();
 require_once __DIR__ . '/langue.php';
 include '../../Controller/ContratController.php';
 require_once __DIR__ . '/../../Model/Contrat.php';
+require_once __DIR__ . '/../../mailconfig.php';
 
 $contratC       = new ContratController();
 $assurances     = $contratC->listAssurances();
@@ -51,8 +52,8 @@ if (isset($_POST['id_assurance'], $_POST['date_d'], $_POST['montant'])) {
 ];
             $mail->Host       = 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
-            $mail->Username   = 'contact.asclepia@gmail.com';
-            $mail->Password   = 'ahtb nbgq dhvq dfio';
+            $mail->Username   = MAIL_USERNAME;
+            $mail->Password   = MAIL_PASSWORD;  
             $mail->SMTPSecure = 'tls';
             $mail->Port       = 587;
             $mail->CharSet    = 'UTF-8';
