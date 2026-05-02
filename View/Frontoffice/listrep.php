@@ -83,6 +83,25 @@ if ($id_post) {
             background: var(--accent-dark);
             transform: translateY(-2px);
         }
+
+        .youtube-embed {
+    position: relative;
+    padding-bottom: 56.25%; /* ratio 16:9 */
+    height: 0;
+    overflow: hidden;
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+.youtube-embed iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 12px;
+}
     </style>
 </head>
 <body>
@@ -154,7 +173,17 @@ if ($id_post) {
                         <?php foreach ($reponses as $rep): ?>
                             <tr>
                                 <td><?= htmlspecialchars($rep['id_rep']) ?></td>
-                                <td><?= htmlspecialchars(substr($rep['texte_rep'], 0, 80)) ?>…</td>
+                                <td><?= htmlspecialchars(substr($rep['texte_rep'], 0, 80)) ?>…
+                            <td>
+    <?php 
+    $contenu = htmlspecialchars(substr($rep['texte_rep'], 0, 150));
+    // Si contient un lien YouTube, affiche un badge spécial
+    if (preg_match('/youtube\.com\/watch\?v=|youtu\.be\//', $contenu)) {
+        echo '<span class="video-badge">🎬 Vidéo YouTube</span>';
+    }
+    echo nl2br($contenu);
+    ?>
+</td></td>
                                 <td>
                                     <i class="fas fa-user"></i> 
                                     <?= htmlspecialchars($rep['auteur'] ?? 'Anonyme') ?>

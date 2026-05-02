@@ -732,6 +732,7 @@ function removeGif() {
         previewContainer.innerHTML = '';
     }
 }
+
 </script>
 
 </body>

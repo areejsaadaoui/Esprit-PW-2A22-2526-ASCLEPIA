@@ -5,14 +5,16 @@ class Post {
     private ?string $date_post;
     private ?string $image;
     private ?int    $id_utilisateur;
+    private ?int $likes; 
 
     // constructeur
-    public function __construct( ?int    $id_post, ?string $contenu, ?string $date_post, ?string $image, ?int    $id_utilisateur ) {
+    public function __construct( ?int    $id_post, ?string $contenu, ?string $date_post, ?string $image, ?int    $id_utilisateur, ?int $likes = 0 ) {
         $this->id_post        = $id_post;
         $this->contenu        = $contenu;
         $this->date_post      = $date_post;
         $this->image          = $image;
         $this->id_utilisateur = $id_utilisateur;
+        $this->likes= $likes;
     }
 
     public function show() {
@@ -43,5 +45,11 @@ class Post {
     public function setDatePost(?string $date_post):        void { $this->date_post = $date_post; }
     public function setImage(?string $image):               void { $this->image = $image; }
     public function setIdUtilisateur(?int $id_utilisateur): void { $this->id_utilisateur = $id_utilisateur;}
+
+     // Getter
+    public function getLikes(): ?int { return $this->likes; }
+
+    // Setter
+    public function setLikes(?int $likes): void { $this->likes = $likes; }
 }
 ?>

@@ -25,43 +25,46 @@ class PostController {
     }
 
     public function listPosts() {
-        $sql = "SELECT * FROM post ORDER BY date_post DESC";
-        $db = config::getConnexion();
-        $stmt = $db->prepare($sql);
-        $stmt->execute();
-        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        $posts = [];
-        foreach ($results as $row) {
-            $posts[] = new Post(
-                $row['id_post'],
-                $row['contenu'],
-                $row['date_post'],
-                $row['image'],
-                $row['id_utilisateur']
-            );
-        }
-        return $posts;
+    $sql = "SELECT * FROM post ORDER BY date_post DESC";
+    $db = config::getConnexion();
+    $req = $db->prepare($sql);
+    $req->execute();
+    $results = $req->fetchAll(PDO::FETCH_ASSOC);
+    
+    $posts = [];
+    foreach ($results as $row) {
+        $posts[] = new Post(
+            $row['id_post'],
+            $row['contenu'],
+            $row['date_post'],
+            $row['image'],
+            $row['id_utilisateur'],
+            $row['likes']  // ← AJOUTÉ
+        );
     }
+    return $posts;
+}
 
-    public function getPostById($id_post) {
-        $sql = "SELECT * FROM post WHERE id_post = :id_post";
-        $db = config::getConnexion();
-        $stmt = $db->prepare($sql);
-        $stmt->execute([':id_post' => $id_post]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if ($row) {
-            return new Post(
-                $row['id_post'],
-                $row['contenu'],
-                $row['date_post'],
-                $row['image'],
-                $row['id_utilisateur']
-            );
-        }
-        return null;
+public function getPostById($id_post) {
+    $sql = "SELECT * FROM post WHERE id_post = :id_post";
+    $db = config::getConnexion();
+    $req = $db->prepare($sql);
+    $req->bindValue(':id_post', $id_post, PDO::PARAM_INT);
+    $req->execute();
+    $row = $req->fetch(PDO::FETCH_ASSOC);
+    
+    if ($row) {
+        return new Post(
+            $row['id_post'],
+            $row['contenu'],
+            $row['date_post'],
+            $row['image'],
+            $row['id_utilisateur'],
+            $row['likes']  // ← AJOUTÉ
+        );
     }
+    return null;
+}
 
     public function updatePost(Post $post, $id_post) {
         try {
@@ -100,5 +103,21 @@ class PostController {
         die('Error:' . $e->getMessage());
     }
 }
+public function addLike($id_post) {
+    $sql = "UPDATE post SET likes = likes + 1 WHERE id_post = :id_post";
+    $db = config::getConnexion();
+    $req = $db->prepare($sql);
+    $req->bindValue(':id_post', $id_post, PDO::PARAM_INT);
+    return $req->execute();
+}
+
+public function removeLike($id_post) {
+    $sql = "UPDATE post SET likes = likes - 1 WHERE id_post = :id_post AND likes > 0";
+    $db = config::getConnexion();
+    $req = $db->prepare($sql);
+    $req->bindValue(':id_post', $id_post, PDO::PARAM_INT);
+    return $req->execute();
+}
+
 }
 ?>

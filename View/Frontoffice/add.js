@@ -96,15 +96,69 @@ function removeImage() {
     c = null;
 }
 
-// ===== GIPHY INTEGRATION (à placer APRES la déclaration des constantes GIPHY) =====
-// Les constantes comme gifUrlInput, gifModal doivent être définies AVANT
-// Normalement, ces variables sont dans ton HTML (addpost.php)
-
-// Supprimer le GIF (et vider l’aperçu)
+// ===== SUPPRIMER L'APERÇU DU GIF =====
 function removeGif() {
     document.getElementById('gifUrl').value = '';
     const previewContainer = document.getElementById('imagePreviewContainer');
     if (previewContainer) {
-        previewContainer.innerHTML = ''; // Efface l’aperçu
+        previewContainer.innerHTML = '';
+    }
+}
+
+// ===== SUGGESTION AUTOMATIQUE DE RÉPONSES (AVEC API) =====
+const suggestionTextarea = document.getElementById('postContent') || document.getElementById('texte_rep');
+
+if (suggestionTextarea) {
+    // Créer la boîte de suggestions
+    const suggestionBox = document.createElement('div');
+    suggestionBox.id = 'suggestionsBox';
+    suggestionBox.style.cssText = 'margin-top: 10px; padding: 10px; background: #f0fdf4; border-radius: 12px; display: none; font-size: 0.85rem;';
+    suggestionBox.innerHTML = '<strong>💡 Suggestions de réponses :</strong><div id="suggestionsList"></div>';
+    suggestionTextarea.parentNode.insertBefore(suggestionBox, suggestionTextarea.nextSibling);
+    
+    let typingTimer;
+    
+    suggestionTextarea.addEventListener('input', function() {
+        clearTimeout(typingTimer);
+        const text = this.value.trim();
+        
+        if (text.length < 8) {
+            suggestionBox.style.display = 'none';
+            return;
+        }
+        
+        typingTimer = setTimeout(() => {
+            // 🔽 Chemin CORRECT vers le fichier API (dans Backoffice)
+            fetch(`../Backoffice/suggestion_api.php?text=${encodeURIComponent(text)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.suggestions && data.suggestions.length > 0) {
+                        const suggestionsList = document.getElementById('suggestionsList');
+                        suggestionsList.innerHTML = data.suggestions.map(suggestion => `
+                            <div style="padding: 8px 0; cursor: pointer; color: #166534; border-bottom: 1px solid #d1fae5;" 
+                                 onclick="insertSuggestion('${suggestion.replace(/'/g, "\\'")}')">
+                                💬 ${suggestion}
+                            </div>
+                        `).join('');
+                        suggestionBox.style.display = 'block';
+                    } else {
+                        suggestionBox.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur API:', error);
+                    suggestionBox.style.display = 'none';
+                });
+        }, 600);
+    });
+}
+
+// ===== INSÉRER LA SUGGESTION DANS LE CHAMP =====
+function insertSuggestion(text) {
+    const textarea = document.getElementById('postContent') || document.getElementById('texte_rep');
+    if (textarea) {
+        textarea.value = text;
+        textarea.dispatchEvent(new Event('input'));
+        document.getElementById('suggestionsBox').style.display = 'none';
     }
 }

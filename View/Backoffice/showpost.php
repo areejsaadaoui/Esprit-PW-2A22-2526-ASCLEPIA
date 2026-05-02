@@ -15,6 +15,31 @@ if (isset($_GET['id']) && !empty($_GET['id'])) {
     $reponses = $reponseC->getReponsesByPost($id_post); 
 }
 
+function embedYouTube($content) {
+    $patterns = [
+        '/(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/',
+        '/(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]+)/',
+        '/https?:\/\/www\.youtube\.com\/embed\/([a-zA-Z0-9_-]+)/'
+    ];
+    
+    $result = $content;
+    
+    foreach ($patterns as $pattern) {
+        if (preg_match($pattern, $content, $matches)) {
+            $videoId = $matches[1];
+            $iframe = '<div class="youtube-embed" style="margin: 20px 0;">'
+                    . '<iframe width="100%" height="315" src="https://www.youtube.com/embed/' . $videoId . '" '
+                    . 'frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" '
+                    . 'allowfullscreen></iframe>'
+                    . '</div>';
+            // Remplace le lien par le texte + l'iframe
+            $result = str_replace($matches[0], $iframe, $content);
+            break;
+        }
+    }
+    
+    return $result;
+}
 ?>
 
 <!DOCTYPE html>
@@ -331,6 +356,21 @@ body.dark-mode p[style*="text-align: center"] {
 .theme-toggle:hover {
     transform: scale(1.1);
 }
+
+
+.suggestion-bubble {
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.suggestion-bubble:active {
+    transform: scale(0.96);
+}
+
+body.dark-mode .suggestion-bubble {
+    background: #334155 !important;
+    color: #e2e8f0 !important;
+}
     </style>
 </head>
 <body>
@@ -401,8 +441,10 @@ if (!empty($mediaPath)):
                     
                     <!-- Contenu complet -->
                     <div class="post-content-full">
-                        <?php echo nl2br(htmlspecialchars($post->getContenu())); ?>
-                    </div>
+<?php 
+$contenu = nl2br(htmlspecialchars($post->getContenu()));
+echo embedYouTube($contenu);
+?>                    </div>
                     
                     <!-- Boutons d'action -->
                     <div class="action-buttons">
@@ -541,6 +583,9 @@ if (!empty($mediaPath)):
 
 <script src="../Frontoffice/rep.js"></script>
 
+
+
+
 <button class="theme-toggle" id="themeToggle">
     <i class="fas fa-moon"></i>
 </button>
@@ -573,6 +618,14 @@ if (!empty($mediaPath)):
         }
     });
 })();
+
 </script>
+
+<script>
+    console.log("🔍 Test : textarea trouvé ?", document.querySelector('textarea[name="texte_rep"]'));
+</script>
+
+
+<script src="../Frontoffice/sugg.js"></script>
 </body>
 </html>

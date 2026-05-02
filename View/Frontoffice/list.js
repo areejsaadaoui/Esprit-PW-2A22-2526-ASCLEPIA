@@ -48,3 +48,42 @@ themeToggle.addEventListener('click', () => {
         themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
     }
 });
+
+// Gestion des likes – chaque post indépendant
+document.querySelectorAll('.like-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        const postId = this.dataset.id;
+        const isLiked = this.classList.contains('liked');
+        const action = isLiked ? 'unlike' : 'like';
+        
+        fetch('../Backoffice/toggleLike.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'id_post=' + postId + '&action=' + action
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Met à jour UNIQUEMENT ce bouton
+                this.classList.toggle('liked');
+                
+                // Met à jour l'icône
+                const icon = this.querySelector('i');
+                if (this.classList.contains('liked')) {
+                    icon.className = 'fa-solid fa-heart';
+                    icon.style.color = '#ef4444';
+                } else {
+                    icon.className = 'fa-regular fa-heart';
+                    icon.style.color = '';
+                }
+                
+                // Met à jour le compteur de ce post
+                const countSpan = this.querySelector('.like-count');
+                countSpan.textContent = data.newCount;
+            }
+        })
+        .catch(error => console.error('Erreur:', error));
+    });
+});
