@@ -302,87 +302,99 @@ body.dark-mode .btn-danger {
         }
 
         /* ===== PAGINATION ===== */
-        .pagination {
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center;
-            gap: 8px;
-            margin-top: 50px;
-            flex-wrap: wrap;
-        }
+       /* ===== PAGINATION STYLES - VERSION CERCLES MODERNES ===== */
+.pagination {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center;
+    gap: 8px;
+    margin-top: 50px;
+    flex-wrap: wrap;
+}
 
-        .pagination a,
-        .pagination span {
-            min-width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.85rem;
-            text-decoration: none;
-            transition: all 0.2s ease;
-        }
+.pagination a,
+.pagination span {
+    min-width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
 
-        .pagination .btn-primary {
-            background: linear-gradient(135deg, #0ea5e9, #3b82f6);
-            color: white;
-            box-shadow: 0 4px 12px rgba(14,165,233,0.4);
-        }
+.pagination a:hover,
+.pagination span:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
 
-        .pagination .btn-outline {
-            background: white;
-            border: 1px solid #e2e8f0;
-            color: #475569;
-        }
+/* Boutons numéros */
+.pagination-num {
+    background: var(--primary);
+    color: white;
+}
 
-        .pagination .btn-outline:hover {
-            background: #0ea5e9;
-            border-color: #0ea5e9;
-            color: white;
-            transform: translateY(-2px);
-        }
+.pagination-num:hover {
+    background: var(--primary-dark);
+}
 
-        /* ===== BARRE FILTRE ===== */
-        .sort-select {
-            border-radius: 25px !important;
-            padding: 6px 16px !important;
-            font-size: 0.85rem;
-            cursor: pointer;
-            border: 1px solid #e2e8f0;
-            background: white;
-            transition: all 0.2s ease;
-        }
+/* Bouton actif */
+.pagination-num.active {
+    background: var(--primary-dark);
+    transform: scale(1.05);
+}
 
-        .sort-select:hover {
-            border-color: #0ea5e9;
-        }
+/* Boutons Précédent/Suivant */
+.pagination-btn {
+    background: var(--primary);
+    color: white;
+    padding: 0 12px !important;
+    min-width: auto !important;
+    border-radius: 40px !important;
+}
 
-        .filter-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            gap: 15px;
-            padding: 0 15px;
-        }
+.pagination-btn-disabled {
+    background: #cbd5e1 !important;
+    color: white !important;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
 
-        .filter-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
+/* Points de suspension */
+.pagination-dots {
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #64748b !important;
+    cursor: default;
+}
 
-        .posts-count {
-            background: #f1f5f9;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            color: #64748b;
-        }
+/* ===== DARK MODE ===== */
+body.dark-mode .pagination-num {
+    background: #0ea5e9;
+    color: white;
+}
 
+body.dark-mode .pagination-num:hover {
+    background: #0284c7;
+}
+
+body.dark-mode .pagination-btn {
+    background: #0ea5e9;
+    color: white;
+}
+
+body.dark-mode .pagination-btn-disabled {
+    background: #334155 !important;
+}
+
+body.dark-mode .pagination-dots {
+    background: transparent !important;
+    color: #94a3b8 !important;
+}
         /* ===== ESPACEMENT GLOBAL ===== */
         .section-padding {
             padding-top: 60px !important;

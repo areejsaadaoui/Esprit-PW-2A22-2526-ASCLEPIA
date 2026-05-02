@@ -1,6 +1,5 @@
 // ========== RÉSUMÉ IA POUR LES POSTS ==========
 
-// ========== RÉSUMÉ IA ==========
 async function generateSummary(postId) {
     console.log("Génération du résumé pour le post " + postId);
     
@@ -13,27 +12,34 @@ async function generateSummary(postId) {
     }
     
     container.style.display = 'block';
-    container.innerHTML = '<div style="padding: 12px; background: #f0fdf4; border-radius: 12px;">⏳ Chargement du contenu et génération du résumé...</div>';
+    container.innerHTML = '<div style="padding: 12px; background: #f0fdf4; border-radius: 12px;">⏳ Génération du résumé par IA...</div>';
     
     if (btn) btn.style.display = 'none';
     
+    // Récupérer le contenu depuis l'attribut data-content du bouton
+    let content = btn ? btn.getAttribute('data-content') : null;
+    
+    if (!content) {
+        container.innerHTML = '<div style="background: #fee2e2; padding: 12px; border-radius: 8px;">❌ Impossible de récupérer le contenu du post</div>';
+        if (btn) btn.style.display = 'flex';
+        return;
+    }
+    
+    // Décoder le JSON si nécessaire
     try {
-        // Récupérer le contenu du post via une requête API
-        const contentResponse = await fetch('get_post_content.php?id=' + postId);
-        const postData = await contentResponse.json();
-        
-        if (!postData.success) {
-            container.innerHTML = `<div style="background: #fee2e2; padding: 12px; border-radius: 8px;">❌ Impossible de récupérer le contenu du post</div>`;
-            return;
+        if (content.startsWith('"') || content.startsWith("'")) {
+            content = JSON.parse(content);
         }
-        
-        const content = postData.content;
-        
-        const formData = new FormData();
-        formData.append('post_id', postId);
-        formData.append('contenu', content);
-        
-        const response = await fetch('summarize_post.php', {
+    } catch(e) {
+        // Déjà en texte brut
+    }
+    
+    const formData = new FormData();
+    formData.append('post_id', postId);
+    formData.append('contenu', content);
+    
+    try {
+        const response = await fetch('../Backoffice/summarize_post.php', {
             method: 'POST',
             body: formData
         });
@@ -59,6 +65,8 @@ async function generateSummary(postId) {
         console.error("Erreur:", error);
         container.innerHTML = `<div style="background: #fee2e2; padding: 12px; border-radius: 8px;">❌ Erreur de connexion: ${escapeHtml(error.message)}</div>`;
     }
+    
+    if (btn) btn.style.display = 'flex';
 }
 
 function escapeHtml(text) {

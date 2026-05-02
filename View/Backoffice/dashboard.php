@@ -725,7 +725,7 @@ body.dark-mode .footer {
     transform: scale(1.1);
 }
 
-/* ===== PAGINATION STYLES ===== */
+/* ===== PAGINATION STYLES - CERCLES MODERNES ===== */
 .pagination-btn, .pagination-num {
     transition: all 0.2s ease;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -734,26 +734,18 @@ body.dark-mode .footer {
 .pagination-btn:hover, .pagination-num:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    opacity: 1 !important;
 }
 
-.pagination-num {
-    background: var(--primary);
-}
-
-.pagination-num:hover {
-    background: var(--primary-dark);
-}
-
-/* Dark mode pagination */
+/* Dark mode */
 body.dark-mode .pagination-btn,
 body.dark-mode .pagination-num {
     background: #0ea5e9;
 }
 
-body.dark-mode .pagination-btn-disabled {
+body.dark-mode .pagination-disabled {
     background: #334155 !important;
 }
+
     </style>
 </head>
 <body>
@@ -1068,87 +1060,108 @@ body.dark-mode .pagination-btn-disabled {
         </table>
     </div>
     
-    <!-- PAGINATION - Affichage des liens -->
-    <?php if ($totalPages > 1): ?>
-    <div class="pagination-container" style="display: flex; justify-content: center; align-items: center; gap: 8px; padding: 20px; flex-wrap: wrap; border-top: 1px solid var(--border);">
+  <!-- PAGINATION - CERCLES MODERNES -->
+<?php if ($totalPages > 1): ?>
+<div class="pagination-container" style="display: flex; justify-content: center; align-items: center; gap: 8px; padding: 20px; flex-wrap: wrap; border-top: 1px solid var(--border);">
+    
+    <!-- Première page -->
+    <?php if ($currentPage > 1): ?>
+        <a href="?page=1<?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?><?= isset($_GET['ch']) ? '&ch=' . urlencode($_GET['ch']) : '' ?>" 
+           class="pagination-btn" 
+           style="min-width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: white; text-decoration: none; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
+           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.15)';"
+           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';">
+            <i class="fas fa-angle-double-left"></i>
+        </a>
+    <?php else: ?>
+        <span class="pagination-disabled" 
+              style="min-width: 36px; height: 36px; border-radius: 50%; background: #cbd5e1; color: white; opacity: 0.5; cursor: not-allowed; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-angle-double-left"></i>
+        </span>
+    <?php endif; ?>
+    
+    <!-- Page précédente -->
+    <?php if ($currentPage > 1): ?>
+        <a href="?page=<?= $currentPage - 1 ?><?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?><?= isset($_GET['ch']) ? '&ch=' . urlencode($_GET['ch']) : '' ?>" 
+           class="pagination-btn" 
+           style="padding: 0 14px; height: 36px; border-radius: 40px; background: var(--primary); color: white; text-decoration: none; display: flex; align-items: center; gap: 5px; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
+           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.15)';"
+           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';">
+            <i class="fas fa-angle-left"></i> Précédent
+        </a>
+    <?php else: ?>
+        <span class="pagination-disabled" 
+              style="padding: 0 14px; height: 36px; border-radius: 40px; background: #cbd5e1; color: white; opacity: 0.5; cursor: not-allowed; display: flex; align-items: center; gap: 5px;">
+            <i class="fas fa-angle-left"></i> Précédent
+        </span>
+    <?php endif; ?>
+    
+    <!-- Numéros de pages -->
+    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+        <?php
+        $startPage = max(1, $currentPage - 2);
+        $endPage = min($totalPages, $currentPage + 2);
         
-        <!-- Première page -->
-        <?php if ($currentPage > 1): ?>
-            <a href="?page=1<?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?><?= isset($_GET['ch']) ? '&ch=' . urlencode($_GET['ch']) : '' ?>" class="pagination-btn" style="padding: 8px 12px; border-radius: 8px; background: var(--primary); color: white; text-decoration: none;">
-                <i class="fas fa-angle-double-left"></i>
+        if ($startPage > 1) {
+            echo '<span style="min-width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: var(--text-muted);">...</span>';
+        }
+        
+        for ($i = $startPage; $i <= $endPage; $i++):
+            $isActive = ($i == $currentPage);
+        ?>
+            <a href="?page=<?= $i ?><?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?><?= isset($_GET['ch']) ? '&ch=' . urlencode($_GET['ch']) : '' ?>" 
+               class="pagination-num" 
+               style="min-width: 36px; height: 36px; border-radius: 50%; background: <?= $isActive ? 'var(--primary-dark)' : 'var(--primary)' ?>; color: white; text-decoration: none; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.1); <?= $isActive ? 'transform: scale(1.05); font-weight: bold;' : '' ?>"
+               onmouseover="<?= !$isActive ? 'this.style.transform=\"translateY(-2px)\"; this.style.boxShadow=\"0 4px 8px rgba(0,0,0,0.15)\";' : '' ?>"
+               onmouseout="<?= !$isActive ? 'this.style.transform=\"translateY(0)\"; this.style.boxShadow=\"0 2px 4px rgba(0,0,0,0.1)\";' : '' ?>">
+                <?= $i ?>
             </a>
-        <?php else: ?>
-            <span class="pagination-disabled" style="padding: 8px 12px; border-radius: 8px; background: #cbd5e1; color: white; opacity: 0.5; cursor: not-allowed;">
-                <i class="fas fa-angle-double-left"></i>
-            </span>
-        <?php endif; ?>
+        <?php endfor;
         
-        <!-- Page précédente -->
-        <?php if ($currentPage > 1): ?>
-            <a href="?page=<?= $currentPage - 1 ?><?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?><?= isset($_GET['ch']) ? '&ch=' . urlencode($_GET['ch']) : '' ?>" class="pagination-btn" style="padding: 8px 12px; border-radius: 8px; background: var(--primary); color: white; text-decoration: none;">
-                <i class="fas fa-angle-left"></i> Précédent
-            </a>
-        <?php else: ?>
-            <span class="pagination-disabled" style="padding: 8px 12px; border-radius: 8px; background: #cbd5e1; color: white; opacity: 0.5; cursor: not-allowed;">
-                <i class="fas fa-angle-left"></i> Précédent
-            </span>
-        <?php endif; ?>
-        
-        <!-- Numéros de pages -->
-        <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-            <?php
-            $startPage = max(1, $currentPage - 2);
-            $endPage = min($totalPages, $currentPage + 2);
-            
-            if ($startPage > 1) {
-                echo '<span style="padding: 8px 12px; color: var(--text-muted);">...</span>';
-            }
-            
-            for ($i = $startPage; $i <= $endPage; $i++):
-                $isActive = ($i == $currentPage);
-                $activeStyle = $isActive ? 'background: var(--primary-dark); transform: scale(1.05); font-weight: bold;' : 'background: var(--primary); opacity: 0.8;';
-            ?>
-                <a href="?page=<?= $i ?><?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?><?= isset($_GET['ch']) ? '&ch=' . urlencode($_GET['ch']) : '' ?>" 
-                   class="pagination-num" 
-                   style="padding: 8px 14px; border-radius: 8px; <?= $activeStyle ?> color: white; text-decoration: none; transition: all 0.2s;">
-                    <?= $i ?>
-                </a>
-            <?php endfor;
-            
-            if ($endPage < $totalPages) {
-                echo '<span style="padding: 8px 12px; color: var(--text-muted);">...</span>';
-            }
-            ?>
-        </div>
-        
-        <!-- Page suivante -->
-        <?php if ($currentPage < $totalPages): ?>
-            <a href="?page=<?= $currentPage + 1 ?><?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?><?= isset($_GET['ch']) ? '&ch=' . urlencode($_GET['ch']) : '' ?>" class="pagination-btn" style="padding: 8px 12px; border-radius: 8px; background: var(--primary); color: white; text-decoration: none;">
-                Suivant <i class="fas fa-angle-right"></i>
-            </a>
-        <?php else: ?>
-            <span class="pagination-disabled" style="padding: 8px 12px; border-radius: 8px; background: #cbd5e1; color: white; opacity: 0.5; cursor: not-allowed;">
-                Suivant <i class="fas fa-angle-right"></i>
-            </span>
-        <?php endif; ?>
-        
-        <!-- Dernière page -->
-        <?php if ($currentPage < $totalPages): ?>
-            <a href="?page=<?= $totalPages ?><?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?><?= isset($_GET['ch']) ? '&ch=' . urlencode($_GET['ch']) : '' ?>" class="pagination-btn" style="padding: 8px 12px; border-radius: 8px; background: var(--primary); color: white; text-decoration: none;">
-                <i class="fas fa-angle-double-right"></i>
-            </a>
-        <?php else: ?>
-            <span class="pagination-disabled" style="padding: 8px 12px; border-radius: 8px; background: #cbd5e1; color: white; opacity: 0.5; cursor: not-allowed;">
-                <i class="fas fa-angle-double-right"></i>
-            </span>
-        <?php endif; ?>
+        if ($endPage < $totalPages) {
+            echo '<span style="min-width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: var(--text-muted);">...</span>';
+        }
+        ?>
     </div>
     
-    <!-- Information sur les posts affichés -->
-    <div style="text-align: center; padding: 10px 20px 20px 20px; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid var(--border);">
-        <i class="fas fa-info-circle"></i> Affichage des posts <?= $offset + 1 ?> à <?= min($offset + $postsPerPage, $totalPostsCount) ?> sur un total de <?= $totalPostsCount ?> posts
-    </div>
+    <!-- Page suivante -->
+    <?php if ($currentPage < $totalPages): ?>
+        <a href="?page=<?= $currentPage + 1 ?><?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?><?= isset($_GET['ch']) ? '&ch=' . urlencode($_GET['ch']) : '' ?>" 
+           class="pagination-btn" 
+           style="padding: 0 14px; height: 36px; border-radius: 40px; background: var(--primary); color: white; text-decoration: none; display: flex; align-items: center; gap: 5px; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
+           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.15)';"
+           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';">
+            Suivant <i class="fas fa-angle-right"></i>
+        </a>
+    <?php else: ?>
+        <span class="pagination-disabled" 
+              style="padding: 0 14px; height: 36px; border-radius: 40px; background: #cbd5e1; color: white; opacity: 0.5; cursor: not-allowed; display: flex; align-items: center; gap: 5px;">
+            Suivant <i class="fas fa-angle-right"></i>
+        </span>
     <?php endif; ?>
+    
+    <!-- Dernière page -->
+    <?php if ($currentPage < $totalPages): ?>
+        <a href="?page=<?= $totalPages ?><?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?><?= isset($_GET['ch']) ? '&ch=' . urlencode($_GET['ch']) : '' ?>" 
+           class="pagination-btn" 
+           style="min-width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: white; text-decoration: none; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
+           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.15)';"
+           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';">
+            <i class="fas fa-angle-double-right"></i>
+        </a>
+    <?php else: ?>
+        <span class="pagination-disabled" 
+              style="min-width: 36px; height: 36px; border-radius: 50%; background: #cbd5e1; color: white; opacity: 0.5; cursor: not-allowed; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-angle-double-right"></i>
+        </span>
+    <?php endif; ?>
+</div>
+
+<!-- Information sur les posts affichés -->
+<div style="text-align: center; padding: 10px 20px 20px 20px; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid var(--border);">
+    <i class="fas fa-info-circle"></i> Affichage des posts <?= $offset + 1 ?> à <?= min($offset + $postsPerPage, $totalPostsCount) ?> sur un total de <?= $totalPostsCount ?> posts
+</div>
+<?php endif; ?>
 </div>
 
  <!-- ============ BLOC INNOVANT 5 : MODÉRATION (Posts signalés) ============ -->
