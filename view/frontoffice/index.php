@@ -84,6 +84,10 @@ $listeMedicaments = $mc->afficherMedicaments()->fetchAll();
 
 <body>
 
+
+
+
+
 <!-- ================================================
      NAVBAR
      ================================================ -->
@@ -479,6 +483,19 @@ $listeMedicaments = $mc->afficherMedicaments()->fetchAll();
                 ?>
                 <img src="<?= $imgPath ?>" alt="<?= htmlspecialchars($m['nom']) ?>" class="product-img" onerror="this.src='https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=400'">
                 <span class="product-category"><?= htmlspecialchars($m['categorie']) ?></span>
+                
+                <!-- QR Code Overlay (Caché par défaut) -->
+                <?php 
+                  $qrData = "ASCLEPIA - " . $m['nom'] . " (" . $m['categorie'] . ") | Prix: " . number_format($m['prix'],3) . " DT";
+                  $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode($qrData);
+                ?>
+                <button class="product-qr-btn" onclick="this.nextElementSibling.classList.toggle('show')" title="Scanner les infos">
+                  <i class="fa-solid fa-qrcode"></i>
+                </button>
+                <div class="product-qr-code">
+                   <img src="<?= $qrUrl ?>" alt="QR" style="width: 120px; height: 120px;">
+                   <div class="qr-info-text">Scannez pour les détails</div>
+                </div>
               </div>
               <div class="product-content">
                 <h3 class="product-name"><?= htmlspecialchars($m['nom']) ?></h3>
@@ -580,14 +597,185 @@ $listeMedicaments = $mc->afficherMedicaments()->fetchAll();
   }
   .in-stock { color: var(--accent); }
   .out-of-stock { color: var(--danger); }
+
+  /* QR Code Overlay */
+  .product-qr-btn {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    width: 34px;
+    height: 34px;
+    background: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    z-index: 5;
+    transition: var(--transition);
+    border: none;
+  }
+  .product-qr-btn:hover {
+    background: var(--primary);
+    color: white;
+    transform: scale(1.1);
+  }
+  .product-qr-code {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition);
+    z-index: 4;
+    padding: 20px;
+    text-align: center;
+  }
+  .product-image-container:hover .product-qr-code.show {
+    opacity: 1;
+    visibility: visible;
+  }
+  .qr-info-text {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-top: 8px;
+    text-transform: uppercase;
+  }
   
   .product-actions {
     margin-top: auto;
     display: flex;
     gap: 10px;
   }
-  .product-actions .btn-primary {
+    margin-top: 8px;
+    text-transform: uppercase;
+  }
+
+  /* ---- CHATBOT STYLES ---- */
+  .chatbot-bubble {
+    position: fixed !important;
+    bottom: 30px !important;
+    right: 30px !important;
+    width: 65px !important;
+    height: 65px !important;
+    background: var(--gradient-primary) !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: white !important;
+    font-size: 1.6rem !important;
+    cursor: pointer !important;
+    box-shadow: 0 10px 30px rgba(14,165,233,0.5) !important;
+    z-index: 999999 !important;
+    transition: var(--transition) !important;
+  }
+  .chatbot-bubble:hover {
+    transform: scale(1.1) rotate(15deg);
+  }
+  .chatbot-window {
+    position: fixed;
+    bottom: 100px;
+    right: 30px;
+    width: 350px;
+    height: 500px;
+    background: var(--bg-card);
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: var(--transition);
+    border: 1px solid var(--border);
+  }
+  .chatbot-window.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+  .chatbot-header {
+    background: var(--gradient-primary);
+    padding: 20px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .chatbot-header .bot-avatar {
+    width: 40px; height: 40px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+  }
+  .chatbot-messages {
     flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: var(--bg);
+  }
+  .msg {
+    max-width: 80%;
+    padding: 12px 16px;
+    border-radius: 18px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+  .msg-bot {
+    align-self: flex-start;
+    background: white;
+    color: var(--dark);
+    border-bottom-left-radius: 4px;
+    box-shadow: var(--shadow-sm);
+  }
+  .msg-user {
+    align-self: flex-end;
+    background: var(--primary);
+    color: white;
+    border-bottom-right-radius: 4px;
+  }
+  .chatbot-input-area {
+    padding: 15px;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+  }
+  .chatbot-input-area input {
+    flex-grow: 1;
+    border: 1px solid var(--border);
+    padding: 10px 15px;
+    border-radius: var(--radius-full);
+    outline: none;
+    font-size: 0.9rem;
+  }
+  .chatbot-send-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  
+  [data-theme="dark"] .msg-bot {
+      background: #334155;
+      color: white;
   }
 </style>
 
@@ -930,13 +1118,109 @@ $listeMedicaments = $mc->afficherMedicaments()->fetchAll();
       <p>Conçu avec  pour une meilleure santé</p>
     </div>
   </div>
+
+  </div>
 </footer>
 
 <!-- ================================================
      SCRIPTS
      ================================================ -->
+
+<!-- ================================================
+     CHATBOT UI
+     ================================================ -->
+<div class="chatbot-bubble" id="chatBubble">
+    <i class="fa-solid fa-robot"></i>
+</div>
+
+<div class="chatbot-window" id="chatWindow">
+    <div class="chatbot-header">
+        <div class="bot-avatar"><i class="fa-solid fa-robot"></i></div>
+        <div>
+            <div style="font-weight: 700; font-size: 1rem;">ASCLEPIA AI</div>
+            <div style="font-size: 0.75rem; opacity: 0.8;">Assistant Médical Virtuel</div>
+        </div>
+        <button id="closeChat" style="margin-left: auto; background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;">
+            <i class="fa-solid fa-times"></i>
+        </button>
+    </div>
+    <div class="chatbot-messages" id="chatMessages">
+        <div class="msg msg-bot animate-fadeInUp">
+            Bonjour ! Je suis l'assistant ASCLEPIA. Comment puis-je vous aider aujourd'hui ? 😊
+        </div>
+    </div>
+    <form class="chatbot-input-area" id="chatForm">
+        <input type="text" id="chatInput" placeholder="Posez votre question ici..." autocomplete="off">
+        <button type="submit" class="chatbot-send-btn">
+            <i class="fa-solid fa-paper-plane"></i>
+        </button>
+    </form>
+</div>
+
 <script src="../assets/js/theme.js?v=<?= time() ?>"></script>
 <script>
+  // ---- Chatbot Logic ----
+  const chatBubble = document.getElementById('chatBubble');
+  const chatWindow = document.getElementById('chatWindow');
+  const closeChat = document.getElementById('closeChat');
+  const chatForm = document.getElementById('chatForm');
+  const chatInput = document.getElementById('chatInput');
+  const chatMessages = document.getElementById('chatMessages');
+
+  chatBubble.addEventListener('click', () => {
+    chatWindow.classList.toggle('open');
+  });
+
+  closeChat.addEventListener('click', () => {
+    chatWindow.classList.remove('open');
+  });
+
+  function addMessage(text, isUser = false) {
+    const msg = document.createElement('div');
+    msg.className = `msg ${isUser ? 'msg-user' : 'msg-bot'} animate-fadeInUp`;
+    msg.textContent = text;
+    chatMessages.appendChild(msg);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function getBotResponse(input) {
+    const lowerInput = input.toLowerCase();
+    
+    if (lowerInput.includes('bonjour') || lowerInput.includes('salut')) {
+      return "Bonjour ! Je suis là pour vous aider à trouver des médicaments ou des pharmacies. Que cherchez-vous ?";
+    }
+    if (lowerInput.includes('médicament') || lowerInput.includes('pills')) {
+      return "Nous avons un large catalogue de médicaments (Analgésiques, Vitamines, etc.). Vous pouvez les voir dans la section 'Produits'.";
+    }
+    if (lowerInput.includes('douleur') || lowerInput.includes('tête')) {
+      return "Pour une douleur légère, nos pharmaciens conseillent souvent des analgésiques comme le Paracétamol. Voulez-vous voir la liste ?";
+    }
+    if (lowerInput.includes('pharmacie') || lowerInput.includes('garde')) {
+      return "Vous pouvez trouver toutes les pharmacies partenaires et leurs horaires dans la section 'Nos Pharmacies'.";
+    }
+    if (lowerInput.includes('merci')) {
+      return "Je vous en prie ! Prenez soin de votre santé. 💙";
+    }
+    
+    // Fallback : Simulation d'appel API
+    return "C'est une excellente question. En tant qu'IA ASCLEPIA, je vous conseille de consulter nos spécialistes ou de vérifier la disponibilité de nos produits en stock.";
+  }
+
+  chatForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const text = chatInput.value.trim();
+    if (text === '') return;
+
+    addMessage(text, true);
+    chatInput.value = '';
+
+    // Simulation de réflexion de l'IA
+    setTimeout(() => {
+      const response = getBotResponse(text);
+      addMessage(response, false);
+    }, 800);
+  });
+
   // ---- Navbar scroll effect ----
   const navbar = document.getElementById('navbar');
   window.addEventListener('scroll', () => {
@@ -1069,8 +1353,104 @@ $listeMedicaments = $mc->afficherMedicaments()->fetchAll();
       });
     }
   });
+</script>
 
+    }
+  });
+</script>
+
+<!-- CHATBOT GROQ -->
+<style>
+  #groq-bubble {
+    position: fixed !important; bottom: 30px !important; right: 30px !important; width: 60px !important; height: 60px !important;
+    background: #0ea5e9 !important; border-radius: 50% !important; display: flex !important; align-items: center !important; justify-content: center !important;
+    cursor: pointer !important; box-shadow: 0 10px 25px rgba(14,165,233,0.4) !important; z-index: 100000 !important;
+  }
+  #groq-window {
+    position: fixed !important; bottom: 100px !important; right: 30px !important; width: 350px !important; height: 450px !important;
+    background: white !important; border-radius: 20px !important; box-shadow: 0 15px 40px rgba(0,0,0,0.2) !important;
+    display: none; flex-direction: column !important; overflow: hidden !important; z-index: 100000 !important; border: 1px solid #e2e8f0 !important;
+  }
+</style>
+
+<div id="groq-bubble" onclick="toggleGroq()">
+  <i class="fas fa-robot" style="color: white; font-size: 24px;"></i>
+</div>
+
+<div id="groq-window">
+  <div style="background: #0ea5e9; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+    <span style="font-weight: bold;">ASCLEPIA Groq AI</span>
+    <button onclick="toggleGroq()" style="background: none; border: none; color: white; cursor: pointer; font-size: 20px;">&times;</button>
+  </div>
+  <div id="groq-messages" style="flex: 1; padding: 15px; overflow-y: auto; background: #f8fafc; display: flex; flex-direction: column; gap: 10px;">
+    <div style="background: white; padding: 10px; border-radius: 10px; font-size: 0.9rem; align-self: flex-start; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+      Bonjour ! Je suis propulsé par Groq. Comment puis-je vous aider ?
+    </div>
+  </div>
+  <form id="groq-form" style="padding: 15px; border-top: 1px solid #eee; display: flex; gap: 10px;">
+    <input type="text" id="groq-input" placeholder="Posez votre question..." style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px; outline: none;">
+    <button type="submit" style="background: #0ea5e9; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">OK</button>
+  </form>
+</div>
+
+<script>
+  function toggleGroq() {
+    const win = document.getElementById('groq-window');
+    if (win.style.display === 'flex') {
+        win.style.display = 'none';
+    } else {
+        win.style.display = 'flex';
+    }
+  }
+
+  document.getElementById('groq-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const input = document.getElementById('groq-input');
+    const msgBox = document.getElementById('groq-messages');
+    const text = input.value.trim();
+    if (!text) return;
+
+    const uMsg = document.createElement('div');
+    uMsg.style.cssText = "background: #0ea5e9; color: white; padding: 10px; border-radius: 10px; align-self: flex-end; max-width: 80%; font-size: 0.9rem;";
+    uMsg.textContent = text;
+    msgBox.appendChild(uMsg);
+    input.value = '';
+
+    const loading = document.createElement('div');
+    loading.textContent = "Groq réfléchit...";
+    loading.style.fontSize = "0.8rem";
+    msgBox.appendChild(loading);
+    msgBox.scrollTop = msgBox.scrollHeight;
+
+    try {
+      const resp = await fetch('GroqHandler.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      });
+      const data = await resp.json();
+      if(msgBox.contains(loading)) msgBox.removeChild(loading);
+
+      const aiMsg = document.createElement('div');
+      aiMsg.style.cssText = "background: white; padding: 10px; border-radius: 10px; align-self: flex-start; max-width: 80%; font-size: 0.9rem; box-shadow: 0 2px 5px rgba(0,0,0,0.05);";
+      if (data.choices && data.choices[0]) {
+          aiMsg.textContent = data.choices[0].message.content;
+      } else {
+          // Afficher le message d'erreur précis
+          const errText = data.error?.message || data.error || "Réponse invalide";
+          aiMsg.textContent = "Erreur Groq : " + errText;
+          console.error("Détails de l'erreur :", data);
+      }
+      msgBox.appendChild(aiMsg);
+    } catch (err) {
+      loading.textContent = "Erreur de connexion.";
+    }
+    msgBox.scrollTop = msgBox.scrollHeight;
+  };
 </script>
 
 </body>
 </html>
+
+
+

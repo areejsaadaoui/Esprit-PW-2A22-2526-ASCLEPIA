@@ -20,6 +20,15 @@ class medicamentC
                 'images' => $medicament->getImages(),
                 'id_pharmacie' => $medicament->getIdPharmacie()
             ]);
+
+            // ---- MÉTIER AVANCÉ : ALERTE SMS ----
+            if ($medicament->getStock() <= 5) {
+                require_once __DIR__ . '/SmsC.php';
+                $sms = new SmsC();
+                $mon_numero = "+21692717357"; 
+                $msg = "📢 ASCLEPIA Alert: Nouveau médicament " . $medicament->getNom() . " ajouté avec un stock critique (" . $medicament->getStock() . ").";
+                $sms->sendSms($mon_numero, $msg);
+            }
         } catch (Exception $e) {
             echo 'Erreur: ' . $e->getMessage();
         }
@@ -75,6 +84,18 @@ class medicamentC
                 'id_pharmacie' => $medicament->getIdPharmacie(),
                 'id_medicament' => $id_medicament
             ]);
+
+            // ---- MÉTIER AVANCÉ : ALERTE SMS ----
+            // Si le nouveau stock est critique (<= 5), on envoie une alerte SMS
+            if ($medicament->getStock() <= 5) {
+                require_once __DIR__ . '/SmsC.php';
+                $sms = new SmsC();
+                // Remplacez par votre numéro de téléphone (format international : +216...)
+                $mon_numero = "+21692717357"; 
+                $msg = "📢 ASCLEPIA Alert: Stock critique pour " . $medicament->getNom() . " (" . $medicament->getStock() . " restants). Pensez à réapprovisionner !";
+                $sms->sendSms($mon_numero, $msg);
+            }
+
         } catch (Exception $e) {
             echo "Erreur: " . $e->getMessage();
         }

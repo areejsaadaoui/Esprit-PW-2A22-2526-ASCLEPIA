@@ -33,6 +33,7 @@ include 'header_back.php';
                             <th>Pharmacie</th>
                             <th>Prix</th>
                             <th>Stock</th>
+                            <th>QR Code</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -60,6 +61,15 @@ include 'header_back.php';
                                     <?php else: ?>
                                         <span class="badge badge-danger">Rupture</span>
                                     <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php 
+                                       $qrData = "ASCLEPIA - Produit: " . $m['nom'] . " | Prix: " . number_format($m['prix'],3) . " DT | Categorie: " . $m['categorie'];
+                                       $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=" . urlencode($qrData);
+                                    ?>
+                                    <a href="<?= $qrUrl ?>" target="_blank" title="Cliquez pour agrandir">
+                                       <img src="<?= $qrUrl ?>" alt="QR Code" style="width: 40px; height: 40px; border: 1px solid #ddd; padding: 2px; background: white; border-radius: 4px;">
+                                    </a>
                                 </td>
                                 <td class="action-btns">
                                     <a href="editmedicament.php?id_medicament=<?= $m['id_medicament'] ?>" class="btn btn-outline btn-sm" title="Modifier">
