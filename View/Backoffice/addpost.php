@@ -66,10 +66,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = "Erreur lors de l'upload de l'image.";
         }
        
-// Récupérer l’URL du GIF si l’utilisateur en a sélectionné un
+// Récupérer l’URL du GIF 
 $gifUrl = $_POST['gif_url'] ?? '';
 if (!empty($gifUrl)) {
-    $imagePath = $gifUrl;  // l’URL GIPHY sera stockée dans la colonne `image`
+    $imagePath = $gifUrl;  // stockée dans la colonne `image`
 }
         
         if (empty($error)) {
@@ -130,6 +130,10 @@ if (!empty($gifUrl)) {
             border: 2px solid var(--border);
             padding: 4px;
             background: var(--white);
+            transition: transform 0.2s;
+        }
+        .image-preview:hover {
+            transform: scale(1.02);
         }
         .remove-image {
             position: absolute;
@@ -146,14 +150,18 @@ if (!empty($gifUrl)) {
             cursor: pointer;
             font-size: 12px;
             transition: var(--transition);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
         }
         .remove-image:hover {
-            transform: scale(1.1);
+            transform: scale(1.15);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
         }
         .file-input-wrapper {
             position: relative;
-            display: inline-block;
-            cursor: pointer;
+            display: inline-flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
         }
         .file-input-wrapper input {
             position: absolute;
@@ -161,6 +169,47 @@ if (!empty($gifUrl)) {
             width: 100%;
             height: 100%;
             cursor: pointer;
+        }
+        /* Barre amélioration IA */
+        .ai-enhance-bar {
+            margin: 15px 0;
+            padding: 12px 16px;
+            background: #f0f9ff;
+            border-radius: 12px;
+            border-left: 4px solid #0ea5e9;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+        }
+        .ai-enhance-bar:hover {
+            background: #e0f2fe;
+            border-left-color: #0284c7;
+        }
+        .ai-enhance-bar .btn-accent {
+            background: linear-gradient(135deg, #3aedc3, #3ae4ed);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .ai-enhance-bar .btn-accent:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+        body.dark-mode .ai-enhance-bar {
+            background: #1e293b;
+            border-left-color: #0ea5e9;
+        }
+        body.dark-mode .ai-enhance-bar:hover {
+            background: #334155;
         }
         /* ===== DARK MODE – VERSION ADDPOST ===== */
 
@@ -312,93 +361,120 @@ body.dark-mode .image-preview {
 .theme-toggle:hover {
     transform: scale(1.1);
 }
-/* Modal GIPHY */
-.gif-modal {
+/* ===== MODAL GIPHY — HARMONISÉE AVEC RÉPONSES ===== */
+#gifModal {
     display: none;
     position: fixed;
-    z-index: 9999;
-    left: 0;
     top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0,0,0,0.7);
-    justify-content: center;
+    background: rgba(0,0,0,0.6);
+    z-index: 10000;
     align-items: center;
+    justify-content: center;
 }
 
-.gif-modal-content {
+#gifModal > div {
     background: white;
-    width: 80%;
-    max-width: 800px;
-    max-height: 80vh;
     border-radius: 20px;
-    overflow: hidden;
-    animation: fadeInScale 0.3s ease;
+    padding: 30px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: slideUp 0.3s ease;
 }
 
-.gif-modal-header {
+#gifModal h3 {
+    margin: 0 0 20px 0;
+    font-size: 1.5rem;
+    color: #1e293b;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 20px;
-    border-bottom: 1px solid var(--border);
-}
-
-.gif-modal-header h3 {
-    margin: 0;
-    color: var(--primary);
 }
 
 .gif-modal-close {
-    font-size: 28px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
     cursor: pointer;
-    transition: 0.2s;
+    color: #64748b;
+    transition: all 0.2s;
 }
 
 .gif-modal-close:hover {
-    color: var(--danger);
-}
-
-.gif-modal-body {
-    padding: 20px;
+    color: #ef4444;
+    transform: scale(1.1);
 }
 
 #gifSearchInput {
-    margin-bottom: 20px;
+    width: 100%;
+    padding: 10px 15px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 1rem;
+    margin-bottom: 15px;
+    transition: all 0.2s;
 }
 
-.gif-results-grid {
+#gifSearchInput:focus {
+    border-color: #0ea5e9;
+    box-shadow: 0 0 0 3px rgba(14,165,233,0.1);
+    outline: none;
+}
+
+#gifResults {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 12px;
-    max-height: 50vh;
-    overflow-y: auto;
+    gap: 10px;
+    min-height: 200px;
 }
 
 .gif-result {
     width: 100%;
-    border-radius: 12px;
+    height: 150px;
+    border-radius: 10px;
+    object-fit: cover;
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: all 0.2s;
+    border: 1px solid #e2e8f0;
 }
 
 .gif-result:hover {
     transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
 }
 
-/* Dark mode pour la modal */
-body.dark-mode .gif-modal-content {
+/* Dark mode modal */
+body.dark-mode #gifModal > div {
     background: #16213e;
+}
+
+body.dark-mode #gifModal h3 {
+    color: #e0e0e0;
+}
+
+body.dark-mode #gifSearchInput {
+    background: #0f0f1a;
+    border-color: #2d2d44;
+    color: white;
+}
+
+body.dark-mode #gifSearchInput:focus {
+    border-color: #0ea5e9;
+    box-shadow: 0 0 0 3px rgba(14,165,233,0.2);
+}
+
+body.dark-mode .gif-result {
     border-color: #2d2d44;
 }
 
-body.dark-mode .gif-modal-header {
-    border-bottom-color: #2d2d44;
-}
-
-body.dark-mode .gif-modal-header h3 {
-    color: #0ea5e9;
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes fadeInScale {
@@ -499,13 +575,13 @@ body.dark-mode .gif-modal-header h3 {
                             </label>
                            
                             <div class="file-input-wrapper">
-                                <button type="button" class="btn btn-outline" onclick="document.getElementById('imageUpload').click()">
+                                <button type="button" class="btn btn-outline" onclick="document.getElementById('imageUpload').click()" style="gap: 8px; display: inline-flex; align-items: center;">
                                     <i class="fa-solid fa-upload"></i> Choisir une image
                                 </button>
                               
-    <button type="button" class="btn btn-outline" id="openGifBtn">
-        <i class="fa-brands fa-giphy"></i>  Ajouter un GIF   
-    </button>
+                                <button type="button" class="btn btn-outline" id="openGifBtn" style="gap: 8px; display: inline-flex; align-items: center; margin-left: 10px;">
+                                    <i class="fa-solid fa-film"></i> Ajouter un GIF   
+                                </button>
 
                                 <input type="file" 
                                        id="imageUpload" 
@@ -526,28 +602,29 @@ body.dark-mode .gif-modal-header h3 {
                         <!-- Boutons -->
                         <div style="display: flex; gap: 16px; margin-top: 32px; flex-wrap: wrap;">
                             <button type="submit" id="submitBtn" class="btn btn-primary btn-lg">
-                                <i class="fa-solid fa-paper-plane"></i> Publier le post
-                            </button>
-                            <button type="button" id="resetBtn" class="btn btn-outline btn-lg">
-                                <i class="fa-solid fa-eraser"></i> Effacer
+                                <i class="fa-solid fa-paper-plane"></i> Publier
                             </button>
                             <a href="../frontoffice/index.html" class="btn btn-outline-white btn-lg" style="background: var(--gray); border-color: var(--gray);">
-                                <i class="fa-solid fa-arrow-left"></i> Retour à l'accueil
+                                <i class="fa-solid fa-arrow-left"></i> Retour
                             </a>
                         </div>
                         <!-- Bouton GIPHY -->
 
 
-<!-- Modal GIPHY -->
-<div id="gifModal" class="gif-modal">
-    <div class="gif-modal-content">
-        <div class="gif-modal-header">
-            <h3><i class="fa-brands fa-giphy"></i> Rechercher un GIF</h3>
-            <span class="gif-modal-close">&times;</span>
+<!-- Modal GIPHY — Harmonisée -->
+<div id="gifModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 20px; padding: 30px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0; font-size: 1.5rem;">🎬 Rechercher un GIF</h3>
+            <button type="button" class="gif-modal-close" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
         </div>
-        <div class="gif-modal-body">
-            <input type="text" id="gifSearchInput" placeholder="Rechercher un GIF (ex: bonjour, rire, santé...)" class="form-control">
-            <div id="gifResults" class="gif-results-grid"></div>
+        
+        <input type="text" id="gifSearchInput" placeholder="Chercher des GIFs... (ex: chat, sourire, merci)" class="form-control" style="margin-bottom: 15px; width: 100%; padding: 10px 15px; border: 2px solid #e2e8f0; border-radius: 10px;">
+        
+        <div id="gifResults" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; min-height: 200px;">
+            <div style="grid-column: 1/-1; text-align: center; color: #94a3b8; padding: 40px 20px;">
+                🔍 Tapez pour chercher des GIFs...
+            </div>
         </div>
     </div>
 </div>
@@ -561,36 +638,27 @@ body.dark-mode .gif-modal-header h3 {
     </div>
 </section>
 
-<!-- ✨ AI PREVIEW MODAL — EN DEHORS DU FORM -->
+<!-- ✨ AI PREVIEW MODAL — Version compacte, dégradé bleu/vert, en haut au centre -->
 <div id="aiPreview" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
-     background:rgba(0,0,0,0.5); z-index:10000; justify-content:center; align-items:center; pointer-events:all;">
-    <div style="background:white; border-radius:20px; padding:28px; max-width:620px; width:90%;
-                box-shadow:0 20px 60px rgba(0,0,0,0.3); animation:fadeInScale 0.3s ease; pointer-events:all;" onclick="event.stopPropagation()">
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
-            <span style="font-size:1.4rem;">✨</span>
-            <strong style="font-size:1.1rem; color:#065f46;">Version améliorée par l'IA</strong>
-            <span id="aiCorrectionsBadge" style="margin-left:auto; background:#dcfce7; color:#16a34a;
-                   padding:3px 12px; border-radius:20px; font-size:0.75rem; font-weight:600;"></span>
+     background:rgba(0,0,0,0.5); backdrop-filter:blur(3px); z-index:10000; justify-content:center; align-items:flex-start; padding-top:80px; pointer-events:all;">
+    <div style="background:white; border-radius:24px; width:90%; max-width:500px; overflow:hidden; animation:fadeInScale 0.3s ease; margin:0 auto;" onclick="event.stopPropagation()">
+        
+        <div style="background:linear-gradient(135deg, #0ea5e9, #10b981); padding:16px 20px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <i class="fas fa-magic" style="color:white; font-size:1.2rem;"></i>
+                <span style="color:white; font-weight:600; flex:1;">Amélioration IA</span>
+                <span id="aiCorrectionsBadge" style="background:rgba(255,255,255,0.2); color:white; font-size:0.65rem; padding:3px 8px; border-radius:20px;"></span>
+            </div>
         </div>
-        <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:12px; padding:14px 16px;
-                    font-size:0.95rem; line-height:1.7; color:#1e293b; white-space:pre-wrap;
-                    max-height:300px; overflow-y:auto;" id="aiPreviewText"></div>
-        <div style="margin-top:18px; display:flex; gap:12px;">
-            <button type="button" onclick="acceptAI()"
-                    style="background:#10b981; color:white; border:none; border-radius:25px;
-                           padding:10px 24px; font-weight:700; cursor:pointer; font-size:0.95rem;
-                           display:flex; align-items:center; gap:8px;">
-                ✅ Accepter — remplacer mon texte
-            </button>
-            <button type="button" onclick="rejectAI()"
-                    style="background:#f1f5f9; color:#475569; border:1px solid #e2e8f0;
-                           border-radius:25px; padding:10px 20px; cursor:pointer; font-size:0.95rem;">
-                ✖ Annuler
-            </button>
+        
+        <div style="padding:20px;">
+            <div style="background:#f0fdf4; border-radius:16px; padding:16px; font-size:0.9rem; line-height:1.6; color:#1e293b;" id="aiPreviewText"></div>
+            
+            <div style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end;">
+                <button onclick="rejectAI()" style="background:#f1f5f9; border:none; border-radius:30px; padding:8px 20px; cursor:pointer; font-weight:500;">Annuler</button>
+                <button onclick="acceptAI()" style="background:linear-gradient(135deg, #0ea5e9, #10b981); border:none; border-radius:30px; padding:8px 24px; color:white; cursor:pointer; font-weight:600;">Accepter</button>
+            </div>
         </div>
-        <p style="margin-top:12px; font-size:0.78rem; color:#94a3b8;">
-            ⚠️ Le texte ne sera <strong>pas publié</strong> automatiquement. Cliquez "Publier" quand vous êtes prêt.
-        </p>
     </div>
 </div>
 
@@ -603,7 +671,7 @@ body.dark-mode .gif-modal-header h3 {
                         <div class="navbar-logo">⚕️</div>
                         <div class="navbar-name" style="font-size: 1.2rem;">ASC<span class="text-primary">LEPIA</span></div>
                     </div>
-                    <p>Votre plateforme médicale complète.</p>
+                    <p>Votre plateforme médicale</p>
                     <div class="social-links">
                         <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
                         <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
@@ -709,222 +777,103 @@ window.addEventListener('click', (e) => {
     }
 });
 
-// Recherche de GIFs
+// Recherche de GIFs avec délai
+let searchTimeout;
 if (gifSearchInput) {
-    gifSearchInput.addEventListener('keyup', function() {
+    gifSearchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
         const query = this.value.trim();
-        if (query.length < 2) return;
         
-        gifResults.innerHTML = '<div style="text-align:center; padding:40px;">🔍 Chargement des GIFs...</div>';
+        if (!query) {
+            gifResults.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #94a3b8; padding: 40px 20px;">🔍 Tapez pour chercher des GIFs...</div>';
+            return;
+        }
         
-        fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query)}&limit=20&rating=g`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.data.length === 0) {
-                    gifResults.innerHTML = '<div style="text-align:center; padding:40px;">😢 Aucun GIF trouvé</div>';
-                    return;
-                }
-                
-                gifResults.innerHTML = '';
-                data.data.forEach(gif => {
-                    const img = document.createElement('img');
-                    img.src = gif.images.fixed_height_small.url;
-                    img.alt = gif.title;
-                    img.classList.add('gif-result');
-                    img.style.cursor = 'pointer';
-                    img.style.borderRadius = '12px';
-                    img.style.width = '100%';
+        searchTimeout = setTimeout(() => {
+            gifResults.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #0ea5e9; padding: 40px 20px;"><i class="fas fa-spinner fa-spin"></i> Recherche...</div>';
+            
+            fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query)}&limit=20&rating=g`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.data.length === 0) {
+                        gifResults.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #94a3b8; padding: 40px 20px;">😢 Aucun GIF trouvé</div>';
+                        return;
+                    }
                     
-                    img.addEventListener('click', () => {
-                        // Stocker l'URL du GIF
-                        gifUrlInput.value = gif.images.original.url;
+                    gifResults.innerHTML = '';
+                    data.data.forEach(gif => {
+                        const img = document.createElement('img');
+                        img.src = gif.images.fixed_height_small.url;
+                        img.alt = gif.title;
+                        img.classList.add('gif-result');
+                        img.style.height = '150px';
+                        img.style.objectFit = 'cover';
                         
-                        // Afficher l'aperçu dans le conteneur d'aperçu (le même que pour les images)
-                        const previewContainer = document.getElementById('imagePreviewContainer');
-                        if (previewContainer) {
-                            previewContainer.innerHTML = `
-                                <div class="image-preview-container">
-                                    <img src="${gif.images.fixed_height_small.url}" class="image-preview" style="max-width: 200px; max-height: 200px; border-radius: 12px; border: 2px solid #e2e8f0; padding: 4px; background: white;">
-                                    <div class="remove-image" onclick="removeGif()">
-                                        <i class="fa-solid fa-times"></i>
-                                    </div>
-                                </div>
-                            `;
-                        }
+                        img.addEventListener('click', () => {
+                            selectGifFromModal(gif.images.original.url, gif.images.fixed_height_small.url);
+                        });
                         
-                        gifModal.style.display = 'none';
+                        gifResults.appendChild(img);
                     });
-                    
-                    gifResults.appendChild(img);
+                })
+                .catch(error => {
+                    console.error('Erreur GIPHY:', error);
+                    gifResults.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #ef4444; padding: 40px 20px;">❌ Erreur de chargement</div>';
                 });
-            })
-            .catch(error => {
-                console.error('Erreur GIPHY:', error);
-                gifResults.innerHTML = '<div style="text-align:center; padding:40px;">❌ Erreur de chargement</div>';
-            });
+        }, 300);
     });
 }
 
-// Supprimer le GIF (et vider l’aperçu)
+// Sélectionner un GIF depuis la modale
+function selectGifFromModal(fullUrl, thumbUrl) {
+    gifUrlInput.value = fullUrl;
+    
+    // Afficher l'aperçu dans le conteneur
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    if (previewContainer) {
+        previewContainer.innerHTML = `
+            <div class="image-preview-container">
+                <img src="${thumbUrl}" class="image-preview" style="max-width: 200px; max-height: 200px; border-radius: 12px; border: 2px solid #e2e8f0; padding: 4px; background: white;">
+                <div class="remove-image" onclick="removeGif()" title="Supprimer">
+                    <i class="fa-solid fa-times"></i>
+                </div>
+            </div>
+        `;
+    }
+    
+    gifModal.style.display = 'none';
+    gifSearchInput.value = '';
+    gifResults.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #94a3b8; padding: 40px 20px;">🔍 Tapez pour chercher des GIFs...</div>';
+    
+    showToastAddPost('🎬 GIF sélectionné !', '#ec4899');
+}
+
+// Supprimer le GIF 
 function removeGif() {
-    document.getElementById('gifUrl').value = '';
+    gifUrlInput.value = '';
     const previewContainer = document.getElementById('imagePreviewContainer');
     if (previewContainer) {
         previewContainer.innerHTML = '';
     }
+    showToastAddPost('❌ GIF supprimé', '#64748b');
 }
 
-
-// ============================================================
-// ✨ AI POST ENHANCER — amélioration de style (sans API payante)
-// Utilise MyMemory API (gratuit) pour reformuler le texte
-// ============================================================
-(function() {
-    const btn      = document.getElementById('btnEnhanceAI');
-    const preview  = document.getElementById('aiPreview');
-    const previewText = document.getElementById('aiPreviewText');
-    const textarea = document.getElementById('postContent');
-
-    if (!btn || !textarea) return;
-
-    btn.addEventListener('click', async function () {
-        const contenu = textarea.value.trim();
-        if (contenu.length < 5) {
-            showAIToast('⚠️ Écris d\'abord ton post !', '#f59e0b');
-            return;
-        }
-
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Amélioration en cours...';
-
-        try {
-            // === AMÉLIORATION LOCALE INTELLIGENTE ===
-            // Pas d'API externe — traitement 100% JS, toujours disponible
-            let improved = ameliorerTexte(contenu);
-
-            // Afficher le modal avec le résultat
-            const badge = document.getElementById('aiCorrectionsBadge');
-            if (badge) {
-                const nbMots = improved.split(/\s+/).length;
-                badge.textContent = nbMots + ' mots · style amélioré';
-            }
-            previewText.textContent = improved;
-            preview.style.display = 'flex';
-
-        } catch (err) {
-            showAIToast('❌ Erreur : ' + err.message, '#ef4444');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-magic"></i> ✨ Améliorer avec l\'IA';
-        }
+//  notifications pour le formulaire de post
+function showToastAddPost(msg, color = '#0f172a') {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    Object.assign(t.style, {
+        position: 'fixed', bottom: '25px', left: '50%',
+        transform: 'translateX(-50%)',
+        background: color, color: 'white',
+        padding: '10px 24px', borderRadius: '30px',
+        zIndex: '99999', fontSize: '0.9rem', fontWeight: '600',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+        animation: 'fadeInScale 0.3s ease'
     });
-
-    // ── Moteur d'amélioration local ─────────────────────────────
-    function ameliorerTexte(texte) {
-        let t = texte.trim();
-
-        // 1. Remplacer abréviations / fautes communes médicales
-        const remplacements = [
-            [/\bje veut\b/gi, 'je voudrais'],
-            [/\bje veux\b/gi, 'je souhaite'],
-            [/\bje cherche\b/gi, 'je recherche'],
-            [/\bbonjour\b/gi, 'Bonjour'],
-            [/\bmedcin\b/gi, 'médecin'],
-            [/\bmedecin\b/gi, 'médecin'],
-            [/\bdocteur\b/gi, 'Dr'],
-            [/\bpharmacie\b/gi, 'pharmacie'],
-            [/\bmedicament[s]?\b/gi, 'médicament'],
-            [/\bjai\b/gi, "j'ai"],
-            [/\bjé\b/gi, "j'ai"],
-            [/\bc est\b/gi, "c'est"],
-            [/\bca\b/gi, 'ça'],
-            [/\bpk\b/gi, 'pourquoi'],
-            [/\bpq\b/gi, 'pourquoi'],
-            [/\bsvp\b/gi, 's\'il vous plaît'],
-            [/\bstp\b/gi, 's\'il te plaît'],
-            [/\bpour la grip+e?\b/gi, 'pour la grippe'],
-            [/\bmrci\b/gi, 'merci'],
-            [/\bmerci d avance\b/gi, 'merci d\'avance'],
-            [/\bqqun\b/gi, 'quelqu\'un'],
-            [/\bqq1\b/gi, 'quelqu\'un'],
-            [/\btrés\b/gi, 'très'],
-            [/\bpeutetre\b/gi, 'peut-être'],
-        ];
-
-        for (const [pattern, rep] of remplacements) {
-            t = t.replace(pattern, rep);
-        }
-
-        // 2. Couper en phrases sur les points, ?, !, \n
-        let phrases = t.split(/(?<=[.!?])\s+|\n+/).filter(p => p.trim().length > 0);
-
-        // 3. Améliorer chaque phrase
-        phrases = phrases.map(phrase => {
-            phrase = phrase.trim();
-            if (!phrase) return '';
-
-            // Majuscule au début
-            phrase = phrase.charAt(0).toUpperCase() + phrase.slice(1);
-
-            // Ajouter point final si manquant et phrase assez longue
-            if (phrase.length > 10 && !/[.!?]$/.test(phrase)) {
-                phrase += '.';
-            }
-
-            // Améliorer formulations courtes médicales
-            phrase = phrase
-                .replace(/^(Bonjour[,.]?\s*)?(je souhaite|je recherche|je voudrais)\s+un\s+médecin\.?$/i,
-                    'Bonjour, je recherche les coordonnées d\'un bon médecin dans ma région. Pourriez-vous m\'aider ?')
-                .replace(/^(Bonjour[,.]?\s*)?(je souhaite|je recherche|je voudrais)\s+un\s+bon\s+médecin\.?$/i,
-                    'Bonjour, je recherche les coordonnées d\'un bon médecin. Pourriez-vous me recommander quelqu\'un ?')
-                .replace(/^(Bonjour[,.]?\s*)?je\s+cherche\s+une?\s+(bonne?\s+)?adresse\s+d[eu]\s+(?:bon\s+)?médecin\.?$/i,
-                    'Bonjour, je recherche l\'adresse d\'un bon médecin. Quelqu\'un peut-il me faire une recommandation ?')
-                .replace(/^j['']ai\s+mal\s+à\s+la\s+tête\.?$/i,
-                    'J\'ai des maux de tête persistants. Avez-vous des conseils ou une recommandation médicale ?')
-                .replace(/^(je ne me sens pas bien|je suis pas bien)\.?$/i,
-                    'Je ne me sens pas bien et j\'aurais besoin d\'un avis médical.');
-
-            return phrase;
-        });
-
-        // 4. Ajouter formule de politesse si absente et texte court
-        let result = phrases.join(' ').trim();
-
-        const aBonjour = /^bonjour/i.test(result);
-        const aMerci = /merci/i.test(result);
-
-        if (!aBonjour && result.length > 0) {
-            result = 'Bonjour, ' + result.charAt(0).toLowerCase() + result.slice(1);
-        }
-        if (!aMerci && result.split(' ').length > 5) {
-            result += ' Merci d\'avance pour votre aide.';
-        }
-
-        return result;
-    }
-
-    // Accepter → coller dans le textarea, fermer le modal, NE PAS publier
-    window.acceptAI = function () {
-        const improved = previewText.textContent;
-        if (improved) {
-            textarea.value = improved;
-            textarea.dispatchEvent(new Event('input'));
-        }
-        preview.style.display = 'none';
-        showAIToast('✅ Texte amélioré ! Relisez puis cliquez "Publier".', '#10b981');
-    };
-
-    // Annuler → juste fermer le modal
-    window.rejectAI = function () {
-        preview.style.display = 'none';
-    };
-
-    // Fermer modal en cliquant le fond
-    if (preview) {
-        preview.addEventListener('click', function(e) {
-            if (e.target === preview) rejectAI();
-        });
-    }
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2500);
+}
 
     function showAIToast(msg, color) {
         const t = document.createElement('div');
@@ -940,7 +889,7 @@ function removeGif() {
         document.body.appendChild(t);
         setTimeout(() => t.remove(), 3000);
     }
-})();
+    
 
 </script>
 

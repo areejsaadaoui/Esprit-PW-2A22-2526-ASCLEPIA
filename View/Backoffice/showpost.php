@@ -4,15 +4,48 @@ include '../../Controller/ReponseController.php';
 require_once __DIR__ . '/../../Model/Post.php';
 require_once __DIR__ . '/../../Model/Reponse.php';
 
+// Fonction pour afficher le texte et le GIF extrait
+function afficherReponseAvecGif($texte) {
+    // Chercher le tag GIF dans le texte
+    preg_match('/\[GIF:(.*?)\]/', $texte, $matches);
+    
+    if (!empty($matches)) {
+        $gifUrl = $matches[1];
+        // Enlever le tag GIF du texte
+        $cleanTexte = preg_replace('/\n?\n?\[GIF:.*?\]\n?\n?/', '', $texte);
+        $cleanTexte = trim($cleanTexte);
+        
+        // Construction HTML
+        $html = '';
+        if (!empty($cleanTexte)) {
+            $html .= '<p style="margin: 0 0 10px 0;">' . nl2br(htmlspecialchars($cleanTexte)) . '</p>';
+        }
+        $html .= '<div style="margin-top: 10px;">
+                    <img src="' . htmlspecialchars($gifUrl) . '" 
+                         alt="GIF" 
+                         style="max-width: 200px; max-height: 150px; border-radius: 12px; object-fit: contain; border: 1px solid #e2e8f0; padding: 4px;">
+                  </div>';
+        return $html;
+    }
+    
+    // Pas de GIF, afficher juste le texte
+    return '<p style="margin: 0;">' . nl2br(htmlspecialchars($texte)) . '</p>';
+}
 
 $postC    = new PostController();
 $reponseC = new ReponseController(); 
 
 $post = null;
+$reponses = [];
 if (isset($_GET['id']) && !empty($_GET['id'])) {
     $id_post  = (int)$_GET['id'];
     $post     = $postC->getPostById($id_post);
-    $reponses = $reponseC->getReponsesByPost($id_post); 
+    $reponses = $reponseC->getReponsesByPost($id_post);
+}
+
+if (!$post) {
+    header('Location: ../Frontoffice/postlist.php');
+    exit;
 }
 
 function embedYouTube($content) {
@@ -32,7 +65,6 @@ function embedYouTube($content) {
                     . 'frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" '
                     . 'allowfullscreen></iframe>'
                     . '</div>';
-            // Remplace le lien par le texte + l'iframe
             $result = str_replace($matches[0], $iframe, $content);
             break;
         }
@@ -40,6 +72,8 @@ function embedYouTube($content) {
     
     return $result;
 }
+
+
 ?>
 
 <!DOCTYPE html>
@@ -139,7 +173,7 @@ textarea.form-control {
 }
 textarea.form-control:focus {
     transform: scale(1.01);
-    border-color: #0ea5e9;
+    border-color: #0ee999;
     box-shadow: 0 0 0 3px rgba(14,165,233,0.2);
 }
 
@@ -186,18 +220,15 @@ body.dark-mode {
     background: #1a1a2e !important;
 }
 
-/* Section principale */
 body.dark-mode .section-padding {
     background: #1a1a2e !important;
 }
 
-/* Carte principale du post */
 body.dark-mode .card {
     background: #16213e !important;
     border-color: #2d2d44 !important;
 }
 
-/* Textes principaux */
 body.dark-mode .post-author,
 body.dark-mode .post-date,
 body.dark-mode .post-content-full {
@@ -209,17 +240,14 @@ body.dark-mode .post-date {
     color: #a0a0c0 !important;
 }
 
-/* Avatar */
 body.dark-mode .post-avatar {
     background: linear-gradient(135deg, #0ea5e9, #3b82f6) !important;
 }
 
-/* Image */
 body.dark-mode .detail-image {
     filter: brightness(0.9);
 }
 
-/* Boutons d'action */
 body.dark-mode .action-buttons .btn-outline {
     border-color: #475569 !important;
     color: #cbd5e1 !important;
@@ -240,7 +268,6 @@ body.dark-mode .btn-danger {
     color: white !important;
 }
 
-/* Formulaire de réponse */
 body.dark-mode .form-control {
     background: #0f0f1a !important;
     border-color: #2d2d44 !important;
@@ -248,7 +275,7 @@ body.dark-mode .form-control {
 }
 
 body.dark-mode .form-control:focus {
-    border-color: #0ea5e9 !important;
+    border-color: #0ee9a7 !important;
     box-shadow: 0 0 0 3px rgba(14,165,233,0.2) !important;
 }
 
@@ -256,7 +283,6 @@ body.dark-mode .form-control::placeholder {
     color: #a0a0c0 !important;
 }
 
-/* Cartes de réponses */
 body.dark-mode .card[style*="background: var(--bg)"] {
     background: #16213e !important;
     border-color: #2d2d44 !important;
@@ -278,7 +304,6 @@ body.dark-mode .card[style*="background: var(--bg)"]:hover {
     background: #1a2a4a !important;
 }
 
-/* Boutons dans les réponses */
 body.dark-mode .btn-outline.btn-sm {
     border-color: #475569 !important;
     color: #cbd5e1 !important;
@@ -289,7 +314,6 @@ body.dark-mode .btn-outline.btn-sm:hover {
     color: white !important;
 }
 
-/* Bouton retour */
 body.dark-mode .btn-outline {
     border-color: #475569 !important;
     color: #cbd5e1 !important;
@@ -300,7 +324,6 @@ body.dark-mode .btn-outline:hover {
     color: white !important;
 }
 
-/* Navbar */
 body.dark-mode .navbar {
     background: #0f0f1a !important;
     border-bottom: 1px solid #2d2d44 !important;
@@ -316,7 +339,6 @@ body.dark-mode .navbar .nav-link.active {
     color: #0ea5e9 !important;
 }
 
-/* Footer */
 body.dark-mode .footer {
     background: #0f0f1a !important;
     border-top: 1px solid #2d2d44 !important;
@@ -328,14 +350,12 @@ body.dark-mode .footer .footer-links a {
     color: #c0c0d0 !important;
 }
 
-/* Message "Soyez le premier" */
 body.dark-mode p[style*="text-align: center"] {
     background: #16213e !important;
     color: #a0a0c0 !important;
     border: 1px solid #2d2d44 !important;
 }
 
-/* Bouton toggle flottant */
 .theme-toggle {
     position: fixed;
     bottom: 30px;
@@ -357,7 +377,6 @@ body.dark-mode p[style*="text-align: center"] {
     transform: scale(1.1);
 }
 
-
 .suggestion-bubble {
     transition: all 0.2s ease;
     font-weight: 500;
@@ -370,6 +389,300 @@ body.dark-mode p[style*="text-align: center"] {
 body.dark-mode .suggestion-bubble {
     background: #334155 !important;
     color: #e2e8f0 !important;
+}
+
+/* ===== EMOJI PICKER FACEBOOK-STYLE ===== */
+.reactions-area {
+    position: relative;
+    display: inline-block;
+}
+
+.react-main-btn {
+    background: none;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #64748b;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+.react-main-btn:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #0ea5e9;
+}
+
+.emoji-picker-popup {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    background: white;
+    border-radius: 40px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+    padding: 8px 14px;
+    gap: 6px;
+    z-index: 999;
+    flex-direction: row;
+    white-space: nowrap;
+    border: 1px solid #e2e8f0;
+}
+.emoji-picker-popup.open {
+    display: flex;
+    animation: pickerPop 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes pickerPop {
+    from { opacity: 0; transform: scale(0.6) translateY(10px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.emoji-choice-btn {
+    font-size: 1.5rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-radius: 50%;
+    padding: 4px;
+    transition: transform 0.15s;
+    line-height: 1;
+}
+.emoji-choice-btn:hover {
+    transform: scale(1.4) translateY(-4px);
+}
+
+.reactions-strip {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+.react-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 2px 9px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.react-pill.mine {
+    background: #dbeafe;
+    border-color: #3b82f6;
+}
+.react-pill:hover {
+    transform: scale(1.08);
+}
+
+body.dark-mode .react-main-btn {
+    border-color: #475569;
+    color: #94a3b8;
+}
+body.dark-mode .react-main-btn:hover {
+    background: #334155;
+    color: #0ea5e9;
+}
+body.dark-mode .emoji-picker-popup {
+    background: #16213e;
+    border-color: #2d2d44;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+}
+body.dark-mode .react-pill {
+    background: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+body.dark-mode .react-pill.mine {
+    background: #1e3a5f;
+    border-color: #3b82f6;
+}
+/* Effet verre (glassmorphism) */
+.post-card {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(0px);
+    transition: all 0.35s ease;
+}
+
+.post-card:hover {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(4px);
+}
+
+body.dark-mode .post-card {
+    background: rgba(22, 33, 62, 0.9);
+}
+
+body.dark-mode .post-card:hover {
+    background: rgba(22, 33, 62, 0.98);
+}
+/* ===== ANIMATIONS POUR SHOWPOST.PHP ===== */
+
+/* Animation de la carte principale */
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 25px 40px -15px rgba(0,0,0,0.2);
+}
+
+/* Animation des boutons d'action */
+.action-buttons .btn {
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.action-buttons .btn:hover {
+    transform: translateY(-3px);
+}
+
+.action-buttons .btn-outline:hover {
+    background: #0ea5e9;
+    color: white;
+    border-color: #0ea5e9;
+}
+
+/* Bouton Supprimer */
+.btn-danger:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 14px rgba(239, 68, 68, 0.4);
+}
+
+/* Bouton Modifier */
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 14px rgba(14, 165, 233, 0.4);
+}
+
+/* Bouton Résumé IA */
+.summary-btn {
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.summary-btn:hover {
+    transform: translateY(-3px);
+    background: #7c3aed;
+    box-shadow: 0 6px 14px rgba(124, 58, 237, 0.4);
+}
+
+/* Bouton Partager */
+.btn-outline[onclick*="copierLienPost"]:hover {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    transform: translateY(-3px);
+}
+/* Bouton signalement */
+#btnSignal {
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#btnSignal:hover {
+    transform: translateY(-2px);
+}
+
+/* Image du post */
+.detail-image {
+    transition: transform 0.4s ease;
+}
+
+.detail-image:hover {
+    transform: scale(1.02);
+}
+
+/* Avatar */
+.post-avatar {
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.post-avatar:hover {
+    transform: scale(1.1);
+}
+
+/* Formulaire de réponse */
+.form-control {
+    transition: all 0.25s ease;
+}
+
+.form-control:focus {
+    transform: scale(1.01);
+}
+
+/* Bouton Publier réponse */
+.btn-primary.btn-sm {
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-primary.btn-sm:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(14, 165, 233, 0.4);
+}
+
+/* Cartes des réponses */
+.card[style*="background: var(--bg)"] {
+    transition: all 0.25s ease;
+}
+
+.card[style*="background: var(--bg)"]:hover {
+    transform: translateX(5px);
+    box-shadow: 0 10px 25px -10px rgba(0,0,0,0.15);
+}
+
+/* Boutons Modifier/Supprimer dans les réponses */
+.card .btn-sm {
+    transition: all 0.2s ease;
+}
+
+.card .btn-sm:hover {
+    transform: translateY(-2px);
+}
+
+/* Bouton Retour */
+.btn-outline[href*="postlist"] {
+    transition: all 0.25s ease;
+}
+
+.btn-outline[href*="postlist"]:hover {
+    transform: translateX(-5px);
+    background: #0ea5e9;
+    color: white;
+}
+
+/* Animation de pulsation pour le bouton IA */
+@keyframes gentlePulse {
+    0% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.4); }
+    70% { box-shadow: 0 0 0 8px rgba(124, 58, 237, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
+}
+
+.summary-btn {
+    animation: gentlePulse 2s infinite;
+}
+
+.summary-btn:hover {
+    animation: none;
+}
+
+/* Version Dark Mode */
+body.dark-mode .card:hover {
+    box-shadow: 0 25px 40px -15px rgba(0,0,0,0.5);
+}
+
+body.dark-mode .summary-btn {
+    background: linear-gradient(135deg, #7c3aed, #4f46e5);
+}
+
+body.dark-mode .action-buttons .btn-outline:hover {
+    background: #0ea5e9;
+    color: white;
 }
     </style>
 </head>
@@ -421,12 +734,10 @@ body.dark-mode .suggestion-bubble {
                     </div>
                     
                     <!-- Image ou GIF -->
-<!-- Image ou GIF -->
 <?php 
 $mediaPath = $post->getImage();
 if (!empty($mediaPath)):
     $isGif = (strpos($mediaPath, '.gif') !== false || strpos($mediaPath, 'giphy.com') !== false);
-    
     if (!$isGif && !filter_var($mediaPath, FILTER_VALIDATE_URL)) {
         $mediaPath = '../Backoffice/' . $mediaPath;
     }
@@ -451,15 +762,21 @@ echo embedYouTube($contenu);
                         <button class="btn btn-outline" onclick="copierLienPost(<?= $post->getIdPost() ?>)">
                             <i class="fa-regular fa-share-from-square"></i> Partager
                         </button>
-                        <!-- Badge sentiment -->
-                        <?= $post->getSentimentBadge() ?>
+
+                       
+
                         <!-- Bouton signalement AJAX -->
+                        <?php
+                        $signaledPosts = isset($_COOKIE['signaled_posts']) ? explode(',', $_COOKIE['signaled_posts']) : [];
+                        $isSignaled    = in_array($post->getIdPost(), $signaledPosts);
+                        ?>
                         <button class="btn btn-outline btn-sm" id="btnSignal"
-                                style="color:#f59e0b;border-color:#f59e0b;"
+                                style="color:<?= $isSignaled ? '#ef4444' : '#f59e0b' ?>;border-color:<?= $isSignaled ? '#ef4444' : '#f59e0b' ?>;"
                                 onclick="toggleSignal(<?= $post->getIdPost() ?>)">
                             <i class="fas fa-flag"></i> 
-                            <span id="signalCount">0</span> Signaler
+                            <span id="signalCount"><?= $post->getSignalements() ?? 0 ?></span> Signaler
                         </button>
+
                         <a href="../Backoffice/deletepost.php?id=<?php echo $post->getIdPost(); ?>" 
                                    class="btn btn-danger btn-sm" >
                                     <i class="fa-solid fa-trash"></i> Supprimer
@@ -476,43 +793,181 @@ echo embedYouTube($contenu);
 </button>
                     </div>
                     
-                   
 
 <!-- Conteneur pour le résumé -->
 <div id="summary-<?= $post->getIdPost() ?>" style="display: none; margin-top: 10px;"></div>
                     </div>
                   
-                    <!-- Formulaire pour ajouter une réponse -->
-<form method="POST" action="../Backoffice/addreponse.php">
-    <input type="hidden" name="id_post" value="<?php echo $post->getIdPost(); ?>">
-    <textarea class="form-control" name="texte_rep" rows="3" 
+                  
+
+<!-- Formulaire pour ajouter une réponse -->
+<div style="margin-top: 30px;">
+    <form method="POST" action="../Backoffice/addreponse.php" id="reponseForm">
+        <input type="hidden" name="id_post" value="<?php echo $post->getIdPost(); ?>">
+        
+       <!-- Zone textarea avec 3 boutons intégrés (GIF + IA + Suggestions) -->
+<div style="position: relative;">
+    <textarea class="form-control" name="texte_rep" id="reponseContent" rows="3" 
               placeholder="Écrire une réponse..." 
-              style="margin-bottom: 12px;" ></textarea>
-    <div style="text-align: right;">
-        <button type="submit" class="btn btn-primary btn-sm">
-            <i class="fa-regular fa-paper-plane"></i> Publier
+              style="padding-right: 110px;"></textarea>
+    
+    <div style="position: absolute; bottom: 8px; right: 8px; display: flex; gap: 5px;">
+        <!-- Bouton GIF (rose) -->
+        <button type="button" id="btnGifReponse" 
+                onclick="openGifModalReponse()"
+                style="background: none; border: none; cursor: pointer; font-size: 1rem; color: #ec4899; transition: all 0.2s; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;"
+                onmouseover="this.style.transform='scale(1.1)'; this.style.background='#fce7f3'"
+                onmouseout="this.style.transform='scale(1)'; this.style.background='none'"
+                title="🎬 Ajouter un GIF">
+            <i class="fas fa-film"></i>
+        </button>
+        
+        <!-- Bouton Amélioration IA (violet) -->
+        <button type="button" id="btnEnhanceReponse" 
+                style="background: none; border: none; cursor: pointer; font-size: 1rem; color: #8b5cf6; transition: all 0.2s; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;"
+                onmouseover="this.style.transform='scale(1.1)'; this.style.background='#f3e8ff'"
+                onmouseout="this.style.transform='scale(1)'; this.style.background='none'"
+                title="✨ Améliorer avec l'IA">
+            <i class="fas fa-magic"></i>
+        </button>
+        
+        <!-- Bouton Suggestions IA (vert) -->
+        <button type="button" id="suggestReplyBtn" 
+                onclick="getAISuggestions(<?= $post->getIdPost() ?>)"
+                style="background: none; border: none; cursor: pointer; font-size: 1rem; color: #10b981; transition: all 0.2s; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;"
+                onmouseover="this.style.transform='scale(1.1)'; this.style.background='#d1fae5'"
+                onmouseout="this.style.transform='scale(1)'; this.style.background='none'"
+                title="💡 Suggestions de réponses IA">
+            <i class="fas fa-lightbulb"></i>
         </button>
     </div>
-</form>
+</div>
+
+
+        <!-- Input caché pour le GIF sélectionné -->
+        <input type="hidden" name="gif_url" id="gifUrlInput" value="">
+        
+        <!-- Aperçu du GIF sélectionné -->
+        <div id="gifPreviewContainer" style="display: none; margin-top: 10px; padding: 12px; background: #fce7f3; border-radius: 12px; border-left: 4px solid #ec4899;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <strong style="font-size: 0.85rem;">🎬 GIF sélectionné :</strong>
+            </div>
+            <img id="gifPreviewImg" src="" alt="GIF preview" style="max-width: 100%; max-height: 200px; border-radius: 8px; margin-bottom: 8px;">
+            <button type="button" id="btnRemoveGif" class="btn btn-outline btn-sm" style="padding: 4px 12px; font-size: 0.75rem;">
+                <i class="fas fa-times"></i> Supprimer le GIF
+            </button>
+        </div>
+        
+        <!-- Conteneur pour les suggestions IA - Version verre -->
+<div id="suggestionsContainer" style="display: none; margin-top: 15px; padding: 16px; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid rgba(14,165,233,0.2); box-shadow: 0 8px 20px rgba(0,0,0,0.1);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <strong style="display: flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #0ea5e9, #10b981); background-clip: text; -webkit-background-clip: text; color: transparent;">
+            <i class="fas fa-robot"></i>
+            <span> Suggestions IA</span>
+        </strong>
+        <button onclick="closeSuggestions()" style="background: none; border: none; cursor: pointer; font-size: 1.2rem; color: #94a3b8;">
+            &times;
+        </button>
+    </div>
+    <div id="suggestionsList" style="display: flex; flex-direction: column; gap: 12px;"></div>
+</div>
+        
+        <div style="text-align: right; margin-top: 10px;">
+            <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fa-regular fa-paper-plane"></i> Publier
+            </button>
+        </div>
+    </form>
+
+</div>
+
+<!-- ===== MODALE GIPHY ===== -->
+<div id="giphyModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 20px; padding: 30px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="margin: 0; font-size: 1.5rem;">🎬 Rechercher un GIF</h2>
+            <button type="button" id="closeGiphyModal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">✕</button>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <input type="text" id="giphySearchInput" placeholder="Chercher des GIFs... (ex: chat, sourire, dance)" 
+                   style="width: 100%; padding: 10px 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1rem;">
+        </div>
+        
+        <div id="giphyResults" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; min-height: 200px;">
+            <div style="grid-column: 1/-1; text-align: center; color: #94a3b8; padding: 40px 20px;">
+                Tapez pour chercher des GIFs...
+            </div>
+        </div>
+        
+        <div style="margin-top: 15px; text-align: center;">
+            <small style="color: #94a3b8;">Powered by <strong>GIPHY</strong></small>
+        </div>
+    </div>
+</div>
 
 <!-- Afficher les réponses existantes -->
 <?php if (!empty($reponses)): ?>
-    <?php foreach ($reponses as $rep): ?>
-        <div class="card" style="padding: 16px; margin-top: 16px; background: var(--bg); border-radius: 16px;" id="reponse-<?= $rep->getIdRep() ?>">
+    <?php foreach ($reponses as $repIdx => $rep):
+        $repId = $rep->getIdRep();
+        $rawReact  = $reponseC->getReponseById($repId)['reactions'] ?? null;
+        $reactData = $rawReact ? (json_decode($rawReact, true) ?? []) : [];
+        $reactData = array_filter($reactData, fn($v) => $v > 0);
+       
+    ?>
+        <div class="card" style="padding: 16px; margin-top: 16px; background: var(--bg); border-radius: 16px;" id="reponse-<?= $repId ?>">
             
             <!-- Si on est en mode édition (paramètre edit) -->
-            <?php if (isset($_GET['edit_reponse']) && $_GET['edit_reponse'] == $rep->getIdRep()): ?>
+            <?php if (isset($_GET['edit_reponse']) && $_GET['edit_reponse'] == $repId): ?>
                 
-                <!-- ✅ FORMULAIRE DE MODIFICATION (updateReponse.php) -->
+                <!-- FORMULAIRE DE MODIFICATION -->
                 <form method="POST" action="modifreponse.php">
                     <div style="margin-bottom: 10px;">
                         <strong><?= htmlspecialchars($rep->getAuteur()) ?></strong>
                         <small><?= date('d/m/Y H:i', strtotime($rep->getDateRep())) ?></small>
                     </div>
-                    <textarea name="texte_rep" class="form-control" rows="4" style="margin: 10px 0;"><?= htmlspecialchars($rep->getTexteRep()) ?></textarea>
-                    <input type="hidden" name="id_rep" value="<?= $rep->getIdRep() ?>">
+                    
+                    <?php
+                        // Extraire le GIF du texte s'il existe
+                        $texteReponse = $rep->getTexteRep();
+                        $gifUrl = '';
+                        $texteSansGif = $texteReponse;
+                        
+                        if (preg_match('/\[GIF:(.*?)\]/', $texteReponse, $matches)) {
+                            $gifUrl = $matches[1];
+                            $texteSansGif = preg_replace('/\n?\n?\[GIF:.*?\]\n?\n?/', '', $texteReponse);
+                            $texteSansGif = trim($texteSansGif);
+                        }
+                    ?>
+                    
+                    <div style="position: relative;">
+                        <textarea name="texte_rep" class="form-control edit-textarea" rows="4" style="margin: 10px 0; padding-right: 45px;"><?= htmlspecialchars($texteSansGif) ?></textarea>
+                        
+                        <!-- Bouton GIF pour modification (intégré dans le textarea) -->
+                        <button type="button" class="btn-edit-gif" style="position: absolute; bottom: 10px; right: 10px; background: none; border: none; cursor: pointer; font-size: 1.2rem; color: #ec4899; transition: all 0.2s; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;" title="🎬 Changer le GIF">
+                            <i class="fas fa-film"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Aperçu du GIF actuel (si existe) -->
+                    <?php if (!empty($gifUrl)): ?>
+                        <div class="edit-gif-preview" style="margin: 10px 0; padding: 12px; background: #fce7f3; border-radius: 12px; border-left: 4px solid #ec4899;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <strong style="font-size: 0.85rem;">🎬 GIF actuel :</strong>
+                            </div>
+                            <img src="<?= htmlspecialchars($gifUrl) ?>" alt="GIF" style="max-width: 100%; max-height: 200px; border-radius: 8px; margin-bottom: 8px;">
+                            <button type="button" class="btn-remove-edit-gif btn btn-outline btn-sm" style="padding: 4px 12px; font-size: 0.75rem;">
+                                <i class="fas fa-times"></i> Supprimer
+                            </button>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <!-- Input caché pour le GIF modifié -->
+                    <input type="hidden" class="edit-gif-url" name="gif_url" value="<?= htmlspecialchars($gifUrl) ?>">
+                    <input type="hidden" name="id_rep" value="<?= $repId ?>">
                     <input type="hidden" name="id_post" value="<?= $post->getIdPost() ?>">
-                    <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                    
+                    <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px;">
                         <button type="submit" class="btn btn-success btn-sm">
                             <i class="fas fa-save"></i> Enregistrer
                         </button>
@@ -525,36 +980,54 @@ echo embedYouTube($contenu);
             <?php else: ?>
                 
                 <!-- Mode affichage normal -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <strong><?= htmlspecialchars($rep->getAuteur()) ?></strong>
-                    <small><?= date('d/m/Y H:i', strtotime($rep->getDateRep())) ?></small>
-                </div>
-                <p style="margin: 10px 0;"><?= nl2br(htmlspecialchars($rep->getTexteRep())) ?></p>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+    <strong><?= htmlspecialchars($rep->getAuteur()) ?></strong>
+    <small><?= date('d/m/Y H:i', strtotime($rep->getDateRep())) ?></small>
+</div>
+
+<?= afficherReponseAvecGif($rep->getTexteRep()) ?>
                 
-                <!-- RÉACTIONS EMOJI -->
-                <div class="reactions-bar" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;" 
-                     data-rep-id="<?= $rep->getIdRep() ?>">
-                    <?php
-                    $emojis = ['❤️','😂','🔥','👍','😮','😢','👏'];
-                    foreach ($emojis as $emoji):
-                    ?>
-                    <button class="reaction-btn"
-                            onclick="toggleReaction(this, <?= $rep->getIdRep() ?>, '<?= $emoji ?>')"
-                            style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:20px;
-                                   padding:3px 10px;font-size:0.85rem;cursor:pointer;transition:0.2s;
-                                   display:inline-flex;align-items:center;gap:4px;"
-                            onmouseover="this.style.transform='scale(1.1)'"
-                            onmouseout="this.style.transform='scale(1)'">
-                        <?= $emoji ?> <span class="reaction-count">0</span>
-                    </button>
-                    <?php endforeach; ?>
+                <!-- ===== RÉACTIONS EMOJI — Facebook style ===== -->
+                <div style="margin-bottom: 10px;">
+                    <div class="reactions-area" id="rarea-<?= $repId ?>">
+                        <!-- Bouton principal -->
+                        <button class="react-main-btn" id="rbtn-<?= $repId ?>"
+                                onclick="togglePicker(<?= $repId ?>)"
+                                onmouseenter="schedulePicker(<?= $repId ?>, true)"
+                                onmouseleave="schedulePicker(<?= $repId ?>, false)">
+                            <span id="rbtn-icon-<?= $repId ?>">❤️</span>
+                            j'aime
+                        </button>
+
+                        <!-- Picker popup -->
+                        <div class="emoji-picker-popup" id="picker-<?= $repId ?>"
+                             onmouseenter="clearPickerTimer(<?= $repId ?>)"
+                             onmouseleave="schedulePicker(<?= $repId ?>, false)">
+                            <?php foreach (['❤️','😂','🔥','👍','😮','😢','👏','😍','🎉'] as $em): ?>
+                            <button class="emoji-choice-btn" title="<?= $em ?>"
+                                    onclick="chooseEmoji(<?= $repId ?>, '<?= $em ?>')">
+                                <?= $em ?>
+                            </button>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <!-- Strip des réactions existantes -->
+                    <div class="reactions-strip" id="rstrip-<?= $repId ?>">
+                        <?php foreach ($reactData as $em => $cnt): ?>
+                        <span class="react-pill" data-emoji="<?= htmlspecialchars($em) ?>"
+                              onclick="chooseEmoji(<?= $repId ?>, '<?= $em ?>')">
+                            <?= $em ?> <span><?= (int)$cnt ?></span>
+                        </span>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
                 
                 <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                    <a href="showpost.php?id=<?= $post->getIdPost() ?>&edit_reponse=<?= $rep->getIdRep() ?>" class="btn btn-primary btn-sm">
+                    <a href="showpost.php?id=<?= $post->getIdPost() ?>&edit_reponse=<?= $repId ?>" class="btn btn-primary btn-sm">
                         <i class="fas fa-pen"></i> Modifier
                     </a>
-                    <a href="deleteReponse.php?id=<?= $rep->getIdRep() ?>" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer cette réponse ?')">
+                    <a href="deleteReponse.php?id=<?= $repId ?>" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer cette réponse ?')">
                         <i class="fas fa-trash"></i> Supprimer
                     </a>
                 </div>
@@ -633,9 +1106,8 @@ const btnSignal = document.getElementById('btnSignal');
 
 function updateSignalBtn(signale) {
     if (btnSignal) {
-        btnSignal.style.color    = signale ? '#ef4444' : '#f59e0b';
+        btnSignal.style.color       = signale ? '#ef4444' : '#f59e0b';
         btnSignal.style.borderColor = signale ? '#ef4444' : '#f59e0b';
-        btnSignal.querySelector('i').style.animation = signale ? 'likePop 0.3s ease' : '';
     }
 }
 
@@ -661,43 +1133,106 @@ function toggleSignal(id_post) {
             localStorage.setItem('signaled_posts', JSON.stringify(postSignale));
             document.getElementById('signalCount').textContent = data.signalements;
             updateSignalBtn(action === 'signal');
-            showToast(action === 'signal' ? '⚠️ Post signalé' : '✓ Signalement retiré', action === 'signal' ? '#f59e0b' : '#10b981');
+            showToast(action === 'signal' ? '⚠️ Post signalé aux modérateurs' : '✓ Signalement retiré', action === 'signal' ? '#f59e0b' : '#10b981');
         }
     })
     .catch(err => console.error('Erreur signalement:', err));
 }
 
-// ============ RÉACTIONS EMOJI ============
-function toggleReaction(btn, id_rep, emoji) {
-    const countSpan = btn.querySelector('.reaction-count');
-    const current = parseInt(countSpan.textContent) || 0;
-    const isActive = btn.classList.contains('active-reaction');
-    const action = isActive ? 'remove' : 'add';
 
-    // Optimistic UI
-    countSpan.textContent = isActive ? Math.max(0, current - 1) : current + 1;
-    btn.classList.toggle('active-reaction');
-    btn.style.background = isActive ? '#f8fafc' : '#dbeafe';
-    btn.style.borderColor = isActive ? '#e2e8f0' : '#3b82f6';
+// ============ EMOJI PICKER FACEBOOK-STYLE ============
+const userReactions = JSON.parse(localStorage.getItem('asc_reactions') || '{}');
+let pickerTimers = {};
+
+// Au chargement : marquer les réactions de l'utilisateur
+document.addEventListener('DOMContentLoaded', () => {
+    Object.entries(userReactions).forEach(([repId, emoji]) => {
+        if (!emoji) return;
+        const icon  = document.getElementById('rbtn-icon-' + repId);
+        const strip = document.getElementById('rstrip-' + repId);
+        if (icon)  icon.textContent = emoji;
+        if (strip) {
+            strip.querySelectorAll('.react-pill').forEach(p => {
+                if (p.dataset.emoji === emoji) p.classList.add('mine');
+            });
+        }
+    });
+});
+
+function togglePicker(repId) {
+    const picker = document.getElementById('picker-' + repId);
+    if (picker) picker.classList.toggle('open');
+}
+
+function schedulePicker(repId, open) {
+    clearPickerTimer(repId);
+    pickerTimers[repId] = setTimeout(() => {
+        const p = document.getElementById('picker-' + repId);
+        if (p) { open ? p.classList.add('open') : p.classList.remove('open'); }
+    }, open ? 120 : 300);
+}
+
+function clearPickerTimer(repId) {
+    if (pickerTimers[repId]) {
+        clearTimeout(pickerTimers[repId]);
+        delete pickerTimers[repId];
+    }
+}
+
+// Fermer picker au clic ailleurs
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.reactions-area')) {
+        document.querySelectorAll('.emoji-picker-popup.open').forEach(p => p.classList.remove('open'));
+    }
+});
+
+function chooseEmoji(repId, emoji) {
+    const oldEmoji = userReactions[repId] || null;
+    const picker   = document.getElementById('picker-' + repId);
+    if (picker) picker.classList.remove('open');
+
+    // Toggle off si même emoji
+    let action = 'add';
+    if (oldEmoji === emoji) {
+        action = 'remove';
+        userReactions[repId] = null;
+    } else {
+        userReactions[repId] = emoji;
+    }
+    localStorage.setItem('asc_reactions', JSON.stringify(userReactions));
+
+    // Mise à jour optimiste du bouton
+    const rbIcon = document.getElementById('rbtn-icon-' + repId);
+    if (rbIcon) rbIcon.textContent = (action === 'remove') ? '❤️' : emoji;
 
     fetch('../Frontoffice/reaction_reponse.php', {
-        method: 'POST',
+        method : 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: `id_rep=${id_rep}&emoji=${encodeURIComponent(emoji)}&action=${action}`
+        body   : `id_rep=${repId}&emoji=${encodeURIComponent(emoji)}&action=${action}&old_emoji=${encodeURIComponent(oldEmoji || '')}`
     })
     .then(r => r.json())
     .then(data => {
         if (data.success && data.reactions) {
-            // Mettre à jour tous les compteurs de cette réponse
-            const bar = btn.closest('.reactions-bar');
-            bar.querySelectorAll('.reaction-btn').forEach(b => {
-                const ej = b.textContent.trim().split(' ')[0];
-                const cnt = b.querySelector('.reaction-count');
-                if (cnt) cnt.textContent = data.reactions[ej] || 0;
-            });
+            updateReactionStrip(repId, data.reactions);
         }
     })
     .catch(err => console.error('Erreur réaction:', err));
+}
+
+function updateReactionStrip(repId, reactions) {
+    const strip = document.getElementById('rstrip-' + repId);
+    if (!strip) return;
+    strip.innerHTML = '';
+    const myEmoji = userReactions[repId];
+    Object.entries(reactions).forEach(([em, cnt]) => {
+        if (cnt < 1) return;
+        const pill = document.createElement('span');
+        pill.className = 'react-pill' + (myEmoji === em ? ' mine' : '');
+        pill.dataset.emoji = em;
+        pill.innerHTML = `${em} <span>${cnt}</span>`;
+        pill.onclick = () => chooseEmoji(repId, em);
+        strip.appendChild(pill);
+    });
 }
 
 // ============ COPIER LIEN ============
@@ -711,7 +1246,7 @@ function copierLienPost(postId) {
 // ============ TOAST NOTIFICATION ============
 function showToast(msg, color = '#0f172a') {
     const t = document.createElement('div');
-    t.innerHTML = msg;
+    t.textContent = msg;
     Object.assign(t.style, {
         position: 'fixed', bottom: '25px', left: '50%',
         transform: 'translateX(-50%)',
@@ -726,14 +1261,11 @@ function showToast(msg, color = '#0f172a') {
 }
 </script>
 
-
-
-
 <button class="theme-toggle" id="themeToggle">
     <i class="fas fa-moon"></i>
 </button>
 <script>
-// Dark Mode - showpost.php
+// Dark Mode
 (function() {
     const themeToggle = document.getElementById('themeToggle');
     if (!themeToggle) return;
@@ -751,7 +1283,6 @@ function showToast(msg, color = '#0f172a') {
     
     themeToggle.addEventListener('click', () => {
         body.classList.toggle('dark-mode');
-        
         if (body.classList.contains('dark-mode')) {
             localStorage.setItem('theme', 'dark');
             themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
@@ -761,168 +1292,68 @@ function showToast(msg, color = '#0f172a') {
         }
     });
 })();
-
 </script>
 
 <script>
-    console.log("🔍 Test : textarea trouvé ?", document.querySelector('textarea[name="texte_rep"]'));
-</script>
-
-<script>
-// ========== RÉSUMÉ IA SIMPLIFIÉ ==========
-// ========== RÉSUMÉ IA SIMPLIFIÉ ==========
 // ========== RÉSUMÉ IA ==========
-async function generateSummary(button) {
-    const postId = button.getAttribute('data-post-id');
-    let content = button.getAttribute('data-content');
-    
-    // Décoder le JSON
-    try {
-        content = JSON.parse(content);
-    } catch(e) {
-        console.error("Erreur de parsing:", e);
-    }
-    
-    console.log("Génération du résumé pour le post " + postId);
-    
-    const container = document.getElementById(`summary-${postId}`);
-    const btn = document.getElementById(`summary-btn-${postId}`);
-    
-    if (!container) {
-        console.error("Container non trouvé");
-        return;
-    }
-    
-    container.style.display = 'block';
-    container.innerHTML = '<div style="padding: 12px; background: #f0fdf4; border-radius: 12px;">⏳ Génération du résumé...</div>';
-    
-    if (btn) btn.style.display = 'none';
-    
-    try {
-        const formData = new FormData();
-        formData.append('post_id', postId);
-        formData.append('contenu', content);
-        
-        const response = await fetch('summarize_post.php', {
-            method: 'POST',
-            body: formData
-        });
-        
-        const data = await response.json();
-        console.log("Réponse:", data);
-        
-        if (data.success) {
-            container.innerHTML = `
-                <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 12px; border-radius: 8px; margin-top: 10px;">
-                    <strong>🤖 Résumé IA :</strong>
-                    <p style="margin: 8px 0 0 0; font-size: 0.9rem;">${escapeHtml(data.summary)}</p>
-                    <button onclick="hideSummary(${postId})" 
-                            style="margin-top: 8px; background: none; border: none; color: #64748b; cursor: pointer;">
-                        ✖ Fermer
-                    </button>
-                </div>
-            `;
-        } else {
-            container.innerHTML = `<div style="background: #fee2e2; padding: 12px; border-radius: 8px;">❌ ${escapeHtml(data.error || 'Erreur')}</div>`;
-        }
-    } catch(error) {
-        console.error("Erreur:", error);
-        container.innerHTML = `<div style="background: #fee2e2; padding: 12px; border-radius: 8px;">❌ Erreur de connexion: ${escapeHtml(error.message)}</div>`;
-    }
-    
-    if (btn) btn.style.display = 'flex';
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function hideSummary(postId) {
-    const container = document.getElementById(`summary-${postId}`);
-    const btn = document.getElementById(`summary-btn-${postId}`);
-    if (container) container.style.display = 'none';
-    if (btn) btn.style.display = 'flex';
-}
-</script>
-<script>
-// ========== RÉSUMÉ IA - Version qui fonctionne ==========
 async function generateSummary(postId) {
-    console.log("🔍 Génération du résumé pour le post " + postId);
-    
     const container = document.getElementById(`summary-${postId}`);
     const btn = document.getElementById(`summary-btn-${postId}`);
-    
-    if (!container) {
-        console.error("Container non trouvé");
+    if (!container) return;
+
+    // Toggle
+    if (container.style.display === 'block') {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        if (btn) btn.style.display = 'inline-flex';
         return;
     }
-    
+
     container.style.display = 'block';
     container.innerHTML = '<div style="padding: 12px; background: #f0fdf4; border-radius: 12px;">⏳ Génération du résumé...</div>';
-    
     if (btn) btn.style.display = 'none';
-    
-    // Récupérer le contenu
+
     let content = '';
     if (btn) {
         content = btn.getAttribute('data-content');
-        // Si le contenu est encodé en JSON
-        try {
-            if (content.startsWith('"')) {
-                content = JSON.parse(content);
-            }
-        } catch(e) {}
+        try { if (content.startsWith('"')) content = JSON.parse(content); } catch(e) {}
     }
-    
+
     if (!content || content.length < 30) {
         container.innerHTML = '<div style="background: #fee2e2; padding: 12px; border-radius: 8px;">❌ Texte trop court pour un résumé</div>';
         if (btn) btn.style.display = 'flex';
         return;
     }
-    
+
     try {
         const formData = new FormData();
         formData.append('contenu', content);
-        
-        const response = await fetch('summarize_post.php', {
-            method: 'POST',
-            body: formData
-        });
-        
+        const response = await fetch('summarize_post.php', { method: 'POST', body: formData });
         const data = await response.json();
-        console.log("Réponse:", data);
-        
+
         if (data.success) {
             container.innerHTML = `
                 <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 12px; border-radius: 8px; margin-top: 10px;">
                     <strong>🤖 Résumé IA :</strong>
                     <p style="margin: 8px 0 0 0; font-size: 0.9rem;">${escapeHtml(data.summary)}</p>
                     <button onclick="hideSummary(${postId})" 
-                            style="margin-top: 8px; background: none; border: none; color: #64748b; cursor: pointer;">
-                        ✖ Fermer
-                    </button>
+                            style="margin-top: 8px; background: none; border: none; color: #64748b; cursor: pointer;">✖ Fermer</button>
                 </div>
             `;
         } else {
             container.innerHTML = `<div style="background: #fee2e2; padding: 12px; border-radius: 8px;">❌ ${escapeHtml(data.error || 'Erreur')}</div>`;
         }
     } catch(error) {
-        console.error("Erreur:", error);
         container.innerHTML = `<div style="background: #fee2e2; padding: 12px; border-radius: 8px;">❌ Erreur: ${error.message}</div>`;
     }
-    
+
     if (btn) btn.style.display = 'flex';
 }
 
 function hideSummary(postId) {
     const container = document.getElementById(`summary-${postId}`);
     const btn = document.getElementById(`summary-btn-${postId}`);
-    if (container) {
-        container.style.display = 'none';
-        container.innerHTML = '';
-    }
+    if (container) { container.style.display = 'none'; container.innerHTML = ''; }
     if (btn) btn.style.display = 'inline-flex';
 }
 
@@ -931,9 +1362,366 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
-
-// Test que la fonction est bien définie
-console.log("✅ generateSummary est définie:", typeof generateSummary);
 </script>
+<script>
+// ===== AMÉLIORATION IA POUR LES RÉPONSES =====
+document.addEventListener('DOMContentLoaded', function() {
+    const btnEnhance = document.getElementById('btnEnhanceReponse');
+    const reponseContent = document.getElementById('reponseContent');
+    const aiPreview = document.getElementById('aiPreviewReponse');
+    const aiPreviewText = document.getElementById('aiPreviewTextReponse');
+    const acceptBtn = document.getElementById('acceptAIReponse');
+    const rejectBtn = document.getElementById('rejectAIReponse');
+    const reponseForm = document.getElementById('reponseForm');
+    
+    if (!btnEnhance) return;
+    
+    // Variable pour stocker le texte amélioré
+    let improvedText = '';
+    
+    btnEnhance.addEventListener('click', async function() {
+        const originalText = reponseContent.value.trim();
+        
+        if (originalText.length < 5) {
+            showToast('⚠️ Écrivez au moins 5 caractères pour améliorer', '#f59e0b');
+            return;
+        }
+        
+        // Afficher le chargement
+        const originalTextBtn = btnEnhance.innerHTML;
+        btnEnhance.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Amélioration...';
+        btnEnhance.disabled = true;
+        
+        try {
+            const formData = new FormData();
+            formData.append('contenu', originalText);
+            
+            const response = await fetch('../Backoffice/ai_enhance_reponse.php', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                improvedText = data.newContent;
+                aiPreviewText.textContent = improvedText;
+                aiPreview.style.display = 'block';
+                reponseContent.style.opacity = '0.6';
+                showToast('✅ Texte amélioré !', '#10b981');
+            } else {
+                showToast('❌ Erreur: ' + data.error, '#ef4444');
+            }
+        } catch (error) {
+            console.error('Erreur:', error);
+            showToast('❌ Erreur de connexion', '#ef4444');
+        } finally {
+            btnEnhance.innerHTML = originalTextBtn;
+            btnEnhance.disabled = false;
+        }
+    });
+    
+    // Accepter l'amélioration
+    acceptBtn.addEventListener('click', function() {
+        if (improvedText) {
+            reponseContent.value = improvedText;
+            aiPreview.style.display = 'none';
+            reponseContent.style.opacity = '1';
+            showToast('✅ Texte amélioré accepté !', '#10b981');
+        }
+    });
+    
+    // Rejeter l'amélioration
+    rejectBtn.addEventListener('click', function() {
+        aiPreview.style.display = 'none';
+        reponseContent.style.opacity = '1';
+        improvedText = '';
+        showToast('❌ Amélioration annulée', '#64748b');
+    });
+});
+</script>
+
+<!-- ===== SCRIPT GIPHY ===== -->
+<script>
+const GIPHY_API_KEY = 'yqqP8DPRQPO1Uph9Zg5EAptLuvWfRx0U'; 
+const giphyModal = document.getElementById('giphyModal');
+const giphySearchInput = document.getElementById('giphySearchInput');
+const giphyResults = document.getElementById('giphyResults');
+const btnGifReponse = document.getElementById('btnGifReponse');
+const closeGiphyModal = document.getElementById('closeGiphyModal');
+const gifUrlInput = document.getElementById('gifUrlInput');
+const gifPreviewContainer = document.getElementById('gifPreviewContainer');
+const gifPreviewImg = document.getElementById('gifPreviewImg');
+const btnRemoveGif = document.getElementById('btnRemoveGif');
+
+// Ouvrir la modale GIPHY
+btnGifReponse.addEventListener('click', function(e) {
+    e.preventDefault();
+    giphyModal.style.display = 'flex';
+});
+
+// Fermer la modale
+closeGiphyModal.addEventListener('click', function() {
+    giphyModal.style.display = 'none';
+});
+
+// Fermer en cliquant en dehors
+giphyModal.addEventListener('click', function(e) {
+    if (e.target === giphyModal) {
+        giphyModal.style.display = 'none';
+    }
+});
+
+// Rechercher des GIFs
+let searchTimeout;
+giphySearchInput.addEventListener('input', function(e) {
+    clearTimeout(searchTimeout);
+    const query = e.target.value.trim();
+    
+    if (!query) {
+        giphyResults.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #94a3b8; padding: 40px 20px;">Tapez pour chercher des GIFs...</div>';
+        return;
+    }
+    
+    searchTimeout = setTimeout(() => {
+        searchGifs(query);
+    }, 300);
+});
+
+// Fonction pour chercher des GIFs
+async function searchGifs(query) {
+    const url = `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query)}&limit=20&offset=0&rating=pg&lang=en`;
+    
+    try {
+        giphyResults.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #0ea5e9; padding: 40px 20px;"><i class="fas fa-spinner fa-spin"></i> Recherche en cours...</div>';
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.data && data.data.length > 0) {
+            giphyResults.innerHTML = '';
+            data.data.forEach(gif => {
+                const gifUrl = gif.images.fixed_height.url;
+                const gifDiv = document.createElement('div');
+                gifDiv.style.cursor = 'pointer';
+                gifDiv.style.borderRadius = '10px';
+                gifDiv.style.overflow = 'hidden';
+                gifDiv.style.transition = 'transform 0.2s';
+                gifDiv.innerHTML = `<img src="${gifUrl}" alt="GIF" style="width: 100%; height: 150px; object-fit: cover; border-radius: 10px;">`;
+                
+                gifDiv.addEventListener('mouseover', function() {
+                    gifDiv.style.transform = 'scale(1.05)';
+                });
+                gifDiv.addEventListener('mouseout', function() {
+                    gifDiv.style.transform = 'scale(1)';
+                });
+                
+                gifDiv.addEventListener('click', function() {
+                    selectGif(gifUrl);
+                });
+                
+                giphyResults.appendChild(gifDiv);
+            });
+        } else {
+            giphyResults.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #94a3b8; padding: 40px 20px;">Aucun GIF trouvé</div>';
+        }
+    } catch (error) {
+        console.error('Erreur GIPHY:', error);
+        giphyResults.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #ef4444; padding: 40px 20px;">Erreur de connexion à GIPHY</div>';
+    }
+}
+
+// Sélectionner un GIF
+function selectGif(gifUrl) {
+    const isEditMode = giphyModal.dataset.editMode === 'true';
+    
+    if (isEditMode) {
+        // Mode édition
+        const gifInput = giphyModal.dataset.gifInput;
+        if (gifInput) {
+            gifInput.value = gifUrl;
+            
+            // Mettre à jour l'aperçu du GIF
+            const form = gifInput.closest('form');
+            if (form) {
+                let gifPreview = form.querySelector('.edit-gif-preview');
+                
+                if (!gifPreview) {
+                    // Créer la preview si elle n'existe pas
+                    gifPreview = document.createElement('div');
+                    gifPreview.className = 'edit-gif-preview';
+                    gifPreview.style.cssText = 'margin: 10px 0; padding: 12px; background: #fce7f3; border-radius: 12px; border-left: 4px solid #ec4899;';
+                    gifPreview.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <strong style="font-size: 0.85rem;">🎬 GIF sélectionné :</strong>
+                        </div>
+                        <img src="${gifUrl}" alt="GIF" style="max-width: 100%; max-height: 200px; border-radius: 8px; margin-bottom: 8px;">
+                        <button type="button" class="btn-remove-edit-gif btn btn-outline btn-sm" style="padding: 4px 12px; font-size: 0.75rem;">
+                            <i class="fas fa-times"></i> Supprimer
+                        </button>
+                    `;
+                    const textarea = form.querySelector('textarea');
+                    textarea.parentElement.insertBefore(gifPreview, textarea.nextElementSibling);
+                    
+                    // Ajouter le listener de suppression au nouveau bouton
+                    gifPreview.querySelector('.btn-remove-edit-gif').addEventListener('click', function(e) {
+                        e.preventDefault();
+                        gifInput.value = '';
+                        gifPreview.style.display = 'none';
+                        showToast('❌ GIF supprimé', '#64748b');
+                    });
+                } else {
+                    // Mettre à jour l'image existante
+                    const img = gifPreview.querySelector('img');
+                    if (img) img.src = gifUrl;
+                    gifPreview.style.display = 'block';
+                }
+            }
+        }
+        giphyModal.dataset.editMode = 'false';
+    } else {
+        // Mode ajout (nouveau GIF)
+        gifUrlInput.value = gifUrl;
+        gifPreviewImg.src = gifUrl;
+        gifPreviewContainer.style.display = 'block';
+    }
+    
+    giphyModal.style.display = 'none';
+    giphySearchInput.value = '';
+    giphyResults.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #94a3b8; padding: 40px 20px;">Tapez pour chercher des GIFs...</div>';
+    showToast('🎬 GIF sélectionné !', '#ec4899');
+}
+
+// Supprimer le GIF
+btnRemoveGif.addEventListener('click', function() {
+    gifUrlInput.value = '';
+    gifPreviewContainer.style.display = 'none';
+    gifPreviewImg.src = '';
+    showToast('❌ GIF supprimé', '#64748b');
+});
+
+// ===== GESTION GIF POUR LA MODIFICATION =====
+document.addEventListener('DOMContentLoaded', function() {
+    // Gérer les boutons GIF dans les formulaires de modification
+    document.querySelectorAll('.btn-edit-gif').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const form = this.closest('form');
+            if (form) {
+                const gifInput = form.querySelector('.edit-gif-url');
+                giphyModal.dataset.editMode = 'true';
+                giphyModal.dataset.gifInput = gifInput;
+                giphyModal.style.display = 'flex';
+            }
+        });
+    });
+    
+    // Gérer la suppression du GIF dans les formulaires de modification
+    document.querySelectorAll('.btn-remove-edit-gif').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const form = this.closest('form');
+            if (form) {
+                const gifInput = form.querySelector('.edit-gif-url');
+                const gifPreview = form.querySelector('.edit-gif-preview');
+                gifInput.value = '';
+                if (gifPreview) gifPreview.style.display = 'none';
+                showToast('❌ GIF supprimé', '#64748b');
+            }
+        });
+    });
+});
+// ===== SUGGESTIONS DE RÉPONSES IA =====
+async function getAISuggestions(postId) {
+    const container = document.getElementById('suggestionsContainer');
+    const suggestionsList = document.getElementById('suggestionsList');
+    
+    if (!container) return;
+    
+    container.style.display = 'block';
+    suggestionsList.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Génération des suggestions...</div>';
+    
+    // Récupérer le contenu du post
+    const postElement = document.querySelector('.post-content-full');
+    const postContent = postElement ? postElement.innerText : '';
+    
+    try {
+        const formData = new FormData();
+        formData.append('post_content', postContent);
+        
+        const response = await fetch('../Backoffice/ai_suggest_reply.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.suggestions.length > 0) {
+            suggestionsList.innerHTML = '';
+            data.suggestions.forEach((suggestion, index) => {
+                const suggestionDiv = document.createElement('div');
+                suggestionDiv.style.cssText = 'background: white; padding: 12px; border-radius: 10px; border-left: 4px solid #10b981; cursor: pointer; transition: all 0.2s;';
+                suggestionDiv.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>💡 ${escapeHtml(suggestion)}</span>
+                        <button onclick="useSuggestion(this)" class="btn btn-primary btn-sm" style="padding: 4px 12px;">Utiliser</button>
+                    </div>
+                `;
+                suggestionDiv.onmouseover = () => suggestionDiv.style.transform = 'translateX(5px)';
+                suggestionDiv.onmouseout = () => suggestionDiv.style.transform = 'translateX(0)';
+                suggestionsList.appendChild(suggestionDiv);
+            });
+        } else {
+            suggestionsList.innerHTML = '<div style="color:#666;text-align:center;">❌ ' + (data.error || 'Aucune suggestion disponible') + '</div>';
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        suggestionsList.innerHTML = '<div style="color:#ef4444;text-align:center;">❌ Erreur de connexion</div>';
+    }
+}
+
+function useSuggestion(button) {
+    const suggestionText = button.closest('div').querySelector('span').innerText.replace('💡 ', '');
+    const textarea = document.querySelector('textarea[name="texte_rep"]');
+    if (textarea) {
+        const currentText = textarea.value;
+        if (currentText) {
+            textarea.value = currentText + ' ' + suggestionText;
+        } else {
+            textarea.value = suggestionText;
+        }
+        textarea.focus();
+        showToastSuggestion('✅ Suggestion ajoutée !', '#10b981');
+    }
+    closeSuggestions();
+}
+
+function closeSuggestions() {
+    const container = document.getElementById('suggestionsContainer');
+    if (container) container.style.display = 'none';
+}
+
+function showToastSuggestion(msg, color) {
+    const toast = document.createElement('div');
+    toast.textContent = msg;
+    Object.assign(toast.style, {
+        position: 'fixed', bottom: '80px', left: '50%',
+        transform: 'translateX(-50%)',
+        background: color, color: 'white',
+        padding: '10px 20px', borderRadius: '30px',
+        zIndex: '10000', fontSize: '0.9rem',
+        animation: 'fadeInScale 0.3s ease'
+    });
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+
 </body>
 </html>

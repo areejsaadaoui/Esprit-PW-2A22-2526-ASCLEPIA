@@ -268,3 +268,94 @@ function showToast(message, type = 'success') {
         toast.style.transform = 'translateX(400px)';
     }, 3000);
 }
+// ===== VOICE-TO-POST : Dictée vocale =====
+let recognition = null;
+let isListening = false;
+
+// Vérifier si le navigateur supporte la Web Speech API
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;  // S'arrête après la pause
+    recognition.interimResults = true;  // Affiche les résultats temporaires
+    recognition.lang = 'fr-FR';  // Langue française
+    recognition.maxAlternatives = 1;
+    
+    recognition.onstart = function() {
+        isListening = true;
+        const voiceBtn = document.getElementById('voiceBtn');
+        if (voiceBtn) {
+            voiceBtn.style.background = '#ef4444';
+            voiceBtn.style.color = 'white';
+            voiceBtn.innerHTML = '<i class="fas fa-microphone-slash"></i> Arrêter';
+        }
+        showToastVoice('🎤 Parlez maintenant...', '#ef4444');
+    };
+    
+    recognition.onend = function() {
+        isListening = false;
+        const voiceBtn = document.getElementById('voiceBtn');
+        if (voiceBtn) {
+            voiceBtn.style.background = '';
+            voiceBtn.style.color = '';
+            voiceBtn.innerHTML = '<i class="fas fa-microphone"></i> Dictée vocale';
+        }
+    };
+    
+    recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        const textarea = document.getElementById('postContent');
+        if (textarea) {
+            // Ajouter le texte dicté
+            const currentText = textarea.value;
+            if (currentText) {
+                textarea.value = currentText + ' ' + transcript;
+            } else {
+                textarea.value = transcript.charAt(0).toUpperCase() + transcript.slice(1);
+            }
+            // Déclencher l'événement input pour le compteur
+            textarea.dispatchEvent(new Event('input'));
+        }
+    };
+    
+    recognition.onerror = function(event) {
+        console.error('Erreur reconnaissance vocale:', event.error);
+        showToastVoice('❌ Erreur: ' + event.error, '#ef4444');
+        if (voiceBtn) {
+            voiceBtn.style.background = '';
+            voiceBtn.style.color = '';
+            voiceBtn.innerHTML = '<i class="fas fa-microphone"></i> Dictée vocale';
+        }
+        isListening = false;
+    };
+} else {
+    console.log('Web Speech API non supportée par ce navigateur');
+}
+
+function toggleVoiceRecognition() {
+    if (!recognition) {
+        alert('❌ La reconnaissance vocale n\'est pas supportée par votre navigateur. Utilisez Chrome ou Edge.');
+        return;
+    }
+    
+    if (isListening) {
+        recognition.stop();
+    } else {
+        recognition.start();
+    }
+}
+
+function showToastVoice(msg, color) {
+    const toast = document.createElement('div');
+    toast.textContent = msg;
+    Object.assign(toast.style, {
+        position: 'fixed', bottom: '80px', left: '50%',
+        transform: 'translateX(-50%)',
+        background: color, color: 'white',
+        padding: '10px 20px', borderRadius: '30px',
+        zIndex: '10000', fontSize: '0.9rem',
+        animation: 'fadeInScale 0.3s ease'
+    });
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+}

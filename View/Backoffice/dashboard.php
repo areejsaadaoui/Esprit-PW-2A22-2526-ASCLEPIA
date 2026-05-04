@@ -25,7 +25,7 @@ $nbSignales    = count($postsSignales);
 try {
     $statsGlobales = $postC->getStatsGlobales();
 } catch (Exception $e) {
-    $statsGlobales = ['total_posts'=>$totalPosts,'total_likes'=>0,'total_reponses'=>0,'total_signalements'=>0,'posts_today'=>0,'avec_media'=>0,'distribution_horaire'=>[],'sentiments'=>[]];
+    $statsGlobales = ['total_posts'=>$totalPosts,'total_likes'=>0,'total_reponses'=>0,'total_signalements'=>0,'posts_today'=>0,'avec_media'=>0,'distribution_horaire'=>[]];
 }
 
 // Top post par réponses
@@ -37,13 +37,6 @@ foreach (($statsGlobales['distribution_horaire'] ?? []) as $h) {
     $heatmapData[(int)$h['heure']] = (int)$h['nb'];
 }
 
-// Tri popularité
-$postsByPop = [];
-try {
-    $postsByPop = $postC->listPostsByPopularite();
-} catch (Exception $e) {
-    $postsByPop = $posts;
-}
 
 // Hashtags les plus utilisés (extraction depuis les contenus)
 $allHashtags = [];
@@ -56,12 +49,6 @@ foreach ($posts as $p) {
 arsort($allHashtags);
 $topHashtags = array_slice($allHashtags, 0, 10, true);
 
-// Analyse sentiment de tous les posts
-$sentimentCount = ['positif' => 0, 'negatif' => 0, 'neutre' => 0, 'toxique' => 0];
-foreach ($posts as $p) {
-    $sent = $p->analyzeSentiment();
-    $sentimentCount[$sent]++;
-}
 // ======================================================
 
 // Recherche
@@ -115,9 +102,7 @@ switch ($orderBy) {
             return strlen($a->getContenu()) - strlen($b->getContenu());
         });
         break;
-    case 'popularite':
-        $posts = $postsByPop;
-        break;
+    
     default: // date_desc
         usort($posts, function($a, $b) {
             return strtotime($b->getDatePost()) - strtotime($a->getDatePost());
@@ -142,7 +127,55 @@ $offset = ($currentPage - 1) * $postsPerPage;
 $paginatedPosts = array_slice($latestPosts, $offset, $postsPerPage);
 // =============================================
 }
+// ========== STATISTIQUES DÉTAILLÉES DES MÉDIAS ==========
+$postsWithImage = 0;      // Images uploadées
+$postsWithGif = 0;        // GIFs (GIPHY)
+$postsWithVideo = 0;      // Vidéos YouTube
+$postsTextOnly = 0;       // Texte uniquement
 
+foreach ($posts as $post) {
+    $image = $post->getImage();
+    
+    if (!empty($image)) {
+        // Vérifier si c'est un GIF
+        if (strpos($image, '.gif') !== false || strpos($image, 'giphy.com') !== false) {
+            $postsWithGif++;
+        }
+        // Vérifier si c'est une image uploadée
+        elseif (strpos($image, 'uploads/') !== false) {
+            $postsWithImage++;
+        }
+        // Sinon c'est une autre URL d'image
+        else {
+            $postsWithImage++;
+        }
+    }
+    // Vérifier si le contenu contient une vidéo YouTube
+    elseif (strpos($post->getContenu(), 'youtube.com') !== false || 
+            strpos($post->getContenu(), 'youtu.be') !== false) {
+        $postsWithVideo++;
+    }
+    else {
+        $postsTextOnly++;
+    }
+}
+
+// Double vérification pour les vidéos (au cas où il y a une image ET une vidéo)
+foreach ($posts as $post) {
+    $hasVideo = (strpos($post->getContenu(), 'youtube.com') !== false || 
+                 strpos($post->getContenu(), 'youtu.be') !== false);
+    if ($hasVideo && !empty($post->getImage())) {
+        // Si déjà compté comme image, on ajuste
+        if (strpos($post->getImage(), '.gif') !== false || strpos($post->getImage(), 'giphy.com') !== false) {
+            $postsWithGif--;
+            $postsWithGif = max(0, $postsWithGif);
+        } else {
+            $postsWithImage--;
+            $postsWithImage = max(0, $postsWithImage);
+        }
+        $postsWithVideo++;
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -358,65 +391,19 @@ $paginatedPosts = array_slice($latestPosts, $offset, $postsPerPage);
         .toast-notify.show {
             transform: translateX(0);
         }
-/* ===== CERCLE CAMEMBERT (donut) ANIMÉ ===== */
-.stats-single {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 50px;
+
+
+/* Dark mode */
+body.dark-mode .legend-label {
+    color: #e2e8f0;
 }
 
-.stat-main-circle {
-    text-align: center;
-    background: white;
-    padding: 30px;
-    border-radius: 40px;
-    box-shadow: var(--shadow);
-    transition: all 0.3s;
+body.dark-mode .legend-count {
+    color: white;
 }
 
-.stat-main-circle:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-lg);
-}
-
-.pie-chart {
-    width: 220px;
-    height: 220px;
-    margin: 0 auto;
-}
-
-.pie-green {
-    transition: all 1.2s ease-out;
-}
-.pie-red {
-    transition: all 1.2s ease-out;
-}
-
-.pie-svg {
-    width: 100%;
-    height: 100%;
-    transform: rotate(-90deg);
-}
-
-.pie-segment {
-    transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.pie-total {
-    dominant-baseline: middle;
-}
-
-.pie-label {
-    dominant-baseline: middle;
-}
-
-.pie-legend {
-    margin-top: 25px;
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    flex-wrap: wrap;
+body.dark-mode .legend-triangle:hover {
+    background: rgba(255,255,255,0.05);
 }
 
 .legend-item {
@@ -595,14 +582,6 @@ body.dark-mode .bar-value {
     color: white !important;
 }
 
-/* ===== CAMEMBERT (TOTAL POSTS) ===== */
-body.dark-mode .pie-total {
-    fill: white !important;
-}
-
-body.dark-mode .pie-label {
-    fill: #a0a0c0 !important;
-}
 
 /* Liens rapides */
 body.dark-mode .quick-card span {
@@ -745,7 +724,380 @@ body.dark-mode .pagination-num {
 body.dark-mode .pagination-disabled {
     background: #334155 !important;
 }
+/* ===== STATISTIQUES MODERNES ===== */
+.stats-modern {
+    margin-bottom: 40px;
+}
 
+/* Grille KPI */
+.stats-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.kpi-card {
+    background: white;
+    border-radius: 24px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transition: all 0.3s;
+    border: 1px solid #e2e8f0;
+}
+
+.kpi-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+}
+
+.kpi-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    font-size: 1.5rem;
+}
+
+.kpi-icon.blue { background: linear-gradient(135deg, #0ea5e9, #3b82f6); color: white; }
+.kpi-icon.green { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+.kpi-icon.purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; }
+.kpi-icon.orange { background: linear-gradient(135deg, #f59e0b, #ea580c); color: white; }
+
+.kpi-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1e293b;
+    line-height: 1;
+}
+
+.kpi-label {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin: 5px 0;
+}
+
+.kpi-trend {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+    display: inline-block;
+}
+
+.kpi-trend.up {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.kpi-trend.down {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* Deux colonnes */
+.stats-two-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+/* Cartes stats */
+.stats-card {
+    background: white;
+    border-radius: 24px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s;
+}
+
+.stats-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+}
+
+.stats-card.full-width {
+    grid-column: span 2;
+}
+
+.stats-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.stats-card-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.stats-card-header h3 i {
+    margin-right: 8px;
+    color: #0ea5e9;
+}
+
+.stats-badge {
+    background: #f1f5f9;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #64748b;
+}
+/* ===== STATISTIQUES STYLE CARTES ===== */
+.stats-card {
+    background: white;
+    border-radius: 24px;
+    padding: 24px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+}
+
+.stats-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.stats-card-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.stats-card-header h3 i {
+    margin-right: 8px;
+    color: #0ea5e9;
+}
+
+.stats-badge {
+    background: #f1f5f9;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #64748b;
+}
+
+/* ===== CAMEMBERT GRAND À GAUCHE ===== */
+.stats-card {
+    background: white;
+    border-radius: 24px;
+    padding: 24px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+}
+
+.stats-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.stats-card-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.stats-card-header h3 i {
+    margin-right: 8px;
+    color: #0ea5e9;
+}
+
+.stats-badge {
+    background: #f1f5f9;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #64748b;
+}
+
+/* Layout 2 colonnes : camembert à gauche, légende à droite */
+.pie-chart-layout {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+/* Camembert à gauche - GRAND */
+.pie-chart-left {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.pie-chart-left canvas {
+    display: block;
+}
+
+.pie-center-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    background: white;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.pie-center-text .pie-total {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1e293b;
+    line-height: 1;
+}
+
+.pie-center-text .pie-label {
+    font-size: 0.6rem;
+    color: #64748b;
+}
+
+/* Légende à droite */
+.stats-list-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 15px;
+    background: #f8fafc;
+    border-radius: 12px;
+    transition: all 0.2s;
+}
+
+.stat-item:hover {
+    background: #f1f5f9;
+    transform: translateX(5px);
+}
+
+.stat-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.stat-label {
+    flex: 1;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #1e293b;
+}
+
+.stat-number {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+    min-width: 35px;
+    text-align: right;
+}
+
+.stat-percent {
+    font-size: 0.85rem;
+    color: #64748b;
+    min-width: 60px;
+    text-align: right;
+}
+
+/* Dark mode */
+body.dark-mode .stats-card {
+    background: #16213e;
+    border-color: #2d2d44;
+}
+
+body.dark-mode .stats-card-header {
+    border-bottom-color: #2d2d44;
+}
+
+body.dark-mode .stats-card-header h3 {
+    color: white;
+}
+
+body.dark-mode .stats-badge {
+    background: #1e293b;
+    color: #94a3b8;
+}
+
+body.dark-mode .stat-item {
+    background: #0f0f1a;
+}
+
+body.dark-mode .stat-item:hover {
+    background: #1a1a2e;
+}
+
+body.dark-mode .stat-label {
+    color: #e2e8f0;
+}
+
+body.dark-mode .stat-number {
+    color: white;
+}
+
+body.dark-mode .stat-percent {
+    color: #94a3b8;
+}
+
+body.dark-mode .pie-center-text {
+    background: #16213e;
+}
+
+body.dark-mode .pie-center-text .pie-total {
+    color: white;
+}
+
+body.dark-mode .pie-center-text .pie-label {
+    color: #94a3b8;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .pie-chart-layout {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .stats-list-right {
+        width: 100%;
+    }
+}
     </style>
 </head>
 <body>
@@ -798,406 +1150,298 @@ body.dark-mode .pagination-disabled {
             <div class="topbar-right"><div class="topbar-user"><i class="fas fa-user-circle" style="font-size:1.5rem;"></i><div><div class="name">Admin</div><div class="role">Administrateur</div></div></div></div>
         </div>
 
-        <div class="page-content" >
-       <!-- Statistiques : camembert animé (posts avec/sans image) -->
-<div id="stats" class="stats-single">
-    <div class="stat-main-circle">
-       <div class="pie-chart" id="pieChart">
-    <svg viewBox="0 0 100 100" class="pie-svg" style="transform: rotate(-90deg);">
-        <!-- Cercle de fond -->
-        <circle cx="50" cy="50" r="45" fill="none" stroke="#e2e8f0" stroke-width="10"/>
-        
-        <!-- Partie ROUGE (posts sans image) -->
-        <circle class="pie-segment pie-red" 
-                cx="50" cy="50" r="45" 
-                fill="none" stroke="#ef4444" 
-                stroke-width="10" 
-                stroke-dasharray="283" 
-                stroke-dashoffset="283"
-                stroke-linecap="round"/>
-        
-        <!-- Partie VERTE (posts avec image) -->
-        <circle class="pie-segment pie-green" 
-                cx="50" cy="50" r="45" 
-                fill="none" stroke="#10b981" 
-                stroke-width="10" 
-                stroke-dasharray="283" 
-                stroke-dashoffset="283"
-                stroke-linecap="round"/>
-        
-        <!-- TEXTE (non roté) -->
-        <g style="transform: rotate(90deg); transform-origin: 50px 50px;">
-            <text x="50" y="45" text-anchor="middle" class="pie-total" font-size="22" font-weight="800"><?= $totalPosts ?></text>
-<text x="50" y="62" text-anchor="middle" class="pie-label" font-size="8">TOTAL POSTS</text>
-        </g>
-    </svg>
-    
-          
-</div>
-  <!-- ============ BLOC INNOVANT 3 : ANALYSE SENTIMENT ============ -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;">
+ <div class="page-content">
 
-                <!-- Analyse de sentiment -->
-                <div class="bar-chart-container">
-                    <h3 style="margin-bottom:16px;"><i class="fas fa-brain" style="color:#8b5cf6;"></i> Analyse de sentiment</h3>
-                    <div style="font-size:0.8rem;color:#94a3b8;margin-bottom:16px;">Calcul automatique sur tous les posts</div>
-                    <?php
-                    $sentConfig = [
-                        'positif' => ['icon'=>'😊','color'=>'#10b981','bg'=>'#d1fae5'],
-                        'negatif' => ['icon'=>'😟','color'=>'#f59e0b','bg'=>'#fef3c7'],
-                        'neutre'  => ['icon'=>'😐','color'=>'#64748b','bg'=>'#f1f5f9'],
-                        'toxique' => ['icon'=>'⚠️','color'=>'#ef4444','bg'=>'#fee2e2'],
-                    ];
-                    foreach ($sentimentCount as $sent => $nb):
-                        $pct = $totalPosts > 0 ? round($nb / $totalPosts * 100) : 0;
-                        $cfg = $sentConfig[$sent];
-                    ?>
-                    <div style="margin-bottom:12px;">
-                        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                            <span style="font-size:0.85rem;font-weight:600;"><?= $cfg['icon'] ?> <?= ucfirst($sent) ?></span>
-                            <span style="font-size:0.85rem;color:#475569;"><?= $nb ?> posts (<?= $pct ?>%)</span>
-                        </div>
-                        <div style="background:#f1f5f9;border-radius:20px;height:10px;overflow:hidden;">
-                            <div style="width:<?= $pct ?>%;background:<?= $cfg['color'] ?>;height:100%;border-radius:20px;transition:width 1s ease;"></div>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-
-                <!-- Hashtags Trending -->
-                <div class="bar-chart-container">
-                    <h3 style="margin-bottom:16px;"><i class="fas fa-hashtag" style="color:#3b82f6;"></i> Hashtags tendance</h3>
-                    <?php if (!empty($topHashtags)): ?>
-                    <div style="display:flex;flex-wrap:wrap;gap:8px;">
-                        <?php
-                        $maxHt = max($topHashtags) ?: 1;
-                        $tagColors = ['#0ea5e9','#3b82f6','#8b5cf6','#10b981','#f59e0b','#ef4444','#06b6d4','#ec4899'];
-                        $i = 0;
-                        foreach ($topHashtags as $tag => $count):
-                            $size = 0.75 + ($count / $maxHt) * 0.5; // taille relative
-                            $color = $tagColors[$i % count($tagColors)];
-                        ?>
-                        <a href="?hashtag=<?= urlencode($tag) ?>"
-                           style="background:<?= $color ?>22;color:<?= $color ?>;border:1px solid <?= $color ?>44;
-                                  padding:5px 12px;border-radius:20px;text-decoration:none;
-                                  font-size:<?= round($size, 2) ?>rem;font-weight:600;transition:0.2s;"
-                           onmouseover="this.style.background='<?= $color ?>33'"
-                           onmouseout="this.style.background='<?= $color ?>22'">
-                            #<?= htmlspecialchars($tag) ?> <span style="opacity:0.7;font-size:0.7rem;">(<?= $count ?>)</span>
-                        </a>
-                        <?php $i++; endforeach; ?>
-                    </div>
-                    <?php else: ?>
-                        <p style="color:#94a3b8;text-align:center;margin-top:30px;">Aucun hashtag détecté dans les posts.</p>
-                    <?php endif; ?>
+    <!-- Camembert Médias dans les posts -->
+    <div class="stats-card">
+        <div class="stats-card-header">
+            <h3><i class="fas fa-chart-pie"></i> Médias dans les posts</h3>
+            <span class="stats-badge">4 catégories</span>
+        </div>
+        
+        <div class="pie-chart-layout">
+            <div class="pie-chart-left">
+                <canvas id="mediaPieCanvas" width="250" height="250" style="width: 250px; height: 250px;"></canvas>
+                <div class="pie-center-text">
+                    <span class="pie-total"><?= $totalPosts ?></span>
+                    <span class="pie-label">TOTAL POSTS</span>
                 </div>
             </div>
-        
-        <div class="pie-legend">
-            <div class="legend-item">
-                <span class="legend-color green"></span>
-                <span class="legend-text"><?= $postsWithImages ?> posts avec image</span>
-                <span class="legend-percent"><?= round(($postsWithImages/$totalPosts)*100) ?>%</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-color red"></span>
-                <span class="legend-text"><?= ($totalPosts - $postsWithImages) ?> posts sans image</span>
-                <span class="legend-percent"><?= round((($totalPosts - $postsWithImages)/$totalPosts)*100) ?>%</span>
+            
+            <div class="stats-list-right">
+                <div class="stat-item">
+                    <span class="stat-dot" style="background: #3b82f6;"></span>
+                    <span class="stat-label">Images uploadées</span>
+                    <span class="stat-number"><?= $postsWithImage ?></span>
+                    <span class="stat-percent">(<?= round(($postsWithImage/$totalPosts)*100) ?>%)</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-dot" style="background: #ec4899;"></span>
+                    <span class="stat-label">GIFs animés</span>
+                    <span class="stat-number"><?= $postsWithGif ?></span>
+                    <span class="stat-percent">(<?= round(($postsWithGif/$totalPosts)*100) ?>%)</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-dot" style="background: #f59e0b;"></span>
+                    <span class="stat-label">Vidéos YouTube</span>
+                    <span class="stat-number"><?= $postsWithVideo ?></span>
+                    <span class="stat-percent">(<?= round(($postsWithVideo/$totalPosts)*100) ?>%)</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-dot" style="background: #ef4444;"></span>
+                    <span class="stat-label">Texte uniquement</span>
+                    <span class="stat-number"><?= $postsTextOnly ?></span>
+                    <span class="stat-percent">(<?= round(($postsTextOnly/$totalPosts)*100) ?>%)</span>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-            <!-- Graphique à barres (au lieu de courbe) -->
-            <div class="bar-chart-container animate-fadeLeft" style="animation-delay:0.2s">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3><i class="fas fa-chart-bar" style="color:var(--primary)"></i> Évolution des posts (12 mois)</h3>
-                </div>
-                <div class="bar-chart" id="barChart">
-                    <?php 
-                    $maxValue = max($monthlyCounts) ?: 1;
-                    foreach ($months as $index => $month): 
-                        $height = ($monthlyCounts[$index] / $maxValue) * 180;
-                    ?>
-                        <div class="bar-item">
-                            <div class="bar-value"><?= $monthlyCounts[$index] ?></div>
-                            <div class="bar" style="height: <?= $height ?>px;"></div>
-                            <div class="bar-label"><?= $month ?></div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-
-            <!-- Liens rapides -->
-            <div class="quick-links-grid">
-                <a href="addpost.php" class="quick-card">
-                    <i class="fas fa-plus-circle"></i>
-                    <span>➕ Ajouter un post</span>
-                </a>
-                <a href="../Frontoffice/postlist.php" class="quick-card">
-                    <i class="fas fa-globe"></i>
-                    <span>🌍 Voir le forum public</span>
-                </a>
-            </div>
-           
-
-            <!-- Barre de recherche avec bouton "Voir" -->
-            <div id="search" class="card" style="padding: 24px; margin-bottom: 30px; border-radius: 32px;">
-                <h3 style="margin-bottom: 20px;"><i class="fas fa-search"></i> Rechercher un post</h3>
-                <form method="GET" action="" id="searchForm">
-                    <div class="search-wrapper">
-                        <i class="fas fa-search"></i>
-                        <input type="text" name="ch" id="searchInput" placeholder="Rechercher par mot-clé..." value="<?= htmlspecialchars($searchTerm) ?>">
-                        <button type="button" class="btn-go" id="goToPostBtn">
-                            <i class="fas fa-arrow-right"></i> Voir
-                        </button>
-                    </div>
-                </form>
-                
-                <!-- Champ caché pour l'ID du post sélectionné -->
-                <input type="hidden" id="selectedPostId" value="">
-
-                <?php if ($searchTerm): ?>
-                    <div class="result-count" style="margin-top: 20px;">
-                        <i class="fas fa-chart-simple"></i> <?= count($displayPosts) ?> résultat(s) pour "<strong><?= htmlspecialchars($searchTerm) ?></strong>"
-                        <a href="dashboard.php" style="float:right;">✖ Effacer</a>
-                    </div>
-                    <div class="search-results">
-                        <?php if (count($displayPosts) > 0): ?>
-                            <?php foreach ($displayPosts as $post): ?>
-                                <div class="post-result" data-post-id="<?= $post->getIdPost() ?>" style="padding: 15px; border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.2s;">
-                                    <h4><i class="fas fa-comment"></i> Post #<?= $post->getIdPost() ?></h4>
-                                    <p><?= htmlspecialchars(substr($post->getContenu(), 0, 150)) ?>…</p>
-                                    <small><i class="fas fa-calendar"></i> <?= date('d/m/Y H:i', strtotime($post->getDatePost())) ?>
-                                    <?php if (!empty($post->getImage())): ?> <span style="color:var(--accent)"><i class="fas fa-image"></i> Avec image</span><?php endif; ?>
-                                    </small>
-                                    <div class="post-actions" style="margin-top:10px">
-                                        <a href="showpost.php?id=<?= $post->getIdPost() ?>" class="btn btn-outline btn-sm"><i class="fas fa-eye"></i> Voir</a>
-                                        <a href="deletepost.php?id=<?= $post->getIdPost() ?>" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ce post ?')"><i class="fas fa-trash"></i> Supprimer</a>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Aucun post correspondant.</div>
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
-                 <!-- Barre de tri -->
-
-            </div>
-
-<!-- Tableau de tous les posts -->
-<div id="recent" class="card" style="padding:0; overflow:hidden; border-radius: 28px;">
-    <div style="padding:20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-        <h3><i class="fas fa-table-list"></i> Tous les posts</h3>
-        <div style="display:flex; gap:10px; align-items:center;">
-            <div>
-                <span><i class="fas fa-sort"></i> Filtre :</span>
-                <form method="GET" action="" id="orderForm" style="display:inline-block;">
-                    <select name="order" class="sort-select" onchange="this.form.submit()">
-                        <option value="date_desc" <?= ($orderBy ?? 'date_desc') == 'date_desc' ? 'selected' : '' ?>>📅 Date décroissante</option>
-                        <option value="date_asc" <?= ($orderBy ?? '') == 'date_asc' ? 'selected' : '' ?>>📅 Date croissante</option>
-                        <option value="length_desc" <?= ($orderBy ?? '') == 'length_desc' ? 'selected' : '' ?>>📄 Plus long </option>
-                        <option value="length_asc" <?= ($orderBy ?? '') == 'length_asc' ? 'selected' : '' ?>>📄 Plus court </option>
-                        <option value="popularite" <?= ($orderBy ?? '') == 'popularite' ? 'selected' : '' ?>>🔥 Popularité</option>
-                    </select>
-                </form>
-            </div>
-            <a href="../Frontoffice/postlist.php" class="btn btn-outline btn-sm">Gérer <i class="fas fa-arrow-right"></i></a>
-            <a href="export_csv.php" class="btn btn-outline btn-sm" style="border-color:#10b981;color:#10b981;">
-                <i class="fas fa-file-csv"></i> Exporter CSV
-            </a>
+    <!-- Hashtags tendance -->
+    <div class="stats-card">
+        <div class="stats-card-header">
+            <h3><i class="fas fa-hashtag"></i> Hashtags tendance</h3>
+            <span class="stats-badge">Populaires</span>
         </div>
-    </div>
-    <div style="overflow-x:auto;">
-        <table class="table">
-            <thead>
-                <tr><th>ID</th><th>Contenu</th><th>Média</th><th>Sentiment</th><th>Likes</th><th>Réponses</th><th>Date</th><th>Actions</th</th>
-            </thead>
-            <tbody>
-                <?php 
-                // PAGINATION - Calcul des posts à afficher
-                $postsPerPage = 10;
-                $currentPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-                $totalPostsCount = count($latestPosts);
-                $totalPages = ceil($totalPostsCount / $postsPerPage);
-                
-                // S'assurer que la page courante est valide
-                if ($currentPage < 1) $currentPage = 1;
-                if ($currentPage > $totalPages && $totalPages > 0) $currentPage = $totalPages;
-                
-                // Calculer l'offset
-                $offset = ($currentPage - 1) * $postsPerPage;
-                
-                // Extraire les posts de la page courante
-                $postsToShow = array_slice($latestPosts, $offset, $postsPerPage);
+        <div class="hashtags-cloud">
+            <?php if (!empty($topHashtags)): ?>
+                <?php
+                $maxHt = max($topHashtags) ?: 1;
+                $tagColors = ['#0ea5e9','#3b82f6','#8b5cf6','#10b981','#f59e0b','#ef4444','#06b6d4','#ec4899'];
+                $i = 0;
+                foreach ($topHashtags as $tag => $count):
+                    $size = 0.8 + ($count / $maxHt) * 0.6;
+                    $color = $tagColors[$i % count($tagColors)];
                 ?>
-                
-                <?php if (empty($postsToShow)): ?>
-                    <tr><td colspan="8" style="text-align:center">Aucun post</td></tr>
-                <?php else: ?>
-                    <?php foreach ($postsToShow as $post): ?>
-                        <tr>
-                            <td><?= $post->getIdPost() ?></td>
-                            <td style="max-width:300px"><?= htmlspecialchars(substr($post->getContenu(),0,70)) ?>…</td>
-                            <td style="text-align:center"><?= !empty($post->getImage()) ? '<i class="fas fa-check-circle" style="color:var(--accent)"></i>' : '<i class="fas fa-times-circle" style="color:var(--gray-light)"></i>' ?></td>
-                            <td><?= $post->getSentimentBadge() ?></td>
-                            <td style="text-align:center;font-weight:600;">❤️ <?= $post->getLikes() ?></td>
-                            <td class="table-actions">
-                                <a href="../Frontoffice/listrep.php?id_post=<?= $post->getIdPost() ?>" class="btn btn-info btn-sm" title="Voir les réponses">
-                                    <i class="fas fa-comments"></i> Voir
-                                </a>
-                            </td>
-                            <td><?= date('d/m/Y', strtotime($post->getDatePost())) ?></td>
-                            <td class="table-actions">
-                                <a href="showpost.php?id=<?= $post->getIdPost() ?>" class="btn btn-outline btn-sm"><i class="fas fa-eye"></i></a>
-                                <a href="deletepost.php?id=<?= $post->getIdPost() ?>" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ?')"><i class="fas fa-trash"></i></a>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                    <a href="?hashtag=<?= urlencode($tag) ?>" class="hashtag-cloud-item"
+                       style="background:<?= $color ?>15;color:<?= $color ?>;border:1px solid <?= $color ?>30;
+                              padding:8px 16px;border-radius:40px;text-decoration:none;
+                              font-size:<?= round($size, 2) ?>rem;font-weight:600;transition:all 0.2s;
+                              display:inline-flex;align-items:center;gap:8px;">
+                        #<?= htmlspecialchars($tag) ?>
+                        <span style="background:<?= $color ?>30;color:white;padding:2px 8px;border-radius:20px;font-size:0.7rem;"><?= $count ?></span>
+                    </a>
+                <?php $i++; endforeach; ?>
+            <?php else: ?>
+                <p class="empty-state">Aucun hashtag détecté pour le moment</p>
+            <?php endif; ?>
+        </div>
     </div>
-    
-  <!-- PAGINATION - CERCLES MODERNES -->
-<?php if ($totalPages > 1): ?>
-<div class="pagination-container" style="display: flex; justify-content: center; align-items: center; gap: 8px; padding: 20px; flex-wrap: wrap; border-top: 1px solid var(--border);">
-    
-    <!-- Première page -->
-    <?php if ($currentPage > 1): ?>
-        <a href="?page=1<?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?><?= isset($_GET['ch']) ? '&ch=' . urlencode($_GET['ch']) : '' ?>" 
-           class="pagination-btn" 
-           style="min-width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: white; text-decoration: none; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
-           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.15)';"
-           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';">
-            <i class="fas fa-angle-double-left"></i>
-        </a>
-    <?php else: ?>
-        <span class="pagination-disabled" 
-              style="min-width: 36px; height: 36px; border-radius: 50%; background: #cbd5e1; color: white; opacity: 0.5; cursor: not-allowed; display: flex; align-items: center; justify-content: center;">
-            <i class="fas fa-angle-double-left"></i>
-        </span>
-    <?php endif; ?>
-    
-    <!-- Page précédente -->
-    <?php if ($currentPage > 1): ?>
-        <a href="?page=<?= $currentPage - 1 ?><?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?><?= isset($_GET['ch']) ? '&ch=' . urlencode($_GET['ch']) : '' ?>" 
-           class="pagination-btn" 
-           style="padding: 0 14px; height: 36px; border-radius: 40px; background: var(--primary); color: white; text-decoration: none; display: flex; align-items: center; gap: 5px; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
-           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.15)';"
-           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';">
-            <i class="fas fa-angle-left"></i> Précédent
-        </a>
-    <?php else: ?>
-        <span class="pagination-disabled" 
-              style="padding: 0 14px; height: 36px; border-radius: 40px; background: #cbd5e1; color: white; opacity: 0.5; cursor: not-allowed; display: flex; align-items: center; gap: 5px;">
-            <i class="fas fa-angle-left"></i> Précédent
-        </span>
-    <?php endif; ?>
-    
-    <!-- Numéros de pages -->
-    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-        <?php
-        $startPage = max(1, $currentPage - 2);
-        $endPage = min($totalPages, $currentPage + 2);
-        
-        if ($startPage > 1) {
-            echo '<span style="min-width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: var(--text-muted);">...</span>';
-        }
-        
-        for ($i = $startPage; $i <= $endPage; $i++):
-            $isActive = ($i == $currentPage);
-        ?>
-            <a href="?page=<?= $i ?><?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?><?= isset($_GET['ch']) ? '&ch=' . urlencode($_GET['ch']) : '' ?>" 
-               class="pagination-num" 
-               style="min-width: 36px; height: 36px; border-radius: 50%; background: <?= $isActive ? 'var(--primary-dark)' : 'var(--primary)' ?>; color: white; text-decoration: none; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.1); <?= $isActive ? 'transform: scale(1.05); font-weight: bold;' : '' ?>"
-               onmouseover="<?= !$isActive ? 'this.style.transform=\"translateY(-2px)\"; this.style.boxShadow=\"0 4px 8px rgba(0,0,0,0.15)\";' : '' ?>"
-               onmouseout="<?= !$isActive ? 'this.style.transform=\"translateY(0)\"; this.style.boxShadow=\"0 2px 4px rgba(0,0,0,0.1)\";' : '' ?>">
-                <?= $i ?>
-            </a>
-        <?php endfor;
-        
-        if ($endPage < $totalPages) {
-            echo '<span style="min-width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: var(--text-muted);">...</span>';
-        }
-        ?>
-    </div>
-    
-    <!-- Page suivante -->
-    <?php if ($currentPage < $totalPages): ?>
-        <a href="?page=<?= $currentPage + 1 ?><?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?><?= isset($_GET['ch']) ? '&ch=' . urlencode($_GET['ch']) : '' ?>" 
-           class="pagination-btn" 
-           style="padding: 0 14px; height: 36px; border-radius: 40px; background: var(--primary); color: white; text-decoration: none; display: flex; align-items: center; gap: 5px; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
-           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.15)';"
-           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';">
-            Suivant <i class="fas fa-angle-right"></i>
-        </a>
-    <?php else: ?>
-        <span class="pagination-disabled" 
-              style="padding: 0 14px; height: 36px; border-radius: 40px; background: #cbd5e1; color: white; opacity: 0.5; cursor: not-allowed; display: flex; align-items: center; gap: 5px;">
-            Suivant <i class="fas fa-angle-right"></i>
-        </span>
-    <?php endif; ?>
-    
-    <!-- Dernière page -->
-    <?php if ($currentPage < $totalPages): ?>
-        <a href="?page=<?= $totalPages ?><?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?><?= isset($_GET['ch']) ? '&ch=' . urlencode($_GET['ch']) : '' ?>" 
-           class="pagination-btn" 
-           style="min-width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: white; text-decoration: none; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
-           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.15)';"
-           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';">
-            <i class="fas fa-angle-double-right"></i>
-        </a>
-    <?php else: ?>
-        <span class="pagination-disabled" 
-              style="min-width: 36px; height: 36px; border-radius: 50%; background: #cbd5e1; color: white; opacity: 0.5; cursor: not-allowed; display: flex; align-items: center; justify-content: center;">
-            <i class="fas fa-angle-double-right"></i>
-        </span>
-    <?php endif; ?>
-</div>
 
-<!-- Information sur les posts affichés -->
-<div style="text-align: center; padding: 10px 20px 20px 20px; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid var(--border);">
-    <i class="fas fa-info-circle"></i> Affichage des posts <?= $offset + 1 ?> à <?= min($offset + $postsPerPage, $totalPostsCount) ?> sur un total de <?= $totalPostsCount ?> posts
-</div>
-<?php endif; ?>
-</div>
-
- <!-- ============ BLOC INNOVANT 5 : MODÉRATION (Posts signalés) ============ -->
-            <?php if ($nbSignales > 0): ?>
-            <div class="card" style="padding:0;overflow:hidden;border-radius:28px;border-left:5px solid #ef4444;margin-bottom:28px;">
-                <div style="padding:18px 20px;background:linear-gradient(135deg,#fee2e2,#fef2f2);display:flex;justify-content:space-between;align-items:center;">
-                    <h3 style="color:#dc2626;margin:0;"><i class="fas fa-shield-halved"></i> ⚠️ Modération — Posts signalés</h3>
-                    <span style="background:#ef4444;color:white;padding:4px 14px;border-radius:20px;font-weight:700;"><?= $nbSignales ?> alerte(s)</span>
+    <!-- Graphique évolution -->
+    <div class="stats-card">
+        <div class="stats-card-header">
+            <h3><i class="fas fa-chart-line"></i> Évolution des publications</h3>
+            <span class="stats-badge">12 derniers mois</span>
+        </div>
+        <div class="bar-chart" id="barChart">
+            <?php 
+            $maxValue = max($monthlyCounts) ?: 1;
+            foreach ($months as $index => $month): 
+                $height = ($monthlyCounts[$index] / $maxValue) * 180;
+            ?>
+                <div class="bar-item">
+                    <div class="bar-value"><?= $monthlyCounts[$index] ?></div>
+                    <div class="bar" style="height: <?= $height ?>px;"></div>
+                    <div class="bar-label"><?= $month ?></div>
                 </div>
-                <div style="overflow-x:auto;">
-                    <table class="table" style="margin:0;">
-                        <thead><tr><th>ID</th><th>Contenu</th><th>Signalements</th><th>Likes</th><th>Actions</th></tr></thead>
-                        <tbody>
-                        <?php foreach ($postsSignales as $ps): ?>
+            <?php endforeach; ?>
+        </div>
+    </div>
+
+    <!-- Liens rapides -->
+    <div class="quick-links-grid">
+        <a href="addpost.php" class="quick-card">
+            <i class="fas fa-plus-circle"></i>
+            <span>➕ Ajouter un post</span>
+        </a>
+        <a href="../Frontoffice/postlist.php" class="quick-card">
+            <i class="fas fa-globe"></i>
+            <span>🌍 Voir le forum public</span>
+        </a>
+    </div>
+
+    <!-- Barre de recherche -->
+    <div id="search" class="card" style="padding: 24px; margin-bottom: 30px; border-radius: 32px;">
+        <h3 style="margin-bottom: 20px;"><i class="fas fa-search"></i> Rechercher un post</h3>
+        <form method="GET" action="" id="searchForm">
+            <div class="search-wrapper">
+                <i class="fas fa-search"></i>
+                <input type="text" name="ch" id="searchInput" placeholder="Rechercher par mot-clé..." value="<?= htmlspecialchars($searchTerm) ?>">
+                <button type="button" class="btn-go" id="goToPostBtn">
+                    <i class="fas fa-arrow-right"></i> Voir
+                </button>
+            </div>
+        </form>
+        
+        <input type="hidden" id="selectedPostId" value="">
+
+        <?php if ($searchTerm): ?>
+            <div class="result-count" style="margin-top: 20px;">
+                <i class="fas fa-chart-simple"></i> <?= count($displayPosts) ?> résultat(s) pour "<strong><?= htmlspecialchars($searchTerm) ?></strong>"
+                <a href="dashboard.php" style="float:right;">✖ Effacer</a>
+            </div>
+            <div class="search-results">
+                <?php if (count($displayPosts) > 0): ?>
+                    <?php foreach ($displayPosts as $post): ?>
+                        <div class="post-result" data-post-id="<?= $post->getIdPost() ?>" style="padding: 15px; border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.2s;">
+                            <h4><i class="fas fa-comment"></i> Post #<?= $post->getIdPost() ?></h4>
+                            <p><?= htmlspecialchars(substr($post->getContenu(), 0, 150)) ?>…</p>
+                            <small><i class="fas fa-calendar"></i> <?= date('d/m/Y H:i', strtotime($post->getDatePost())) ?>
+                            <?php if (!empty($post->getImage())): ?> <span style="color:var(--accent)"><i class="fas fa-image"></i> Avec image</span><?php endif; ?>
+                            </small>
+                            <div class="post-actions" style="margin-top:10px">
+                                <a href="showpost.php?id=<?= $post->getIdPost() ?>" class="btn btn-outline btn-sm"><i class="fas fa-eye"></i> Voir</a>
+                                <a href="deletepost.php?id=<?= $post->getIdPost() ?>" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ce post ?')"><i class="fas fa-trash"></i> Supprimer</a>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Aucun post correspondant.</div>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- Tableau de tous les posts -->
+    <div id="recent" class="card" style="padding:0; overflow:hidden; border-radius: 28px;">
+        <div style="padding:20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <h3><i class="fas fa-table-list"></i> Tous les posts</h3>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <div>
+                    <span><i class="fas fa-sort"></i> Filtre :</span>
+                    <form method="GET" action="" id="orderForm" style="display:inline-block;">
+                        <select name="order" class="sort-select" onchange="this.form.submit()">
+                            <option value="date_desc" <?= ($orderBy ?? 'date_desc') == 'date_desc' ? 'selected' : '' ?>>📅 Date décroissante</option>
+                            <option value="date_asc" <?= ($orderBy ?? '') == 'date_asc' ? 'selected' : '' ?>>📅 Date croissante</option>
+                            <option value="length_desc" <?= ($orderBy ?? '') == 'length_desc' ? 'selected' : '' ?>>📄 Plus long</option>
+                            <option value="length_asc" <?= ($orderBy ?? '') == 'length_asc' ? 'selected' : '' ?>>📄 Plus court</option>
+                        </select>
+                    </form>
+                </div>
+                <a href="../Frontoffice/postlist.php" class="btn btn-outline btn-sm">Gérer <i class="fas fa-arrow-right"></i></a>
+                <a href="export_csv.php" class="btn btn-outline btn-sm" style="border-color:#10b981;color:#10b981;">
+                    <i class="fas fa-file-csv"></i> Exporter CSV
+                </a>
+            </div>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="table">
+                <thead>
+                    <tr><th>ID</th><th>Contenu</th><th>Média</th><th>Likes</th><th>Réponses</th><th>Date</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    <?php 
+                    $postsPerPage = 10;
+                    $currentPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+                    $totalPostsCount = count($latestPosts);
+                    $totalPages = ceil($totalPostsCount / $postsPerPage);
+                    if ($currentPage < 1) $currentPage = 1;
+                    if ($currentPage > $totalPages && $totalPages > 0) $currentPage = $totalPages;
+                    $offset = ($currentPage - 1) * $postsPerPage;
+                    $postsToShow = array_slice($latestPosts, $offset, $postsPerPage);
+                    ?>
+                    
+                    <?php if (empty($postsToShow)): ?>
+                        <tr><td colspan="7" style="text-align:center">Aucun post</td></tr>
+                    <?php else: ?>
+                        <?php foreach ($postsToShow as $post): ?>
                             <tr>
-                                <td><?= $ps['id_post'] ?></td>
-                                <td style="max-width:300px;"><?= htmlspecialchars(substr($ps['contenu'], 0, 80)) ?>…</td>
-                                <td><span style="background:#fee2e2;color:#dc2626;padding:3px 10px;border-radius:20px;font-weight:700;">🚩 <?= $ps['signalements'] ?></span></td>
-                                <td>❤️ <?= $ps['likes'] ?></td>
-                                <td>
-                                    <a href="showpost.php?id=<?= $ps['id_post'] ?>" class="btn btn-outline btn-sm"><i class="fas fa-eye"></i></a>
-                                    <a href="deletepost.php?id=<?= $ps['id_post'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ce post signalé ?')"><i class="fas fa-trash"></i></a>
+                                <td><?= $post->getIdPost() ?></td>
+                                <td style="max-width:300px"><?= htmlspecialchars(substr($post->getContenu(),0,70)) ?>…</td>
+                                <td style="text-align:center"><?= !empty($post->getImage()) ? '<i class="fas fa-check-circle" style="color:var(--accent)"></i>' : '<i class="fas fa-times-circle" style="color:var(--gray-light)"></i>' ?></td>
+                                <td style="text-align:center;font-weight:600;">❤️ <?= $post->getLikes() ?></td>
+                                <td><a href="../Frontoffice/listrep.php?id_post=<?= $post->getIdPost() ?>" class="btn btn-info btn-sm"><i class="fas fa-comments"></i> Voir</a></td>
+                                <td><?= date('d/m/Y', strtotime($post->getDatePost())) ?></td>
+                                <td class="table-actions">
+                                    <a href="showpost.php?id=<?= $post->getIdPost() ?>" class="btn btn-outline btn-sm"><i class="fas fa-eye"></i></a>
+                                    <a href="deletepost.php?id=<?= $post->getIdPost() ?>" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ?')"><i class="fas fa-trash"></i></a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        <?php if ($totalPages > 1): ?>
+        <div class="pagination-container" style="display: flex; justify-content: center; align-items: center; gap: 8px; padding: 20px; flex-wrap: wrap; border-top: 1px solid var(--border);">
+            <?php if ($currentPage > 1): ?>
+                <a href="?page=1<?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?>" class="pagination-btn" style="min-width:36px;height:36px;border-radius:50%;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;"><i class="fas fa-angle-double-left"></i></a>
+            <?php else: ?>
+                <span class="pagination-disabled" style="min-width:36px;height:36px;border-radius:50%;background:#cbd5e1;color:white;display:flex;align-items:center;justify-content:center;opacity:0.5;"><i class="fas fa-angle-double-left"></i></span>
             <?php endif; ?>
+            
+            <?php if ($currentPage > 1): ?>
+                <a href="?page=<?= $currentPage-1 ?><?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?>" class="pagination-btn" style="padding:0 14px;height:36px;border-radius:40px;background:var(--primary);color:white;display:flex;align-items:center;gap:5px;"><i class="fas fa-angle-left"></i> Précédent</a>
+            <?php else: ?>
+                <span class="pagination-disabled" style="padding:0 14px;height:36px;border-radius:40px;background:#cbd5e1;color:white;opacity:0.5;"><i class="fas fa-angle-left"></i> Précédent</span>
+            <?php endif; ?>
+            
+            <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                <?php
+                $startPage = max(1, $currentPage - 2);
+                $endPage = min($totalPages, $currentPage + 2);
+                if ($startPage > 1) echo '<span style="min-width:36px;height:36px;display:flex;align-items:center;justify-content:center;">...</span>';
+                for ($i = $startPage; $i <= $endPage; $i++):
+                    $isActive = ($i == $currentPage);
+                ?>
+                    <a href="?page=<?= $i ?><?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?>" class="pagination-num" style="min-width:36px;height:36px;border-radius:50%;background:<?= $isActive ? 'var(--primary-dark)' : 'var(--primary)' ?>;color:white;display:flex;align-items:center;justify-content:center;<?= $isActive ? 'transform:scale(1.05);font-weight:bold;' : '' ?>"><?= $i ?></a>
+                <?php endfor;
+                if ($endPage < $totalPages) echo '<span style="min-width:36px;height:36px;display:flex;align-items:center;justify-content:center;">...</span>';
+                ?>
+            </div>
+            
+            <?php if ($currentPage < $totalPages): ?>
+                <a href="?page=<?= $currentPage+1 ?><?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?>" class="pagination-btn" style="padding:0 14px;height:36px;border-radius:40px;background:var(--primary);color:white;display:flex;align-items:center;gap:5px;">Suivant <i class="fas fa-angle-right"></i></a>
+            <?php else: ?>
+                <span class="pagination-disabled" style="padding:0 14px;height:36px;border-radius:40px;background:#cbd5e1;color:white;opacity:0.5;">Suivant <i class="fas fa-angle-right"></i></span>
+            <?php endif; ?>
+            
+            <?php if ($currentPage < $totalPages): ?>
+                <a href="?page=<?= $totalPages ?><?= isset($_GET['order']) ? '&order=' . $_GET['order'] : '' ?>" class="pagination-btn" style="min-width:36px;height:36px;border-radius:50%;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;"><i class="fas fa-angle-double-right"></i></a>
+            <?php else: ?>
+                <span class="pagination-disabled" style="min-width:36px;height:36px;border-radius:50%;background:#cbd5e1;color:white;opacity:0.5;"><i class="fas fa-angle-double-right"></i></span>
+            <?php endif; ?>
+        </div>
+        <div style="text-align:center;padding:10px 20px 20px;color:var(--text-muted);font-size:0.85rem;border-top:1px solid var(--border);">
+            <i class="fas fa-info-circle"></i> Affichage des posts <?= $offset + 1 ?> à <?= min($offset + $postsPerPage, $totalPostsCount) ?> sur un total de <?= $totalPostsCount ?> posts
+        </div>
+        <?php endif; ?>
+    </div>
 
+    <!-- Modération Posts signalés -->
+    <?php if ($nbSignales > 0): ?>
+    <div class="card" style="padding:0;overflow:hidden;border-radius:28px;border-left:5px solid #ef4444;margin-bottom:28px;">
+        <div style="padding:18px 20px;background:linear-gradient(135deg,#fee2e2,#fef2f2);display:flex;justify-content:space-between;align-items:center;">
+            <h3 style="color:#dc2626;margin:0;"><i class="fas fa-shield-halved"></i> ⚠️ Modération — Posts signalés</h3>
+            <span style="background:#ef4444;color:white;padding:4px 14px;border-radius:20px;font-weight:700;"><?= $nbSignales ?> alerte(s)</span>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="table" style="margin:0;">
+                <thead><tr><th>ID</th><th>Contenu</th><th>Signalements</th><th>Likes</th><th>Actions</th></tr></thead>
+                <tbody>
+                <?php foreach ($postsSignales as $ps): ?>
+                    <tr>
+                        <td><?= $ps['id_post'] ?></td>
+                        <td style="max-width:300px;"><?= htmlspecialchars(substr($ps['contenu'], 0, 80)) ?>…</td>
+                        <td><span style="background:#fee2e2;color:#dc2626;padding:3px 10px;border-radius:20px;font-weight:700;">🚩 <?= $ps['signalements'] ?></span></td>
+                        <td>❤️ <?= $ps['likes'] ?></td>
+                        <td>
+                            <a href="showpost.php?id=<?= $ps['id_post'] ?>" class="btn btn-outline btn-sm"><i class="fas fa-eye"></i></a>
+                            <a href="deletepost.php?id=<?= $ps['id_post'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ce post signalé ?')"><i class="fas fa-trash"></i></a>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <?php endif; ?>
 
-
-<!-- Toast de notification -->
-<div id="toastMsg" class="toast-notify"><i class="fas fa-check-circle"></i> <span id="toastText"></span></div>
-
+</div> <!-- Fin page-content -->
+    </main>
 <script>
     // Toggle sidebar
     function toggleSidebar() {
@@ -1271,18 +1515,6 @@ body.dark-mode .pagination-disabled {
             btn.innerHTML = '<i class="fas fa-arrow-right"></i> Voir le post #' + postId;
         });
     });
-
-    // Afficher une notification si un message est passé en GET
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('success')) {
-        let msg = '';
-        if (urlParams.get('success') === 'deleted') msg = 'Post supprimé avec succès !';
-        else msg = 'Action réussie !';
-        const toast = document.getElementById('toastMsg');
-        document.getElementById('toastText').innerText = msg;
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 3000);
-    }
     // ===== ANIMATION DES COMPTEURS =====
 function animateCounter(element, target, duration = 2000) {
     let start = 0;
@@ -1318,46 +1550,6 @@ const observer = new IntersectionObserver((entries) => {
         }
     });
 }, observerOptions);
-
-    // Sidebar toggle (bouton ☰)
-    function toggleSidebar() {
-        document.querySelector('.sidebar').classList.toggle('open');
-    }
-
-    // Sous-menus déroulants
-    function toggleSubMenu(element) {
-        const parent = element.closest('.has-sub');
-        parent.classList.toggle('open');
-        const subMenu = parent.querySelector('.sub-menu');
-        if (subMenu) subMenu.classList.toggle('open');
-    }
-
-  // ===== ANIMATION DU CAMEMBERT =====
-// Animation + clic du camembert
-const total = <?= $totalPosts ?>;
-const withImg = <?= $postsWithImages ?>;
-const withoutImg = total - withImg;
-const percentGreen = total ? (withImg / total) : 0;      // Partie VERTE
-const percentRed = total ? (withoutImg / total) : 0;    // Partie ROUGE
-
-const circumference = 2 * Math.PI * 45; // ≈ 283
-
-const greenCircle = document.querySelector('.pie-green');
-const redCircle = document.querySelector('.pie-red');
-
-if (greenCircle && redCircle) {
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                // Le vert est par-dessus, le rouge en dessous
-                greenCircle.style.strokeDashoffset = circumference * (1 - percentGreen);
-                redCircle.style.strokeDashoffset = circumference * (1 - (percentGreen + percentRed));
-                observer.disconnect();
-            }
-        });
-    }, { threshold: 0.3 });
-    observer.observe(document.querySelector('.stat-main-circle'));
-}
 </script>
 <button class="theme-toggle" id="themeToggle">
     <i class="fas fa-moon"></i>
@@ -1395,6 +1587,78 @@ if (greenCircle && redCircle) {
         }
     });
 })();
+</script>
+<script>
+// ===== DESSINER LE CAMEMBERT GRAND =====
+function drawPieChart() {
+    const canvas = document.getElementById('mediaPieCanvas');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    const width = 250;
+    const height = 250;
+    canvas.width = width;
+    canvas.height = height;
+    
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const radius = 100;
+    
+    // Données dans l'ordre (sens horaire)
+    const data = [
+        { value: <?= $postsWithImage ?>, color: '#3b82f6' },
+        { value: <?= $postsWithGif ?>, color: '#ec4899' },
+        { value: <?= $postsWithVideo ?>, color: '#f59e0b' },
+        { value: <?= $postsTextOnly ?>, color: '#ef4444' }
+    ];
+    
+    const total = <?= $totalPosts ?>;
+    let startAngle = -Math.PI / 2; // Commencer à 12h
+    
+    ctx.clearRect(0, 0, width, height);
+    
+    data.forEach(item => {
+        if (item.value === 0) return;
+        
+        const sliceAngle = (item.value / total) * Math.PI * 2;
+        const endAngle = startAngle + sliceAngle;
+        
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.closePath();
+        
+        ctx.fillStyle = item.color;
+        ctx.fill();
+        
+        // Contour blanc entre les parts
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+        
+        startAngle = endAngle;
+    });
+    
+    // Cercle central blanc
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 32, 0, Math.PI * 2);
+    ctx.fillStyle = 'white';
+    ctx.fill();
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+}
+
+drawPieChart();
+
+// Redessiner si le thème change
+const themeToggle = document.getElementById('themeToggle');
+if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+        setTimeout(drawPieChart, 100);
+    });
+}
+drawPieChart();
 </script>
 </body>
 </html>

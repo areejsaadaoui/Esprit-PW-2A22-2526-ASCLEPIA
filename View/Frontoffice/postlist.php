@@ -23,11 +23,6 @@ function detectYouTubeInContent($content) {
 $postC = new PostController();
 $posts = $postC->listPosts();
 
-// ========== FILTRE PAR HASHTAG ==========
-$hashtagFilter = isset($_GET['hashtag']) ? trim($_GET['hashtag']) : '';
-if ($hashtagFilter) {
-    $posts = $postC->getPostsByHashtag($hashtagFilter);
-}
 
 // ========== GESTION DU TRI ==========
 $orderBy = $_GET['order'] ?? 'date_desc';
@@ -113,17 +108,51 @@ if (isset($_GET['like'])) {
             50% { border-left-color: #10b981; }
             100% { border-left-color: #0ea5e9; }
         }
+/* ===== BARRE DE TRI ===== */
+.sort-bar {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 28px;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+.sort-select {
+    padding: 8px 15px;
+    border-radius: 40px;
+    border: 1px solid var(--border);
+}
+       /* ===== L'AFFICHAGE EN GRILLE 3x3 ===== */
+.posts-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 25px !important;
+    max-width: 1200px !important;
+    margin: 0 auto !important;
+    padding: 0 15px !important;
+}
 
-        /* ===== GRID RESPONSIVE ===== */
-        .posts-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 25px;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 15px;
-        }
+.grid-item {
+    display: flex !important;
+    justify-content: center !important;
+}
 
+/* Tablette : 2 colonnes */
+@media (max-width: 992px) {
+    .posts-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+/* Mobile : 1 colonne */
+@media (max-width: 576px) {
+    .posts-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
         /* Tablette : 2 colonnes */
         @media (max-width: 992px) {
             .posts-grid {
@@ -150,7 +179,7 @@ if (isset($_GET['like'])) {
             max-width: 400px;
             border-radius: 18px;
             padding: 14px !important;
-            background: white;
+            background:  #e0efff;;
             box-shadow: 0 6px 20px rgba(0,0,0,0.08);
             transition: all 0.3s ease;
             position: relative;
@@ -399,7 +428,7 @@ body.dark-mode .pagination-dots {
         .section-padding {
             padding-top: 60px !important;
             padding-bottom: 60px !important;
-            background: #f8fafc;
+            background: #e0efff;
         }
 
         .container {
@@ -768,6 +797,7 @@ body.dark-mode .share-option {
     text-decoration: none;
     display: block;
     transition: transform 0.3s ease;
+    
 }
 
 .post-card-link:hover {
@@ -814,21 +844,17 @@ body.dark-mode .share-option {
 
 <section class="section-padding">
     <div class="container">
-        <div class="section-header">
-            <div class="section-tag">
-                <i class="fa-solid fa-comments"></i>
-                Communauté
-            </div>
-            <h2 class="section-title">Forum Santé</h2>
-            <p class="section-desc">
-                Échangez avec la communauté. Posez vos questions et partagez votre expérience.
-            </p>
-        </div>
+        <div class="section-header" style="padding-top: 40px;">
+    <h2 class="section-title">Forum Santé</h2>
+    <p class="section-desc">
+        Échangez avec la communauté. Posez vos questions et partagez votre expérience.
+    </p>
+</div>
 
         <div style="text-align: right; margin-bottom: 30px;">
             <a href="../Backoffice/addpost.php" class="btn btn-primary">
                 <i class="fa-solid fa-plus"></i>
-                Nouvelle discussion
+                Nouveau post
             </a>
         </div>
         
@@ -842,146 +868,104 @@ body.dark-mode .share-option {
                     <select name="order" class="sort-select" onchange="this.form.submit()">
                         <option value="date_desc" <?= ($orderBy == 'date_desc') ? 'selected' : '' ?>>📅 Date récente → ancienne</option>
                         <option value="date_asc" <?= ($orderBy == 'date_asc') ? 'selected' : '' ?>>📅 Date ancienne → récente</option>
-                        <option value="length_desc" <?= ($orderBy == 'length_desc') ? 'selected' : '' ?>>📄 Texte plus long</option>
-                        <option value="length_asc" <?= ($orderBy == 'length_asc') ? 'selected' : '' ?>>📄 Texte plus court</option>
-                        <option value="likes_desc" <?= ($orderBy == 'likes_desc') ? 'selected' : '' ?>>🔥 Les plus aimés</option>
+                        <option value="length_desc" <?= ($orderBy == 'length_desc') ? 'selected' : '' ?>>📄 plus long</option>
+                        <option value="length_asc" <?= ($orderBy == 'length_asc') ? 'selected' : '' ?>>📄 plus court</option>
                     </select>
                 </form>
             </div>
             
-            <div class="posts-count">
-                <i class="fas fa-chart-line"></i> <?= $totalPosts ?> discussions au total
-                <?php if ($hashtagFilter): ?>
-                    — filtre <strong>#<?= htmlspecialchars($hashtagFilter) ?></strong>
-                    <a href="?" style="color:#ef4444;margin-left:6px;text-decoration:none;" title="Retirer le filtre">✖</a>
-                <?php endif; ?>
-            </div>
+           
         </div>
-        <!-- Grille des posts -->
-<div class="posts-grid">
+      <!-- Grille des posts - Version simple -->
+<div style="display: flex; flex-wrap: wrap; gap: 25px; justify-content: center; max-width: 1200px; margin: 0 auto;">
     <?php foreach ($postsAPaginer as $post): 
         $contenuOriginal = $post->getContenu();
         $hasVideo = detectYouTubeInContent($contenuOriginal);
         $textePur = strip_tags($contenuOriginal);
         $contenuAvecYouTube = embedYouTube($contenuOriginal);
     ?>
-        <div class="grid-item">
-             <a href="../Backoffice/showpost.php?id=<?= $post->getIdPost() ?>" class="post-card-link" style="text-decoration: none; display: block;">
-            <div class="card post-card">
-                <?php if ($hasVideo): ?>
-                    <div class="video-badge">
-                        <i class="fa-solid fa-video"></i>
-                        🎬 Vidéo YouTube
-                    </div>
-                <?php endif; ?>
-                
-                <!-- Image ou GIF -->
-                <?php 
-                $mediaPath = $post->getImage();
-                if (!empty($mediaPath)):
-                    $isGif = (strpos($mediaPath, '.gif') !== false || strpos($mediaPath, 'giphy.com') !== false);
-                    if (!$isGif && !filter_var($mediaPath, FILTER_VALIDATE_URL)) {
-                        $mediaPath = '../Backoffice/' . $mediaPath;
-                    }
-                    $imgStyle = $isGif ? 'object-fit: contain; max-height: 140px;' : 'object-fit: cover; height: 140px;';
-                ?>
-                    <img src="<?= $mediaPath ?>" 
-                         alt="Post media" 
-                         class="post-image"
-                         style="width: 100%; <?= $imgStyle ?> border-radius: 12px; margin-bottom: 12px; cursor: pointer;"
-                         onclick="window.location.href='../Backoffice/showpost.php?id=<?= $post->getIdPost() ?>'">
-                <?php endif; ?>
+        <div style="width: calc(33.333% - 17px); min-width: 280px;">
+            <a href="../Backoffice/showpost.php?id=<?= $post->getIdPost() ?>" style="text-decoration: none; display: block;">
+                <div class="card post-card" style="padding: 14px; background: white; border-radius: 18px; box-shadow: 0 6px 20px rgba(0,0,0,0.08); transition: all 0.3s; height: 100%;">
+                    
+                    <?php if ($hasVideo): ?>
+                        <div class="video-badge">
+                            <i class="fa-solid fa-video"></i> 🎬 Vidéo YouTube
+                        </div>
+                    <?php endif; ?>
+                    
+                    <!-- Image ou GIF -->
+                    <?php 
+                    $mediaPath = $post->getImage();
+                    if (!empty($mediaPath)):
+                        $isGif = (strpos($mediaPath, '.gif') !== false || strpos($mediaPath, 'giphy.com') !== false);
+                        if (!$isGif && !filter_var($mediaPath, FILTER_VALIDATE_URL)) {
+                            $mediaPath = '../Backoffice/' . $mediaPath;
+                        }
+                        $imgStyle = $isGif ? 'object-fit: contain; max-height: 140px;' : 'object-fit: cover; height: 140px;';
+                    ?>
+                        <img src="<?= $mediaPath ?>" 
+                             alt="Post media" 
+                             style="width: 100%; <?= $imgStyle ?> border-radius: 12px; margin-bottom: 12px; cursor: pointer;">
+                    <?php endif; ?>
 
-                <!-- Post meta -->
-                <div class="post-meta" style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                    <div class="post-avatar" style="background: linear-gradient(135deg, #0ea5e9, #3b82f6);">
-                        <?= strtoupper(substr($post->getIdUtilisateur() ?? 'U', 0, 2)) ?>
+                    <!-- Post meta -->
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                        <div class="post-avatar" style="background: linear-gradient(135deg, #0ea5e9, #3b82f6); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                            <?= strtoupper(substr($post->getIdUtilisateur() ?? 'U', 0, 2)) ?>
+                        </div>
+                        <div>
+                            <div class="post-date" style="font-size: 0.75rem; color: #64748b;">
+                                <i class="fa-regular fa-calendar"></i>
+                                <?= (new DateTime($post->getDatePost()))->format('d/m/Y à H:i') ?>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <div class="post-date">
-                            <i class="fa-regular fa-calendar"></i>
-                            <?= (new DateTime($post->getDatePost()))->format('d/m/Y à H:i') ?>
+
+                    <!-- Post content -->
+                    <div class="post-content">
+                        <p style="font-size: 0.85rem; line-height: 1.6; color: #555; margin-bottom: 12px;">
+                            <?= nl2br(htmlspecialchars(substr($textePur, 0, 120))) ?>
+                            <?php if (strlen($textePur) > 120): ?>...<?php endif; ?>
+                        </p>
+                        <?php if ($hasVideo): ?>
+                            <?= $contenuAvecYouTube ?>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Post footer -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 35px; gap: 8px;">
+                        <!-- Bouton LIKE -->
+                        <?php 
+                        $likedPosts = isset($_COOKIE['liked_posts']) ? explode(',', $_COOKIE['liked_posts']) : [];
+                        $isLiked = in_array($post->getIdPost(), $likedPosts);
+                        ?>
+                        <a href="?like=<?= $post->getIdPost() ?>&order=<?= $orderBy ?>&page=<?= $pageActuelle ?>" 
+                           style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 40px; font-size: 0.85rem; <?= $isLiked ? 'color: #ef4444;' : 'color: #64748b;' ?> background: transparent; transition: all 0.2s;">
+                            <i class="<?= $isLiked ? 'fa-solid' : 'fa-regular' ?> fa-heart"></i>
+                            <span><?= $post->getLikes() ?></span>
+                        </a>
+
+                        <!-- Bouton PARTAGER -->
+                        <button onclick="copierLien(<?= $post->getIdPost() ?>)" style="background: transparent; border: none; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 40px; font-size: 0.85rem; color: #64748b; cursor: pointer; transition: all 0.2s;">
+                            <i class="fa-solid fa-share-alt"></i> Partager
+                        </button>
+
+                        <!-- Boutons actions -->
+                        <div style="display: flex; gap: 8px;">
+                            <a href="../Backoffice/modifpost.php?id=<?= $post->getIdPost() ?>" class="btn btn-primary btn-sm" style="border-radius: 20px; padding: 5px 12px; font-size: 0.75rem; background: #0ea5e9; color: white; text-decoration: none;">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                            <a href="../Backoffice/deletepost.php?id=<?= $post->getIdPost() ?>" 
+                               class="btn btn-danger btn-sm" 
+                               onclick="return confirm('Supprimer ce post ?')"
+                               style="border-radius: 20px; padding: 5px 12px; font-size: 0.75rem; background: #dc2626; color: white; text-decoration: none;">
+                                <i class="fa-solid fa-trash"></i>
+                            </a>
                         </div>
                     </div>
                 </div>
-
-                <!-- Post content -->
-                <div class="post-content">
-                    <p>
-                        <?= nl2br(htmlspecialchars(substr($textePur, 0, 120))) ?>
-                        <?php if (strlen($textePur) > 120): ?>...<?php endif; ?>
-                    </p>
-                    <?php if ($hasVideo): ?>
-                        <?= $contenuAvecYouTube ?>
-                    <?php endif; ?>
-                    <!-- Badge hashtags détectés -->
-                    <?php $tags = $post->extractHashtags(); if (!empty($tags)): ?>
-                    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;">
-                        <?php foreach (array_slice($tags, 0, 3) as $tag): ?>
-                        <a href="?hashtag=<?= urlencode($tag) ?>&order=<?= $orderBy ?>"
-                           style="background:#dbeafe;color:#3b82f6;padding:2px 9px;border-radius:20px;font-size:0.7rem;text-decoration:none;font-weight:600;">
-                            #<?= htmlspecialchars($tag) ?>
-                        </a>
-                        <?php endforeach; ?>
-                    </div>
-                    <?php endif; ?>
-                    <!-- Badge sentiment -->
-                    <div style="margin-top:8px;"><?= $post->getSentimentBadge() ?></div>
-                </div>
-
-                <!-- Post footer -->
-                <div class="post-footer">
-<!-- Bouton LIKE avec cœur rouge si déjà liké -->
-<?php 
-// Vérifier si ce post a été liké (via session ou cookie)
-$likedPosts = isset($_COOKIE['liked_posts']) ? explode(',', $_COOKIE['liked_posts']) : [];
-$isLiked = in_array($post->getIdPost(), $likedPosts);
-?>
-
-<a href="?like=<?= $post->getIdPost() ?>&order=<?= $orderBy ?>&page=<?= $pageActuelle ?>" 
-   class="like-btn"
-   style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; <?= $isLiked ? 'color: #ef4444;' : 'color: #64748b;' ?>">
-    <i class="<?= $isLiked ? 'fa-solid' : 'fa-regular' ?> fa-heart" style="<?= $isLiked ? 'color: #ef4444;' : '' ?>"></i>
-    <span class="like-count" style="<?= $isLiked ? 'color: #ef4444;' : '' ?>"><?= $post->getLikes() ?></span>
-</a>
-<?php
-// Détection automatique de l'URL de base
-$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
-$host = $_SERVER['HTTP_HOST'];
-$baseUrl = $protocol . $host . '/posts/';
-?>
-<!-- Bouton PARTAGER simplifié qui fonctionne -->
-<button class="share-btn" onclick="copierLien(<?= $post->getIdPost() ?>)">
-    <i class="fa-solid fa-share-alt"></i>
-    Partager
-</button>
-
-<!-- Bouton SIGNALER (AJAX) -->
-<?php
-$signaledPosts = isset($_COOKIE['signaled_posts']) ? explode(',', $_COOKIE['signaled_posts']) : [];
-$isSignaled = in_array($post->getIdPost(), $signaledPosts);
-?>
-<button class="share-btn signal-btn-<?= $post->getIdPost() ?>"
-        onclick="signalerPost(<?= $post->getIdPost() ?>, this)"
-        style="<?= $isSignaled ? 'color:#ef4444;' : 'color:#64748b;' ?>">
-    <i class="fas fa-flag"></i>
-    <span class="signal-txt"><?= $isSignaled ? 'Signalé' : 'Signaler' ?></span>
-</button>
-   
-                    
-                    <div class="post-actions">
-                        
-                        <a href="../Backoffice/modifpost.php?id=<?= $post->getIdPost() ?>" class="btn btn-primary btn-sm">
-                            <i class="fa-solid fa-pen"></i>
-                        </a>
-                        <a href="../Backoffice/deletepost.php?id=<?= $post->getIdPost() ?>" 
-                           class="btn btn-danger btn-sm" 
-                           onclick="return confirm('Supprimer ce post ?')">
-                            <i class="fa-solid fa-trash"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
+            </a>
         </div>
     <?php endforeach; ?>
 </div>

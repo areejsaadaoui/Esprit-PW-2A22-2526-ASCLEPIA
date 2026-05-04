@@ -75,49 +75,7 @@ class Post {
         return array_unique($matches[1] ?? []);
     }
 
-    /**
-     * Analyse de sentiment locale simple (sans IA externe)
-     * Retourne : positif / negatif / neutre / toxique
-     */
-    public function analyzeSentiment(): string {
-        $text = mb_strtolower($this->contenu ?? '');
 
-        $positif = ['merci', 'super', 'excellent', 'bravo', 'génial', 'top', 'bien', 'parfait',
-                    'recommande', 'formidable', 'magnifique', 'love', 'aime', 'adore', 'felicitation',
-                    'félicitation', 'bonne', 'bon', 'qualité', 'rapide', 'efficace', '❤', '🔥', '👍', '😍'];
 
-        $negatif = ['mauvais', 'nul', 'horrible', 'problème', 'erreur', 'bug', 'lent', 'cher',
-                    'déçu', 'décevant', 'inutile', 'pire', 'catastrophe', 'mauvaise', 'impossible',
-                    'triste', 'dommage', 'honte', '😞', '😡', '👎'];
-
-        $toxique = ['idiot', 'stupide', 'con', 'merde', 'nique', 'putain', 'imbécile', 'bête',
-                    'crétin', 'débile', 'abruti', 'enculé', 'fdp'];
-
-        $scorePos = 0; $scoreNeg = 0; $scoreTox = 0;
-
-        foreach ($positif as $mot) if (strpos($text, $mot) !== false) $scorePos++;
-        foreach ($negatif as $mot) if (strpos($text, $mot) !== false) $scoreNeg++;
-        foreach ($toxique as $mot) if (strpos($text, $mot) !== false) $scoreTox++;
-
-        if ($scoreTox > 0)             return 'toxique';
-        if ($scorePos > $scoreNeg)     return 'positif';
-        if ($scoreNeg > $scorePos)     return 'negatif';
-        return 'neutre';
-    }
-
-    /**
-     * Badge HTML du sentiment
-     */
-    public function getSentimentBadge(): string {
-        $sent = $this->sentiment ?? $this->analyzeSentiment();
-        $config = [
-            'positif' => ['color' => '#10b981', 'bg' => '#d1fae5', 'icon' => '😊', 'label' => 'Positif'],
-            'negatif' => ['color' => '#f59e0b', 'bg' => '#fef3c7', 'icon' => '😟', 'label' => 'Négatif'],
-            'neutre'  => ['color' => '#64748b', 'bg' => '#f1f5f9', 'icon' => '😐', 'label' => 'Neutre'],
-            'toxique' => ['color' => '#ef4444', 'bg' => '#fee2e2', 'icon' => '⚠️', 'label' => 'Signalé'],
-        ];
-        $c = $config[$sent] ?? $config['neutre'];
-        return "<span style=\"background:{$c['bg']};color:{$c['color']};padding:2px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;\">{$c['icon']} {$c['label']}</span>";
-    }
 }
 ?>

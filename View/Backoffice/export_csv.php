@@ -23,7 +23,7 @@ fputs($output, "\xEF\xBB\xBF");
 // En-têtes CSV
 fputcsv($output, [
     'ID', 'Contenu', 'Date publication', 'Likes',
-    'Signalements', 'Sentiment', 'Nb réponses'
+    'Signalements', 'Nb réponses'
 ], ';');
 
 foreach ($rows as $row) {
@@ -33,8 +33,7 @@ foreach ($rows as $row) {
         str_replace(["\r\n", "\r", "\n"], ' ', strip_tags($row['contenu'])),
         $row['date_post'],
         $row['likes'],
-        $row['signalements'] ?? 0,
-        $row['sentiment'] ?? 'non analysé',
+        $row['signalements'],
         $row['nb_reponses']
     ], ';');
 }

@@ -1,8 +1,5 @@
 <?php
-/**
- * ASCLEPIA — AI Smart Summary via Groq (gratuit)
- * Version avec résumé plus long
- */
+
 header('Content-Type: application/json; charset=utf-8');
 
 $contenu = trim($_POST['contenu'] ?? '');
@@ -23,10 +20,11 @@ $payload = json_encode([
             'role' => 'system',
             'content' => "Tu es un assistant médical. Résume ce post de forum médical en 2-3 phrases.
             RÈGLES :
-            - Résumé entre 200 et 300 caractères
-            - Inclus : symptômes principaux, durée, médicaments essayés, demande du patient
+            - Résumé entre 200 et 300 caractères, même si le post est long, reste concis et focalisé sur les infos médicales clés
+            - Inclus : symptômes principaux, durée, médicaments essayés, demande du patient si c'est un témoignage ou une question si c'est un post de question sans réponse si tu as des réponses n'hésite pas à les inclure après dire qu'ils sont différent du résumé
             - Reste précis et médical
             - Réponds UNIQUEMENT avec le résumé, sans guillemets, sans explication"
+
         ],
         [
             'role' => 'user',

@@ -145,31 +145,8 @@ public function retirerSignalement($id_post) {
     return $req->execute();
 }
 
-/**
- * Mettre à jour le sentiment analysé d'un post
- */
-public function updateSentiment($id_post, $sentiment) {
-    $allowed = ['positif', 'negatif', 'neutre', 'toxique'];
-    if (!in_array($sentiment, $allowed)) return false;
-    $sql = "UPDATE post SET sentiment = :sentiment WHERE id_post = :id_post";
-    $db = config::getConnexion();
-    $req = $db->prepare($sql);
-    $req->bindValue(':sentiment', $sentiment, PDO::PARAM_STR);
-    $req->bindValue(':id_post', $id_post, PDO::PARAM_INT);
-    return $req->execute();
-}
 
-/**
- * Mettre à jour les hashtags détectés dans un post
- */
-public function updateHashtags($id_post, $hashtags) {
-    $sql = "UPDATE post SET hashtags = :hashtags WHERE id_post = :id_post";
-    $db = config::getConnexion();
-    $req = $db->prepare($sql);
-    $req->bindValue(':hashtags', $hashtags, PDO::PARAM_STR);
-    $req->bindValue(':id_post', $id_post, PDO::PARAM_INT);
-    return $req->execute();
-}
+
 
 /**
  * Liste des posts par popularité = likes + (nb_réponses * 2)
@@ -259,10 +236,6 @@ public function getStatsGlobales() {
     $req3 = $db->query("SELECT HOUR(date_post) AS heure, COUNT(*) AS nb FROM post GROUP BY HOUR(date_post) ORDER BY heure");
     $stats['distribution_horaire'] = $req3->fetchAll(PDO::FETCH_ASSOC);
 
-    // Distribution sentiments
-    $req4 = $db->query("SELECT sentiment, COUNT(*) AS nb FROM post WHERE sentiment IS NOT NULL GROUP BY sentiment");
-    $stats['sentiments'] = $req4->fetchAll(PDO::FETCH_ASSOC);
-
     return $stats;
 }
 
@@ -270,8 +243,7 @@ public function getStatsGlobales() {
  * Export CSV de tous les posts
  */
 public function exportCSV() {
-    $sql = "SELECT p.id_post, p.contenu, p.date_post, p.likes, p.signalements,
-                   p.sentiment, COUNT(r.id_rep) AS nb_reponses
+    $sql = "SELECT p.id_post, p.contenu, p.date_post, p.likes, p.signalements, COUNT(r.id_rep) AS nb_reponses
             FROM post p
             LEFT JOIN reponse r ON p.id_post = r.id_post
             GROUP BY p.id_post
@@ -281,34 +253,4 @@ public function exportCSV() {
     $req->execute();
     return $req->fetchAll(PDO::FETCH_ASSOC);
 }
-
-/**
- * Posts par hashtag
- */
-public function getPostsByHashtag($hashtag) {
-    $hashtag = ltrim($hashtag, '#');
-    $sql = "SELECT * FROM post WHERE contenu LIKE :tag OR hashtags LIKE :tag2 ORDER BY date_post DESC";
-    $db = config::getConnexion();
-    $req = $db->prepare($sql);
-    $req->bindValue(':tag', '%#' . $hashtag . '%', PDO::PARAM_STR);
-    $req->bindValue(':tag2', '%' . $hashtag . '%', PDO::PARAM_STR);
-    $req->execute();
-    $results = $req->fetchAll(PDO::FETCH_ASSOC);
-    $posts = [];
-    foreach ($results as $row) {
-        $posts[] = new Post(
-            $row['id_post'], $row['contenu'], $row['date_post'],
-            $row['image'], $row['id_utilisateur'], $row['likes']
-        );
-    }
-    return $posts;
 }
-
-public function enhancePostWithAI($id_post, $contenu) {
-    // Cette méthode peut être appelée directement depuis le controller si besoin
-    $db = config::getConnexion();
-    $stmt = $db->prepare("UPDATE post SET contenu = :contenu, ai_enhanced = 1 WHERE id_post = :id");
-    return $stmt->execute(['contenu' => $contenu, 'id' => $id_post]);
-}
-}
-?>

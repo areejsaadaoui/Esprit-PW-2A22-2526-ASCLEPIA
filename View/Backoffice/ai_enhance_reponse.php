@@ -12,18 +12,19 @@ if (strlen($contenu) < 5) {
 $apiKey = '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';
 
 $payload = json_encode([
-    'model' => 'llama-3.3-70b-versatile',  // Modèle puissant et gratuit
+    'model' => 'llama-3.3-70b-versatile',
     'messages' => [
         [
             'role' => 'system', 
-            'content' => 'Tu es un assistant qui corrige les fautes d\'orthographe et de grammaire en français ou en anglais selon le besoin. Tu ne fais que corriger le texte, sans ajouter d\'explications, sans changer le sens, sans ajouter de contenu. Tu réponds UNIQUEMENT avec le texte corrigé.'
+            'content' => 'Tu es un assistant qui corrige les fautes d\'orthographe et de grammaire en français. Tu ne fais que corriger le texte, sans ajouter d\'explications, sans changer le sens. Tu réponds UNIQUEMENT avec le texte corrigé ou amélioré si il ya du monque d\'expressions , sans changer le sens .'
         ],
         [
             'role' => 'user', 
-            'content' => "Corrige ce texte :\n\n" . $contenu
+            'content' => "Corrige cette réponse :\n\n" . $contenu
         ]
     ],
-    'temperature' => 0.1,  // Faible température pour rester fidèle au texte original
+    
+    'temperature' => 0.1,
     'max_tokens' => 500
 ]);
 
@@ -53,18 +54,16 @@ if ($curlErr) {
 if ($httpCode === 200) {
     $data = json_decode($response, true);
     $corrected = trim($data['choices'][0]['message']['content'] ?? '');
-    
-    // Nettoyer les guillemets si présents
     $corrected = trim($corrected, '"\'');
     
     echo json_encode([
         'success' => true,
         'newContent' => $corrected,
-        'original' => $contenu,
-        'message' => '✅ Texte amélioré par IA Groq'
+        'message' => '✅ Texte amélioré par IA'
     ]);
 } else {
     $errorMsg = json_decode($response, true);
     $error = $errorMsg['error']['message'] ?? 'Erreur API HTTP ' . $httpCode;
     echo json_encode(['success' => false, 'error' => $error]);
 }
+?>
