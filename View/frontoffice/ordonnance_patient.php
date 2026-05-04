@@ -1,9 +1,9 @@
 <?php
 require_once '../../config/db.php';
-require_once '../../models/Ordonnance.php';
+require_once '../../controllers/OrdonnanceController.php';
 
-$model = new Ordonnance($pdo);
-$ordonnances = $model->getAll();
+$controller = new OrdonnanceController($pdo);
+$ordonnances = $controller->getAllOrdonnances();
 ?>
 <!DOCTYPE html>
 <html lang="fr">

@@ -1,12 +1,12 @@
 <?php
 require_once '../../config/db.php';
-require_once '../../models/Ordonnance.php';
+require_once '../../controllers/OrdonnanceController.php';
 
-$model = new Ordonnance($pdo);
+$controller = new OrdonnanceController($pdo);
 $success = '';
 $errors = [];
 
-$consultations = $model->getConsultationsTerminees();
+$consultations = $controller->getConsultationsTerminees();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_consultation = intval($_POST['id_consultation'] ?? 0);
@@ -34,9 +34,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'instructions'     => $instructions,
             'duree_traitement' => $duree
         ];
-        if ($model->create($data)) {
+        if ($controller->createOrdonnance($data)) {
             $success = "Ordonnance ajoutée avec succès !";
-            $consultations = $model->getConsultationsTerminees();
+            $consultations = $controller->getConsultationsTerminees();
         } else {
             $errors[] = "Erreur lors de l'ajout.";
         }
@@ -52,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="../../assets/css/style.css">
     <link rel="stylesheet" href="../../assets/css/backoffice.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="../../assets/css/dark.css">
 </head>
 <body>
 <div class="admin-wrapper">
@@ -69,11 +70,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
         <nav class="sidebar-nav">
+            <div class="nav-section-label">Navigation</div>
+            <div class="nav-item">
+                <a href="dashboard.php">
+                    <span class="nav-icon"><i class="fa-solid fa-gauge"></i></span>
+                    Dashboard
+                </a>
+            </div>
             <div class="nav-section-label">Consultation</div>
             <div class="nav-item">
                 <a href="list_consultation.php">
                     <span class="nav-icon"><i class="fa-solid fa-calendar-check"></i></span>
                     Consultations
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="add_consultation.php">
+                    <span class="nav-icon"><i class="fa-solid fa-plus"></i></span>
+                    Ajouter
                 </a>
             </div>
             <div class="nav-section-label">Ordonnance</div>
@@ -105,6 +119,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </div>
             </div>
+            <div class="topbar-right">
+    <button class="dark-toggle" onclick="toggleDark()" id="darkBtn" title="Mode sombre">
+        <i class="fa-solid fa-moon"></i>
+    </button>
+</div>
         </div>
 
         <div class="page-content">
@@ -154,17 +173,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <span class="form-error" id="err_consultation">Veuillez choisir une consultation.</span>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Médicaments * <span class="text-muted" style="font-weight:400;font-size:0.8rem">(min. 5 caractères)</span></label>
+                    <div class="form-group" style="position:relative;">
+                        <label class="form-label">Médicaments *
+                            <span class="text-muted" style="font-weight:400;font-size:0.8rem">(min. 5 caractères)</span>
+                            <span class="badge badge-primary" style="font-size:0.75rem; margin-left:8px;">
+                                <i class="fa-solid fa-robot"></i> IA
+                            </span>
+                        </label>
                         <textarea name="medicaments" id="medicaments" class="form-control"
                             placeholder="Ex: Paracétamol 500mg, Ibuprofène 400mg..."
-                            oninput="compter('medicaments', 'count_med', 5)"></textarea>
+                            oninput="compter('medicaments', 'count_med', 5); suggererMedicament();"></textarea>
                         <span class="form-hint"><span id="count_med">0</span> caractères</span>
                         <span class="form-error" id="err_med">Les médicaments sont obligatoires (min. 5 caractères).</span>
+                        <div id="suggestions_med" style="
+                            position:absolute;
+                            background:white;
+                            border:1px solid var(--border);
+                            border-radius:var(--radius);
+                            box-shadow:var(--shadow);
+                            z-index:1000;
+                            width:100%;
+                            display:none;
+                            margin-top:4px;">
+                        </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Instructions * <span class="text-muted" style="font-weight:400;font-size:0.8rem">(min. 5 caractères)</span></label>
+                        <label class="form-label">Instructions *
+                            <span class="text-muted" style="font-weight:400;font-size:0.8rem">(min. 5 caractères)</span>
+                        </label>
                         <textarea name="instructions" id="instructions" class="form-control"
                             placeholder="Ex: Prendre 1 comprimé 3 fois par jour après les repas..."
                             oninput="compter('instructions', 'count_inst', 5)"></textarea>
@@ -173,7 +210,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Durée du traitement * <span class="text-muted" style="font-weight:400;font-size:0.8rem">(en jours)</span></label>
+                        <label class="form-label">Durée du traitement *
+                            <span class="text-muted" style="font-weight:400;font-size:0.8rem">(en jours)</span>
+                        </label>
                         <input type="number" name="duree_traitement" id="duree_traitement" class="form-control"
                             placeholder="Ex: 7" min="1">
                         <span class="form-error" id="err_duree">La durée doit être supérieure à 0.</span>
@@ -204,6 +243,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         el.textContent = nb;
         el.style.color = nb >= minimum ? 'green' : 'red';
     }
+
+    // SUGGESTION IA MEDICAMENTS
+    function suggererMedicament() {
+        const q = document.getElementById('medicaments').value.trim();
+        const box = document.getElementById('suggestions_med');
+
+        if (q.length < 2) {
+            box.style.display = 'none';
+            return;
+        }
+
+        const dernierMot = q.split(/[,\n]/).pop().trim();
+        if (dernierMot.length < 2) {
+            box.style.display = 'none';
+            return;
+        }
+
+        fetch('suggest_medicament.php?q=' + encodeURIComponent(dernierMot))
+            .then(r => r.json())
+            .then(data => {
+                if (data.length === 0) {
+                    box.style.display = 'none';
+                    return;
+                }
+                box.innerHTML = data.map(s =>
+                    `<div onclick="choisirMedicament('${s.replace(/'/g, "\\'")}')"
+                    style="padding:10px 16px; cursor:pointer; font-size:0.9rem; border-bottom:1px solid var(--border);"
+                    onmouseover="this.style.background='var(--bg)'"
+                    onmouseout="this.style.background='white'">
+                    <i class="fa-solid fa-pills" style="color:var(--primary); margin-right:8px;"></i>
+                    ${s}
+                    </div>`
+                ).join('');
+                box.style.display = 'block';
+            })
+            .catch(() => box.style.display = 'none');
+    }
+
+    function choisirMedicament(texte) {
+        const med = document.getElementById('medicaments');
+        const parts = med.value.split(/[,\n]/);
+        parts[parts.length - 1] = ' ' + texte;
+        med.value = parts.join(',');
+        document.getElementById('suggestions_med').style.display = 'none';
+        compter('medicaments', 'count_med', 5);
+    }
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('#medicaments') && !e.target.closest('#suggestions_med')) {
+            document.getElementById('suggestions_med').style.display = 'none';
+        }
+    });
 
     function validerFormulaire() {
         let valide = true;
@@ -240,6 +331,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         return valide;
     }
+    // MODE SOMBRE
+function toggleDark() {
+    document.body.classList.toggle('dark-mode');
+    const btn = document.getElementById('darkBtn');
+    const isDark = document.body.classList.contains('dark-mode');
+    btn.innerHTML = isDark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+    localStorage.setItem('darkMode', isDark);
+}
+
+if (localStorage.getItem('darkMode') === 'true') {
+    document.body.classList.add('dark-mode');
+    document.getElementById('darkBtn').innerHTML = '<i class="fa-solid fa-sun"></i>';
+}
 </script>
 </body>
 </html>

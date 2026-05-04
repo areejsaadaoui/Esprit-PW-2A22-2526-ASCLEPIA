@@ -66,6 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="../../assets/css/style.css">
     <link rel="stylesheet" href="../../assets/css/backoffice.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="../../assets/css/dark.css">
 </head>
 <body>
 <div class="admin-wrapper">
@@ -83,6 +84,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
         <nav class="sidebar-nav">
+            <div class="nav-section-label">Navigation</div>
+            <div class="nav-item">
+                <a href="dashboard.php">
+                    <span class="nav-icon"><i class="fa-solid fa-gauge"></i></span>
+                    Dashboard
+                </a>
+            </div>
             <div class="nav-section-label">Consultation</div>
             <div class="nav-item">
                 <a href="list_consultation.php" class="active">
@@ -125,6 +133,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </div>
             </div>
+            <div class="topbar-right">
+    <button class="dark-toggle" onclick="toggleDark()" id="darkBtn" title="Mode sombre">
+        <i class="fa-solid fa-moon"></i>
+    </button>
+</div>
         </div>
 
         <div class="page-content">
@@ -172,16 +185,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <span class="form-error" id="err_statut">Veuillez choisir un statut.</span>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group" style="position:relative;">
                         <label class="form-label">Diagnostique
                             <span class="text-muted" style="font-weight:400;font-size:0.8rem" id="hint_diag">
                                 (disponible après la consultation)
                             </span>
+                            <span class="badge badge-primary" style="font-size:0.75rem; margin-left:8px;">
+                                <i class="fa-solid fa-robot"></i> IA
+                            </span>
                         </label>
                         <textarea name="diagnostique" id="diagnostique" class="form-control"
-                            oninput="compter('diagnostique', 'count_diag', 10)"><?= htmlspecialchars($consultation->getDiagnostique()) ?></textarea>
+                            oninput="compter('diagnostique', 'count_diag', 10); suggererDiagnostique();"><?= htmlspecialchars($consultation->getDiagnostique()) ?></textarea>
                         <span class="form-hint"><span id="count_diag"><?= strlen($consultation->getDiagnostique()) ?></span> caractères</span>
                         <span class="form-error" id="err_diag">Le diagnostique doit contenir au moins 10 caractères.</span>
+                        <div id="suggestions_diag" style="
+                            position:absolute;
+                            background:white;
+                            border:1px solid var(--border);
+                            border-radius:var(--radius);
+                            box-shadow:var(--shadow);
+                            z-index:1000;
+                            width:100%;
+                            display:none;
+                            margin-top:4px;">
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -251,8 +278,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             hintNotes.textContent = "(disponible après la consultation)";
             document.getElementById('count_diag').textContent = '0';
             document.getElementById('count_notes').textContent = '0';
+            document.getElementById('suggestions_diag').style.display = 'none';
         }
     }
+
+    // SUGGESTION IA DIAGNOSTIQUE
+    function suggererDiagnostique() {
+        const q = document.getElementById('diagnostique').value.trim();
+        const box = document.getElementById('suggestions_diag');
+
+        if (q.length < 2) {
+            box.style.display = 'none';
+            return;
+        }
+
+        fetch('suggest_diagnostic.php?q=' + encodeURIComponent(q))
+            .then(r => r.json())
+            .then(data => {
+                if (data.length === 0) {
+                    box.style.display = 'none';
+                    return;
+                }
+                box.innerHTML = data.map(s =>
+                    `<div onclick="choisirSuggestion('${s.replace(/'/g, "\\'").replace(/\n/g, ' ')}')"
+                    style="padding:10px 16px; cursor:pointer; font-size:0.9rem; border-bottom:1px solid var(--border);"
+                    onmouseover="this.style.background='var(--bg)'"
+                    onmouseout="this.style.background='white'">
+                    <i class="fa-solid fa-robot" style="color:var(--primary); margin-right:8px;"></i>
+                    ${s}
+                    </div>`
+                ).join('');
+                box.style.display = 'block';
+            })
+            .catch(() => box.style.display = 'none');
+    }
+
+    function choisirSuggestion(texte) {
+        const diag = document.getElementById('diagnostique');
+        diag.value = texte;
+        document.getElementById('suggestions_diag').style.display = 'none';
+        compter('diagnostique', 'count_diag', 10);
+    }
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('#diagnostique') && !e.target.closest('#suggestions_diag')) {
+            document.getElementById('suggestions_diag').style.display = 'none';
+        }
+    });
 
     function validerFormulaire() {
         let valide = true;
@@ -295,6 +367,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     verifierDate();
+    // MODE SOMBRE
+function toggleDark() {
+    document.body.classList.toggle('dark-mode');
+    const btn = document.getElementById('darkBtn');
+    const isDark = document.body.classList.contains('dark-mode');
+    btn.innerHTML = isDark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+    localStorage.setItem('darkMode', isDark);
+}
+
+if (localStorage.getItem('darkMode') === 'true') {
+    document.body.classList.add('dark-mode');
+    document.getElementById('darkBtn').innerHTML = '<i class="fa-solid fa-sun"></i>';
+}
 </script>
 </body>
 </html>

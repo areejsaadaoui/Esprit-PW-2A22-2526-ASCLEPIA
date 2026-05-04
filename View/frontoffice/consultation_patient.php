@@ -1,10 +1,12 @@
 <?php
 require_once '../../config/db.php';
 require_once '../../controllers/ConsultationController.php';
+require_once '../../controllers/OrdonnanceController.php';
 
 $controller = new ConsultationController($pdo);
+$ordonnanceController = new OrdonnanceController($pdo);
 $consultations = $controller->getAllConsultations();
-?>"
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>

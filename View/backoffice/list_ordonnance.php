@@ -1,9 +1,9 @@
 <?php
 require_once '../../config/db.php';
-require_once '../../models/Ordonnance.php';
+require_once '../../controllers/OrdonnanceController.php';
 
-$model = new Ordonnance($pdo);
-$ordonnances = $model->getAll();
+$controller = new OrdonnanceController($pdo);
+$ordonnances = $controller->getAllOrdonnances();
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -14,6 +14,7 @@ $ordonnances = $model->getAll();
     <link rel="stylesheet" href="../../assets/css/style.css">
     <link rel="stylesheet" href="../../assets/css/backoffice.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="../../assets/css/dark.css">
 </head>
 <body>
 <div class="admin-wrapper">
@@ -50,6 +51,12 @@ $ordonnances = $model->getAll();
                     <span class="nav-icon"><i class="fa-solid fa-plus"></i></span>
                     Ajouter
                 </a>
+                <div class="nav-item">
+    <a href="calendrier.php">
+        <span class="nav-icon"><i class="fa-solid fa-calendar"></i></span>
+        Calendrier
+    </a>
+</div>
             </div>
         </nav>
     </aside>
@@ -73,6 +80,11 @@ $ordonnances = $model->getAll();
                 </a>
             </div>
         </div>
+        <div class="topbar-right">
+    <button class="dark-toggle" onclick="toggleDark()" id="darkBtn" title="Mode sombre">
+        <i class="fa-solid fa-moon"></i>
+    </button>
+</div>
 
         <div class="page-content">
             <div class="table-wrapper">
@@ -140,6 +152,19 @@ $ordonnances = $model->getAll();
     document.querySelector('.sidebar-toggle').addEventListener('click', function() {
         document.querySelector('.sidebar').classList.toggle('open');
     });
+    // MODE SOMBRE
+function toggleDark() {
+    document.body.classList.toggle('dark-mode');
+    const btn = document.getElementById('darkBtn');
+    const isDark = document.body.classList.contains('dark-mode');
+    btn.innerHTML = isDark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+    localStorage.setItem('darkMode', isDark);
+}
+
+if (localStorage.getItem('darkMode') === 'true') {
+    document.body.classList.add('dark-mode');
+    document.getElementById('darkBtn').innerHTML = '<i class="fa-solid fa-sun"></i>';
+}
 </script>
 </body>
 </html>
