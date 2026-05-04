@@ -92,8 +92,9 @@ $listeMedicaments = $mc->afficherMedicaments()->fetchAll();
      NAVBAR
      ================================================ -->
 <nav class="navbar" id="navbar">
-  <a href="index.php" class="navbar-brand" style="display: flex; align-items: center; text-decoration: none;">
+  <a href="index.php" class="navbar-brand" style="display: flex; align-items: center; text-decoration: none; gap: 10px;">
     <img src="../assets/image/logo.png?v=<?php echo time(); ?>" alt="ASCLEPIA Logo" style="height: 55px; object-fit: contain;">
+    <span style="color: #10b981; font-weight: 700; font-size: 1.25rem; letter-spacing: -0.5px;">ASCLEPIA</span>
   </a>
 
   <div class="nav-links" id="navLinks">
@@ -366,6 +367,20 @@ $listeMedicaments = $mc->afficherMedicaments()->fetchAll();
         </div>
       </div>
 
+      <!-- Module 6: Psychothérapie -->
+      <div class="col-4">
+        <div class="card service-card">
+          <div class="icon-box icon-box-lg" style="background: linear-gradient(135deg,#0ea5e9,#2563eb);">
+            <i class="fa-solid fa-brain"></i>
+          </div>
+          <h3>Psychothérapie</h3>
+          <p>Bilan confidentiel et solutions concrètes pour votre équilibre mental et votre bien-être.</p>
+          <a href="sinafseni.php" class="btn btn-outline btn-sm mt-3">
+            Démarrer le bilan <i class="fa-solid fa-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+
       <!-- CTA Card -->
       <div class="col-4">
         <div class="card service-card" style="background: var(--gradient-hero); border: none;">
@@ -397,12 +412,19 @@ $listeMedicaments = $mc->afficherMedicaments()->fetchAll();
     </div>
 
     <!-- Search bar -->
-    <div style="max-width: 480px; margin: 0 auto 48px; position: relative;">
+    <div style="max-width: 480px; margin: 0 auto 24px; position: relative;">
       <i class="fa-solid fa-search" style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--gray-light);"></i>
       <input type="text" placeholder="<?= tr('ph_search') ?>" id="pharmSearch"
         style="width: 100%; padding: 14px 18px 14px 48px; border: 2px solid var(--border); border-radius: var(--radius-full); font-size: 0.95rem; outline: none; background: var(--bg); font-family: var(--font-main);"
         onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
     </div>
+
+    <!-- Interactive Map -->
+    <div id="pharmacyMap" style="height: 400px; border-radius: 20px; margin-bottom: 48px; border: 2px solid var(--border); box-shadow: var(--shadow-sm); z-index: 1;"></div>
+    
+    <!-- Leaflet CSS/JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <div class="row" id="pharmaciesGrid">
 
@@ -434,9 +456,18 @@ $listeMedicaments = $mc->afficherMedicaments()->fetchAll();
                   <?= htmlspecialchars($p['email']) ?>
                 </div>
               </div>
-              <a href="../backoffice/listepharmacie.php" class="btn btn-outline btn-sm" style="align-self: flex-start;">
-                <?= tr('ph_btn_view') ?>
-              </a>
+              <div class="d-flex" style="gap: 8px; margin-top: 10px;">
+                  <a href="../backoffice/listepharmacie.php" class="btn btn-outline btn-sm" style="flex: 1;">
+                    <?= tr('ph_btn_view') ?>
+                  </a>
+                  <a href="https://www.google.com/maps/search/<?= urlencode($p['nom'] . ' ' . $p['adresse']) ?>" 
+                     target="_blank" 
+                     class="btn btn-primary btn-sm" 
+                     style="width: 42px; display: flex; align-items: center; justify-content: center; background: #4285F4; border-color: #4285F4;" 
+                     title="Ouvrir dans Google Maps">
+                    <i class="fa-solid fa-location-arrow"></i>
+                  </a>
+              </div>
             </div>
           </div>
         <?php endforeach; ?>
@@ -1447,6 +1478,41 @@ $listeMedicaments = $mc->afficherMedicaments()->fetchAll();
     }
     msgBox.scrollTop = msgBox.scrollHeight;
   };
+</script>
+
+<script>
+    // Initialisation de la carte centrée sur Tunis
+    const map = L.map('pharmacyMap').setView([36.8065, 10.1815], 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Icône personnalisée pour les pharmacies
+    const pharmacyIcon = L.icon({
+        iconUrl: 'https://cdn-icons-png.flaticon.com/512/883/883356.png',
+        iconSize: [38, 38],
+        iconAnchor: [19, 38],
+        popupAnchor: [0, -38]
+    });
+
+    // Ajouter les marqueurs dynamiquement
+    <?php foreach ($listePharmacies as $p): 
+        // Note: Pour un vrai GPS, il faudrait stocker lat/lng en BDD.
+        // Ici on utilise des coordonnées de test proches de Tunis.
+        $lat = 36.8065 + (rand(-100, 100) / 2000); 
+        $lng = 10.1815 + (rand(-100, 100) / 2000);
+    ?>
+    L.marker([<?= $lat ?>, <?= $lng ?>], {icon: pharmacyIcon})
+        .addTo(map)
+        .bindPopup(`
+            <div style="font-family: var(--font-main); padding: 5px;">
+                <h4 style="margin: 0 0 5px; color: var(--primary);"><?= htmlspecialchars($p['nom']) ?></h4>
+                <p style="font-size: 0.8rem; margin-bottom: 10px;"><?= htmlspecialchars($p['adresse']) ?></p>
+                <a href="https://www.google.com/maps/search/<?= urlencode($p['nom'] . ' ' . $p['adresse']) ?>" target="_blank" class="btn btn-primary btn-sm" style="color: white; padding: 4px 8px; font-size: 0.75rem;">Ouvrir GPS</a>
+            </div>
+        `);
+    <?php endforeach; ?>
 </script>
 
 </body>

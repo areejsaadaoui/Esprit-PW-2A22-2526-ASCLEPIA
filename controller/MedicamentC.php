@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/../config.php';
 include __DIR__ . '/../model/medicament.php';
-require_once '../../Controller/PharmacieC.php';
+require_once __DIR__ . '/PharmacieC.php';
 
 class medicamentC
 {

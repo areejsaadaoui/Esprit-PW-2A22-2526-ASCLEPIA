@@ -1,14 +1,14 @@
 <?php
+require_once __DIR__ . '/../config_api.php';
 
 class SmsC {
-    // Remplacer ces valeurs par celles de votre console Twilio
-    private $sid = "AC0b7b850c6a3283e572e3bc257814c881"; 
-    private $token = "800f10984dd133b79ec3418baefe9932";
-    private $from = "+12525302651";
+    private $sid = TWILIO_SID; 
+    private $token = TWILIO_TOKEN;
+    private $from = TWILIO_FROM;
 
     public function sendSms($to, $message) {
         // Si les clés ne sont pas configurées, on simule l'envoi
-        if ($this->sid === "VOTRE_ACCOUNT_SID") {
+        if ($this->sid === "VOTRE_ACCOUNT_SID" || empty($this->sid)) {
             error_log("SIMULATION SMS vers $to : $message");
             return true;
         }
