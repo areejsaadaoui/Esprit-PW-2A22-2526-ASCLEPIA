@@ -254,6 +254,9 @@ $isRtl = $i18n['isRtl'];
         <i class="fa-solid fa-file-contract"></i>
         <span>Mes contrats</span>
     </button>
+   <button class="ai-fab" onclick="goToDoctor()" title="Dr. ASCLEPIA">
+        🤖
+    </button>
     <div id="transitionOverlay"></div>
     <!-- BOUTON MODE SOMBRE -->
     <button class="dark-toggle" id="darkToggle" onclick="toggleDark()" title="<?= htmlspecialchars(i18n_t('dark_mode', $lang)) ?>">
@@ -452,6 +455,12 @@ $isRtl = $i18n['isRtl'];
         document.getElementById('transitionOverlay').classList.add('animate');
         setTimeout(function() {
             window.location.href = 'mesContrats.php?<?= htmlspecialchars(http_build_query(['lang' => $lang])) ?>';
+        }, 480);
+    }
+  function goToDoctor() {
+        document.getElementById('transitionOverlay').classList.add('animate');
+        setTimeout(function() {
+            window.location.href = 'doctorAI.php';
         }, 480);
     }
 

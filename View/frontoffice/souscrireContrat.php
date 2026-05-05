@@ -62,11 +62,13 @@ if (isset($_POST['id_assurance'], $_POST['date_d'], $_POST['montant'])) {
             $mail->addAddress($email);
             $mail->Subject = 'Confirmation de votre contrat ASCLEPIA';
 
-            $lien = 'http://localhost/projetweb/View/frontoffice/confirmerContrat.php?token=' . $token;
+            $proto = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? (isset($_SERVER['HTTPS']) ? 'https' : 'http');
+$host  = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'];
+$lien  = $proto . '://' . $host . '/projetweb/View/frontoffice/confirmerContrat.php?token=' . $token;
             
             $mail->isHTML(true);
             $mail->Body = '
-                <div style="font-family:Arial,sans-serif; max-width:600px; margin:0 auto;">
+                     <div style="font-family:Arial,sans-serif; max-width:600px; margin:0 auto;">
                     <div style="background:linear-gradient(135deg,#0ea5e9,#10b981); padding:30px; text-align:center; border-radius:12px 12px 0 0;">
                         <h1 style="color:white; margin:0;">🏥 ASCLEPIA</h1>
                     </div>

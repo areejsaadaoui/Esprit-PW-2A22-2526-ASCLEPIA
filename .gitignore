@@ -1,1 +1,4 @@
 mailconfig.php
+stripe_config.php
+libs/stripe/stripe-php-20.1.0/README.md
+

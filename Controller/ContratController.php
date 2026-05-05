@@ -27,22 +27,23 @@ class ContratController {
         return $query->fetchAll();
     }
 
-    public function addContrat(Contrat $contrat) {
-        $sql = "INSERT INTO contrat VALUES (NULL, :date_d, :date_f, :id_assurance, :montant, :statut)";
-        $db  = config::getConnexion();
-        try {
-            $query = $db->prepare($sql);
-            $query->execute([
-                'date_d'       => $contrat->getDateD(),
-                'date_f'       => $contrat->getDateF(),
-                'id_assurance' => $contrat->getIdAssurance(),
-                'montant'      => $contrat->getMontant(),
-                'statut'       => $contrat->getStatut(),
-            ]);
-        } catch (Exception $e) {
-            echo 'Error: ' . $e->getMessage();
-        }
+   public function addContrat(Contrat $contrat) {
+    $sql = "INSERT INTO contrat (date_d, date_f, id_assurance, montant, statut) 
+            VALUES (:date_d, :date_f, :id_assurance, :montant, :statut)";
+    $db  = config::getConnexion();
+    try {
+        $query = $db->prepare($sql);
+        $query->execute([
+            'date_d'       => $contrat->getDateD(),
+            'date_f'       => $contrat->getDateF(),
+            'id_assurance' => $contrat->getIdAssurance(),
+            'montant'      => $contrat->getMontant(),
+            'statut'       => $contrat->getStatut(),
+        ]);
+    } catch (Exception $e) {
+        echo 'Error: ' . $e->getMessage();
     }
+}
 
     public function updateContrat(Contrat $contrat, $id) {
         $db = config::getConnexion();
@@ -158,18 +159,46 @@ class ContratController {
         return $user['email'] ?? null;
     }
 
-    public function confirmerContratByToken(string $token) {
-        $db   = config::getConnexion();
-        $stmt = $db->prepare("SELECT id_contrat, statut FROM contrat WHERE token = :token");
-        $stmt->execute([':token' => $token]);
-        $contrat = $stmt->fetch();
+public function confirmerContratByToken(string $token) {
+    $db   = config::getConnexion();
+    $stmt = $db->prepare("SELECT id_contrat, statut FROM contrat WHERE token = :token");
+    $stmt->execute([':token' => $token]);
+    $contrat = $stmt->fetch();
 
-        if (!$contrat) return 'invalid';
-        if ($contrat['statut'] !== 'En attente') return 'already_confirmed';
+    if (!$contrat) return ['status' => 'invalid', 'id_contrat' => 0];
+    if ($contrat['statut'] !== 'En attente') return ['status' => 'already_confirmed', 'id_contrat' => 0];
 
-        $upd = $db->prepare("UPDATE contrat SET statut = 'Actif', token = NULL WHERE token = :token");
-        $upd->execute([':token' => $token]);
-        return 'success';
-    }
+    $upd = $db->prepare("UPDATE contrat SET statut = 'Actif', token = NULL WHERE token = :token");
+    $upd->execute([':token' => $token]);
+    return ['status' => 'success', 'id_contrat' => (int)$contrat['id_contrat']];
+}
+    public function saveSignature($id_contrat, $signature) {
+    $db = config::getConnexion();
+    $stmt = $db->prepare("UPDATE contrat SET signature = :signature WHERE id_contrat = :id_contrat");
+    $stmt->execute([
+        ':signature'  => $signature,
+        ':id_contrat' => $id_contrat,
+    ]);
+}
+public function marquerPaye($id_contrat) {
+    $db = config::getConnexion();
+    $stmt = $db->prepare("UPDATE contrat SET statut_paiement = 'paye' WHERE id_contrat = :id");
+    $stmt->execute([':id' => $id_contrat]);
+}
+public function getExpiringContrats($id_patient, $days = 30) {
+    $sql = "SELECT c.*, a.nom_assurance
+            FROM contrat c
+            JOIN assurance a ON c.id_assurance = a.id_assurance
+            WHERE c.id_patient = :id_patient
+              AND c.statut = 'Actif'
+              AND c.date_f IS NOT NULL
+              AND c.date_f != ''
+              AND DATEDIFF(c.date_f, CURDATE()) BETWEEN 0 AND :days
+            ORDER BY c.date_f ASC";
+    $db = config::getConnexion();
+    $query = $db->prepare($sql);
+    $query->execute([':id_patient' => $id_patient, ':days' => $days]);
+    return $query->fetchAll();
+}
 }
 ?>

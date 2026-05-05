@@ -11,6 +11,7 @@ $isRtl = $i18n['isRtl'];
 // TODO: remplacer 1 par $_SESSION['id_user'] après intégration auth
 $list = $contratC->listActiveContrats(1);
 $contrats = [];
+$expiringContrats = $contratC->getExpiringContrats(1);
 foreach ($list as $c) { $contrats[] = $c; }
 
 function daysBetween($start, $end) {
@@ -130,7 +131,37 @@ function clampPercent($v) {
             </div>
         </div>
     </section>
+<?php if (!empty($expiringContrats)): ?>
+<div id="notif-overlay" class="notif-overlay">
+    <div class="notif-box">
+        <div class="notif-header">
+            <div class="notif-icon">🔔</div>
+            <div class="notif-header-text">
+                <h3>Contrats expirant bientôt</h3>
+                <p>Dans moins de 30 jours</p>
+            </div>
+        </div>
 
+        <?php foreach ($expiringContrats as $exp): ?>
+            <?php $daysLeft = (int)floor((strtotime($exp['date_f']) - time()) / 86400); ?>
+            <div class="notif-item">
+                <div class="notif-item-info">
+                    <strong><?= htmlspecialchars($exp['nom_assurance']) ?></strong>
+                    <p>Expire le <?= htmlspecialchars($exp['date_f']) ?></p>
+                </div>
+                <span class="notif-badge">
+                    <?= $daysLeft === 0 ? "Aujourd'hui!" : "J-$daysLeft" ?>
+                </span>
+            </div>
+        <?php endforeach; ?>
+
+        <button onclick="document.getElementById('notif-overlay').remove()" 
+                class="btn btn-primary notif-close-btn">
+            <i class="fa-solid fa-check"></i> J'ai compris
+        </button>
+    </div>
+</div>
+<?php endif; ?>
 <script>
     async function refreshStatuses() {
         const cards = Array.from(document.querySelectorAll('[data-contrat-id]'));

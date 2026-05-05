@@ -9,10 +9,13 @@ $isRtl = $i18n['isRtl'];
 
 $contratC = new ContratController();
 $token    = $_GET['token'] ?? '';
-$result   = '';
+$result     = '';
+$id_contrat = 0;
 
 if (!empty($token)) {
-    $result = $contratC->confirmerContratByToken($token);
+    $res        = $contratC->confirmerContratByToken($token);
+    $result     = $res['status'];
+    $id_contrat = $res['id_contrat'];
 } else {
     $result = 'invalid';
 }
@@ -44,9 +47,14 @@ if (!empty($token)) {
                         <div style="width:80px; height:80px; background:linear-gradient(135deg,#10b981,#059669); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:2rem; margin:0 auto 24px; box-shadow:0 8px 24px rgba(16,185,129,0.3);">✅</div>
                         <h2 style="color:var(--dark); margin-bottom:12px;">Contrat activé !</h2>
                         <p style="color:var(--text-muted); margin-bottom:32px;">Votre contrat est maintenant <strong style="color:#10b981;">Actif</strong>.</p>
-                        <a href="mesContrats.php" class="btn btn-primary">
-                            <i class="fa-solid fa-file-contract"></i> Voir mes contrats
-                        </a>
+                       <div style="display:flex; gap:12px; justify-content:center;">
+    <a href="signerContrat.php?id_contrat=<?= $id_contrat ?>" class="btn btn-primary">
+        <i class="fa-solid fa-pen-nib"></i> Signer le contrat
+    </a>
+    <a href="mesContrats.php" class="btn btn-outline">
+        <i class="fa-solid fa-file-contract"></i> Mes contrats
+    </a>
+</div>
                     </div>
                 <?php else: ?>
                     <div class="card" style="padding:60px 40px;">
