@@ -40,12 +40,12 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 // Si c'est une requête GET sans action, retourner tous les utilisateurs
 if ($method === 'GET' && empty($action) && empty($_GET['id'])) {
-    // Récupérer les patients
-    $stmt = $pdo->query("SELECT id_user, nom, email, telephone, adresse, date_creation FROM utilisateur WHERE role = 'patient' ORDER BY id_user DESC");
+    // Récupérer les patients avec les colonnes de bannissement
+    $stmt = $pdo->query("SELECT id_user, nom, email, telephone, adresse, date_creation, is_banned, ban_until FROM utilisateur WHERE role = 'patient' ORDER BY id_user DESC");
     $patients = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Récupérer les médecins
-    $stmt = $pdo->query("SELECT id_user, nom, email, telephone, adresse, date_creation, description as specialite FROM utilisateur WHERE role = 'medecin' ORDER BY id_user DESC");
+    // Récupérer les médecins avec les colonnes de bannissement
+    $stmt = $pdo->query("SELECT id_user, nom, email, telephone, adresse, date_creation, description as specialite, is_banned, ban_until FROM utilisateur WHERE role = 'medecin' ORDER BY id_user DESC");
     $medecins = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     echo json_encode(['success' => true, 'patients' => $patients, 'medecins' => $medecins]);

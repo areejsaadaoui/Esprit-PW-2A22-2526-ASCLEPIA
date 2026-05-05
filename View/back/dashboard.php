@@ -140,7 +140,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
             margin-top: 5px;
         }
         
-        /* Pagination styles */
         .pagination-container {
             display: flex;
             justify-content: space-between;
@@ -233,7 +232,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
             font-size: 0.8rem;
         }
         
-        /* Modal Stats avec animations */
         .stats-overlay {
             display: none;
             position: fixed;
@@ -599,12 +597,53 @@ $adminEmail = $_SESSION['user_email'] ?? '';
             padding: 6px 10px;
             font-size: 0.8rem;
         }
+        
+        .badge-banned {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .badge-active {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .btn-ban {
+            background: #f59e0b;
+            color: white;
+            border: none;
+        }
+        
+        .btn-ban:hover {
+            background: #d97706;
+        }
+        
+        .btn-unban {
+            background: #10b981;
+            color: white;
+            border: none;
+        }
+        
+        .btn-unban:hover {
+            background: #059669;
+        }
     </style>
 </head>
 <body>
 
 <div class="admin-wrapper">
-    <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-brand">
             <div class="sidebar-logo">⚕️</div>
@@ -664,7 +703,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
         </div>
     </aside>
     
-    <!-- Main Content -->
     <main class="main-content">
         <div class="topbar">
             <div class="topbar-left">
@@ -695,7 +733,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
         </div>
         
         <div class="page-content">
-            <!-- Statistiques -->
             <div class="stat-summary">
                 <div class="stat-summary-card">
                     <div class="number" id="totalPatients">0</div>
@@ -711,7 +748,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
                 </div>
             </div>
             
-            <!-- Tabs avec bouton STATS -->
             <div class="tabs-container">
                 <div class="tabs">
                     <div class="tabs-left">
@@ -728,7 +764,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
                 </div>
             </div>
             
-            <!-- Tableau Patients -->
             <div id="patientsTab" class="tab-content active">
                 <div class="filter-bar">
                     <div style="display: flex; gap: 10px; align-items: center; flex: 1;">
@@ -772,12 +807,13 @@ $adminEmail = $_SESSION['user_email'] ?? '';
                                     <th>Email</th>
                                     <th>Téléphone</th>
                                     <th>Date d'inscription</th>
+                                    <th>Statut</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="patientsTable">
                                 <tr>
-                                    <td colspan="6" style="text-align: center; padding: 40px;">
+                                    <td colspan="7" style="text-align: center; padding: 40px;">
                                         <i class="fas fa-spinner fa-spin"></i> Chargement...
                                     </td>
                                 </tr>
@@ -786,7 +822,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
                     </div>
                 </div>
                 
-                <!-- Pagination Patients -->
                 <div class="pagination-container" id="paginationPatients">
                     <div class="pagination-info">
                         Affichage de <span id="patientsStart">0</span> à <span id="patientsEnd">0</span> sur <span id="patientsTotal">0</span> patients
@@ -803,7 +838,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
                 </div>
             </div>
             
-            <!-- Tableau Médecins -->
             <div id="medecinsTab" class="tab-content">
                 <div class="filter-bar">
                     <div style="display: flex; gap: 10px; align-items: center; flex: 1;">
@@ -848,12 +882,13 @@ $adminEmail = $_SESSION['user_email'] ?? '';
                                     <th>Téléphone</th>
                                     <th>Adresse</th>
                                     <th>Date d'inscription</th>
+                                    <th>Statut</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="medecinsTable">
                                 <tr>
-                                    <td colspan="7" style="text-align: center; padding: 40px;">
+                                    <td colspan="8" style="text-align: center; padding: 40px;">
                                         <i class="fas fa-spinner fa-spin"></i> Chargement...
                                     </td>
                                 </tr>
@@ -862,7 +897,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
                     </div>
                 </div>
                 
-                <!-- Pagination Médecins -->
                 <div class="pagination-container" id="paginationMedecins">
                     <div class="pagination-info">
                         Affichage de <span id="medecinsStart">0</span> à <span id="medecinsEnd">0</span> sur <span id="medecinsTotal">0</span> médecins
@@ -882,7 +916,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
     </main>
 </div>
 
-<!-- Modal Stats Innovant avec animations -->
 <div id="statsModal" class="stats-overlay">
     <div class="stats-modal">
         <div class="stats-header">
@@ -935,9 +968,7 @@ $adminEmail = $_SESSION['user_email'] ?? '';
                         <span id="progressPatientsPercent">0%</span>
                     </div>
                     <div class="progress-bar-bg">
-                        <div class="progress-bar-fill patients" id="progressPatients">
-                            0%
-                        </div>
+                        <div class="progress-bar-fill patients" id="progressPatients">0%</div>
                     </div>
                 </div>
                 <div class="progress-item">
@@ -946,9 +977,7 @@ $adminEmail = $_SESSION['user_email'] ?? '';
                         <span id="progressMedecinsPercent">0%</span>
                     </div>
                     <div class="progress-bar-bg">
-                        <div class="progress-bar-fill medecins" id="progressMedecins">
-                            0%
-                        </div>
+                        <div class="progress-bar-fill medecins" id="progressMedecins">0%</div>
                     </div>
                 </div>
             </div>
@@ -956,7 +985,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
     </div>
 </div>
 
-<!-- Modals (Ajout/Modification) -->
 <div id="userModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -1007,7 +1035,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
     </div>
 </div>
 
-<!-- Modal Suppression -->
 <div id="deleteModal" class="modal">
     <div class="modal-content" style="max-width: 400px;">
         <div class="modal-header">
@@ -1031,10 +1058,39 @@ $adminEmail = $_SESSION['user_email'] ?? '';
     </div>
 </div>
 
+<!-- Modal Bannissement -->
+<div id="banModal" class="modal">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3 class="modal-title">
+                <i class="fas fa-gavel"></i> Bannir l'utilisateur
+            </h3>
+            <button class="modal-close" onclick="closeBanModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="banUserId">
+            <div class="form-group">
+                <label class="form-label">Durée du bannissement</label>
+                <select id="banDuration" class="form-control">
+                    <option value="hour">1 heure</option>
+                    <option value="day">1 jour</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeBanModal()">Annuler</button>
+            <button class="btn btn-danger" onclick="confirmBan()">
+                <i class="fas fa-ban"></i> Bannir
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
     let currentTab = 'patients';
     
-    // Variables pour le tri
     let patientsData = [];
     let medecinsData = [];
     let currentSort = {
@@ -1042,7 +1098,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
         medecins: { column: 'id', direction: 'desc' }
     };
     
-    // Variables pour la pagination
     let patientsCurrentPage = 1;
     let medecinsCurrentPage = 1;
     let patientsPerPage = 10;
@@ -1081,7 +1136,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
     }
     
     function applyFiltersAndRender() {
-        // Filtrer et trier les patients
         const searchTermPatient = document.getElementById('searchPatient').value.toLowerCase();
         filteredPatients = [...patientsData];
         
@@ -1092,7 +1146,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
             );
         }
         
-        // Appliquer le tri
         if (currentSort.patients.column) {
             filteredPatients.sort((a, b) => {
                 let valueA, valueB;
@@ -1102,6 +1155,8 @@ $adminEmail = $_SESSION['user_email'] ?? '';
                 } else if (currentSort.patients.column === 'date') {
                     valueA = new Date(a.date_creation);
                     valueB = new Date(b.date_creation);
+                } else {
+                    return 0;
                 }
                 if (currentSort.patients.direction === 'asc') {
                     return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
@@ -1111,7 +1166,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
             });
         }
         
-        // Filtrer et trier les médecins
         const searchTermMedecin = document.getElementById('searchMedecin').value.toLowerCase();
         filteredMedecins = [...medecinsData];
         
@@ -1131,6 +1185,8 @@ $adminEmail = $_SESSION['user_email'] ?? '';
                 } else if (currentSort.medecins.column === 'date') {
                     valueA = new Date(a.date_creation);
                     valueB = new Date(b.date_creation);
+                } else {
+                    return 0;
                 }
                 if (currentSort.medecins.direction === 'asc') {
                     return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
@@ -1140,7 +1196,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
             });
         }
         
-        // Rendre les pages
         renderPaginatedPatients();
         renderPaginatedMedecins();
         renderPaginationControls('patients');
@@ -1153,7 +1208,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
         const paginatedPatients = filteredPatients.slice(start, end);
         renderPatientsTable(paginatedPatients);
         
-        // Mettre à jour les infos de pagination
         document.getElementById('patientsStart').textContent = filteredPatients.length === 0 ? 0 : start + 1;
         document.getElementById('patientsEnd').textContent = Math.min(end, filteredPatients.length);
         document.getElementById('patientsTotal').textContent = filteredPatients.length;
@@ -1184,12 +1238,10 @@ $adminEmail = $_SESSION['user_email'] ?? '';
         
         let html = '';
         
-        // Bouton précédent
         html += `<button class="pagination-btn" onclick="goToPage('${type}', ${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
             <i class="fas fa-chevron-left"></i>
         </button>`;
         
-        // Numéros de pages
         const maxVisible = 5;
         let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
         let endPage = Math.min(totalPages, startPage + maxVisible - 1);
@@ -1212,7 +1264,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
             html += `<div class="page-number" onclick="goToPage('${type}', ${totalPages})">${totalPages}</div>`;
         }
         
-        // Bouton suivant
         html += `<button class="pagination-btn" onclick="goToPage('${type}', ${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
             <i class="fas fa-chevron-right"></i>
         </button>`;
@@ -1260,7 +1311,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
         applyFiltersAndRender();
     }
     
-    // Fonction pour mettre à jour le donut chart
     function updateDonutChart(patientsPercent, medecinsPercent) {
         const circumference = 2 * Math.PI * 80;
         
@@ -1372,10 +1422,18 @@ $adminEmail = $_SESSION['user_email'] ?? '';
         if (!tbody) return;
         
         if (!patients || patients.length === 0) {
-            tbody.innerHTML = '<tr class="no-data"><td colspan="6" style="text-align: center; padding: 40px;"><i class="fas fa-inbox"></i> Aucun patient trouvé</td></tr>';
+            tbody.innerHTML = '<tr class="no-data"><td colspan="7" style="text-align: center; padding: 40px;"><i class="fas fa-inbox"></i> Aucun patient trouvé</td></tr>';
             return;
         }
-        tbody.innerHTML = patients.map(patient => `
+        
+        tbody.innerHTML = patients.map(patient => {
+            const isBanned = patient.is_banned == 1;
+            const banUntil = patient.ban_until ? new Date(patient.ban_until).toLocaleString() : null;
+            const statusBadge = isBanned ? 
+                `<span class="badge-banned"><i class="fas fa-ban"></i> Banni${banUntil ? ` (jusqu'au ${banUntil})` : ''}</span>` : 
+                `<span class="badge-active"><i class="fas fa-check-circle"></i> Actif</span>`;
+            
+            return `
             <tr>
                 <td>${patient.id_user}</td>
                 <td>
@@ -1387,16 +1445,25 @@ $adminEmail = $_SESSION['user_email'] ?? '';
                 <td>${escapeHtml(patient.email)}</td>
                 <td>${patient.telephone || '-'}</td>
                 <td>${formatDate(patient.date_creation)}</td>
+                <td>${statusBadge}</td>
                 <td class="table-actions">
                     <button class="btn btn-primary btn-icon btn-sm" onclick="editUser(${patient.id_user}, 'patient')">
                         <i class="fas fa-pen"></i>
                     </button>
+                    ${!isBanned ? 
+                        `<button class="btn btn-ban btn-icon btn-sm" onclick="openBanModal(${patient.id_user})">
+                            <i class="fas fa-ban"></i>
+                        </button>` :
+                        `<button class="btn btn-unban btn-icon btn-sm" onclick="unbanUser(${patient.id_user})">
+                            <i class="fas fa-check"></i>
+                        </button>`
+                    }
                     <button class="btn btn-danger btn-icon btn-sm" onclick="openDeleteModal(${patient.id_user}, 'patient')">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
             </tr>
-        `).join('');
+        `}).join('');
     }
     
     function renderMedecinsTable(medecins) {
@@ -1404,10 +1471,18 @@ $adminEmail = $_SESSION['user_email'] ?? '';
         if (!tbody) return;
         
         if (!medecins || medecins.length === 0) {
-            tbody.innerHTML = '<tr class="no-data"><td colspan="7" style="text-align: center; padding: 40px;"><i class="fas fa-inbox"></i> Aucun médecin trouvé</td></tr>';
+            tbody.innerHTML = '<tr class="no-data"><td colspan="8" style="text-align: center; padding: 40px;"><i class="fas fa-inbox"></i> Aucun médecin trouvé</td></tr>';
             return;
         }
-        tbody.innerHTML = medecins.map(medecin => `
+        
+        tbody.innerHTML = medecins.map(medecin => {
+            const isBanned = medecin.is_banned == 1;
+            const banUntil = medecin.ban_until ? new Date(medecin.ban_until).toLocaleString() : null;
+            const statusBadge = isBanned ? 
+                `<span class="badge-banned"><i class="fas fa-ban"></i> Banni${banUntil ? ` (jusqu'au ${banUntil})` : ''}</span>` : 
+                `<span class="badge-active"><i class="fas fa-check-circle"></i> Actif</span>`;
+            
+            return `
             <tr>
                 <td>${medecin.id_user}</td>
                 <td>
@@ -1420,16 +1495,25 @@ $adminEmail = $_SESSION['user_email'] ?? '';
                 <td>${medecin.telephone || '-'}</td>
                 <td class="adresse-cell">${escapeHtml(medecin.adresse) || '-'}</td>
                 <td>${formatDate(medecin.date_creation)}</td>
+                <td>${statusBadge}</td>
                 <td class="table-actions">
                     <button class="btn btn-primary btn-icon btn-sm" onclick="editUser(${medecin.id_user}, 'medecin')">
                         <i class="fas fa-pen"></i>
                     </button>
+                    ${!isBanned ? 
+                        `<button class="btn btn-ban btn-icon btn-sm" onclick="openBanModal(${medecin.id_user})">
+                            <i class="fas fa-ban"></i>
+                        </button>` :
+                        `<button class="btn btn-unban btn-icon btn-sm" onclick="unbanUser(${medecin.id_user})">
+                            <i class="fas fa-check"></i>
+                        </button>`
+                    }
                     <button class="btn btn-danger btn-icon btn-sm" onclick="openDeleteModal(${medecin.id_user}, 'medecin')">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
             </tr>
-        `).join('');
+        `}).join('');
     }
     
     function editUser(id, role) {
@@ -1605,8 +1689,72 @@ $adminEmail = $_SESSION['user_email'] ?? '';
         setTimeout(() => alertDiv.remove(), 3000);
     }
     
-    // Écouteurs d'événements
-    const resetPasswordCheckbox = document.getElementById('resetPassword');
+    // Fonctions pour le bannissement
+    function openBanModal(userId) {
+        document.getElementById('banUserId').value = userId;
+        document.getElementById('banModal').classList.add('active');
+    }
+    
+    function closeBanModal() {
+        document.getElementById('banModal').classList.remove('active');
+    }
+    
+    function confirmBan() {
+        const userId = document.getElementById('banUserId').value;
+        const duration = document.getElementById('banDuration').value;
+        
+        fetch('ban_user.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user_id: userId,
+                action: 'ban',
+                duration: duration
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                closeBanModal();
+                loadUsers();
+                showNotification('Utilisateur banni avec succès', 'success');
+            } else {
+                showNotification(result.message || 'Erreur lors du bannissement', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            showNotification('Erreur de connexion', 'error');
+        });
+    }
+    
+    function unbanUser(userId) {
+        if (confirm('Êtes-vous sûr de vouloir lever le bannissement de cet utilisateur ?')) {
+            fetch('ban_user.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: userId,
+                    action: 'unban'
+                })
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    loadUsers();
+                    showNotification('Bannissement levé avec succès', 'success');
+                } else {
+                    showNotification(result.message || 'Erreur lors de la levée du bannissement', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                showNotification('Erreur de connexion', 'error');
+            });
+        }
+    }
+    
+    // Écouteurs d'événements    const resetPasswordCheckbox = document.getElementById('resetPassword');
     if (resetPasswordCheckbox) {
         resetPasswordCheckbox.addEventListener('change', function() {
             const passwordField = document.getElementById('passwordField');

@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     // Vérifier avec Google
-    $secret_key = '6LcxldQsAAAAAEi2Ym74vAW4Em9Lam5Wd-PaFrHm'; // À remplacer par votre SECRET KEY
+    $secret_key = '6LcxldQsAAAAAEi2Ym74vAW4Em9Lam5Wd-PaFrHm';
     $verify_url = 'https://www.google.com/recaptcha/api/siteverify';
     $post_data = http_build_query([
         'secret' => $secret_key,
@@ -59,8 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     // =========================================
 
-    // Chercher l'utilisateur
-    $stmt = $pdo->prepare("SELECT id_user, nom, email, mot_de_passe, role FROM utilisateur WHERE email = :email");
+    // Chercher l'utilisateur avec les colonnes de bannissement
+    $stmt = $pdo->prepare("SELECT id_user, nom, email, mot_de_passe, role, is_banned, ban_until FROM utilisateur WHERE email = :email");
     $stmt->execute([':email' => $email]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -68,6 +68,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: login.html?error=1');
         exit();
     }
+
+    // ========== VÉRIFICATION DU BANNISSEMENT ==========
+    if ($user['is_banned'] == 1) {
+        $ban_until = $user['ban_until'];
+        $current_time = date('Y-m-d H:i:s');
+        
+        // Vérifier si le bannissement n'a pas expiré
+        if ($ban_until && $ban_until > $current_time) {
+            // Bannissement toujours actif
+            $ban_until_formatted = date('d/m/Y à H:i', strtotime($ban_until));
+            $error_message = urlencode("Votre compte est suspendu jusqu'au {$ban_until_formatted}");
+            header("Location: login.html?error=4&message={$error_message}");
+            exit();
+        } elseif ($ban_until && $ban_until <= $current_time) {
+            // Bannissement expiré, réactiver automatiquement le compte
+            $updateBan = $pdo->prepare("UPDATE utilisateur SET is_banned = 0, ban_until = NULL WHERE id_user = :id");
+            $updateBan->execute([':id' => $user['id_user']]);
+            // Continuer la connexion normalement
+        }
+    }
+    // ===================================================
 
     if (!password_verify($mot_de_passe, $user['mot_de_passe'])) {
         header('Location: login.html?error=2');

@@ -233,6 +233,12 @@
       <span>reCAPTCHA non validé. Veuillez cocher la case.</span>
     </div>
 
+    <!-- NOUVEAU - ALERTE BANNISSEMENT -->
+    <div id="alertBan" class="error-msg">
+      <i class="fa-solid fa-ban"></i>
+      <span id="banMessage"></span>
+    </div>
+
     <form id="loginForm" method="POST" action="login.php" novalidate>
       <div style="margin-bottom: 16px;">
         <label class="glass-label">Adresse email</label>
@@ -342,6 +348,7 @@
     document.getElementById('alertPassword').classList.remove('show');
     document.getElementById('alertGeneric').classList.remove('show');
     document.getElementById('alertCaptcha').classList.remove('show');
+    document.getElementById('alertBan').classList.remove('show');
   }
 
   function showAlert(id, autoHide) {
@@ -357,9 +364,11 @@
   function setFieldError(inputId, errorId, message) {
     var input = document.getElementById(inputId);
     var error = document.getElementById(errorId);
-    input.classList.add('input-error');
-    error.textContent = message;
-    error.classList.add('show');
+    if (input) input.classList.add('input-error');
+    if (error) {
+      error.textContent = message;
+      error.classList.add('show');
+    }
   }
 
   function clearFieldError(inputId, errorId) {
@@ -461,6 +470,7 @@
   window.addEventListener('DOMContentLoaded', function() {
     var params = new URLSearchParams(window.location.search);
     var error = params.get('error');
+    var message = params.get('message');
 
     console.log("Paramètre error détecté: " + error);
 
@@ -472,6 +482,12 @@
       document.getElementById('password').classList.add('input-error');
     } else if (error === '3') {
       showAlert('alertCaptcha', true);
+    } else if (error === '4') {
+      var banMessageSpan = document.getElementById('banMessage');
+      if (message && banMessageSpan) {
+        banMessageSpan.innerHTML = decodeURIComponent(message);
+      }
+      showAlert('alertBan', false);
     }
 
     var btn = document.getElementById('submitBtn');
