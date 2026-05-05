@@ -95,6 +95,112 @@
     color: #ef4444;
 }
 
+/* Style pour le bouton générer mot de passe */
+.btn-generate {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-generate:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-generate:active {
+    transform: translateY(0);
+}
+
+.password-wrapper {
+    position: relative;
+}
+
+/* Style pour le champ téléphone avec indicateur */
+.phone-wrapper {
+    position: relative;
+}
+
+.phone-prefix {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    font-size: 0.85rem;
+    pointer-events: none;
+    background: white;
+    padding-right: 4px;
+}
+
+.phone-wrapper input {
+    padding-left: 50px !important;
+}
+
+.phone-hint {
+    display: block;
+    font-size: 0.7rem;
+    color: #6b7280;
+    margin-top: 4px;
+}
+
+.phone-hint.valid {
+    color: #10b981;
+}
+
+.phone-hint.invalid {
+    color: #ef4444;
+}
+
+/* Animation pour la notification */
+.toast-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    z-index: 1000;
+    animation: slideInRight 0.3s ease-out;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.toast-notification.fade-out {
+    animation: fadeOut 0.5s ease-out forwards;
+}
+
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
 @media (max-width: 768px) {
     .form-row {
         flex-direction: column;
@@ -110,6 +216,10 @@
         width: 100%;
         justify-content: center;
     }
+    .btn-generate {
+        width: 100%;
+        justify-content: center;
+    }
 }
 </style>
 
@@ -117,12 +227,8 @@
 <body>
 
 <div class="admin-wrapper">
-    <!-- Sidebar - SUPPRIMÉE -->
-
     <!-- Main Content -->
     <div class="main-content">
-        <!-- Top Bar - SUPPRIMÉE -->
-
         <!-- Page Content -->
         <div class="page-content">
             <div class="form-container card">
@@ -148,9 +254,12 @@
                     </div>
 
                     <div class="form-row">
-                        <div class="form-group">
+                        <div class="form-group password-wrapper">
                             <label class="form-label">Mot de passe <span class="required-star">*</span></label>
                             <input type="password" id="mot_de_passe" class="form-control" placeholder="8+ caractères, chiffres, lettres et symboles">
+                            <button type="button" class="btn-generate" id="generatePasswordBtn">
+                                🔄 Générer un mot de passe sécurisé
+                            </button>
                             <div id="password-error" class="error-message"></div>
                         </div>
 
@@ -186,8 +295,13 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">Téléphone</label>
-                            <input type="tel" id="telephone" class="form-control" placeholder="+216 XX XXX XXX">
+                            <label class="form-label">Téléphone Tunisien</label>
+                            <div class="phone-wrapper">
+                                <span class="phone-prefix">+216</span>
+                                <input type="tel" id="telephone" class="form-control" placeholder="XX XXX XXX" maxlength="11">
+                            </div>
+                            <div id="telephone-error" class="error-message"></div>
+                            <div id="phone-hint" class="phone-hint"></div>
                         </div>
                     </div>
 
@@ -211,25 +325,270 @@
 </div>
 
 <script type="text/javascript">
-// Fonction pour vérifier si le mot de passe est valide
+// ==================== FONCTIONS POUR LE TÉLÉPHONE TUNISIEN ====================
+
+// Fonction pour valider un numéro de téléphone tunisien
+function validateTunisianPhone(phoneNumber) {
+    // Supprimer tous les espaces et le +216 s'il est présent
+    let cleaned = phoneNumber.replace(/\s/g, '');
+    
+    // Enlever le +216 au début si présent
+    if (cleaned.startsWith('+216')) {
+        cleaned = cleaned.substring(4);
+    }
+    
+    // Enlever le 00216 si présent
+    if (cleaned.startsWith('00216')) {
+        cleaned = cleaned.substring(5);
+    }
+    
+    // Vérifier que le numéro commence par un indicatif tunisien valide
+    // Les opérateurs tunisiens : 2 (Tunisie Telecom), 4, 5, 9 (Orange), 3 (Ooredoo)
+    // Format : 2x xxx xxx, 4x xxx xxx, 5x xxx xxx, 9x xxx xxx
+    const phoneRegex = /^(2|4|5|9)\d{7}$/;
+    
+    // Vérifier également les numéros commençant par 7 (fixes) ou 8
+    const alternativeRegex = /^[78]\d{7}$/;
+    
+    return phoneRegex.test(cleaned) || alternativeRegex.test(cleaned);
+}
+
+// Fonction pour formater automatiquement le numéro de téléphone tunisien
+function formatTunisianPhone(phoneNumber) {
+    // Supprimer tous les non-chiffres
+    let cleaned = phoneNumber.replace(/\D/g, '');
+    
+    // Si le numéro commence par 216 (sans +), l'enlever
+    if (cleaned.startsWith('216')) {
+        cleaned = cleaned.substring(3);
+    }
+    
+    // Limiter à 8 chiffres (numéro tunisien standard)
+    if (cleaned.length > 8) {
+        cleaned = cleaned.substring(0, 8);
+    }
+    
+    // Formater avec des espaces tous les 2 chiffres après les 2 premiers
+    if (cleaned.length > 0) {
+        if (cleaned.length <= 2) {
+            return cleaned;
+        } else if (cleaned.length <= 4) {
+            return cleaned.substring(0, 2) + ' ' + cleaned.substring(2);
+        } else if (cleaned.length <= 6) {
+            return cleaned.substring(0, 2) + ' ' + cleaned.substring(2, 4) + ' ' + cleaned.substring(4);
+        } else {
+            return cleaned.substring(0, 2) + ' ' + cleaned.substring(2, 4) + ' ' + cleaned.substring(4, 6) + ' ' + cleaned.substring(6, 8);
+        }
+    }
+    return cleaned;
+}
+
+// Fonction pour obtenir le message d'erreur du téléphone tunisien
+function getPhoneErrorMessage(phoneNumber) {
+    if (!phoneNumber || phoneNumber.trim() === '') {
+        return ""; // Pas d'erreur si champ vide (optionnel)
+    }
+    
+    let cleaned = phoneNumber.replace(/\s/g, '');
+    if (cleaned.startsWith('+216')) {
+        cleaned = cleaned.substring(4);
+    }
+    if (cleaned.startsWith('00216')) {
+        cleaned = cleaned.substring(5);
+    }
+    
+    if (cleaned.length === 0) {
+        return "Numéro de téléphone requis";
+    }
+    
+    if (cleaned.length !== 8) {
+        return "Le numéro tunisien doit contenir exactement 8 chiffres";
+    }
+    
+    const firstDigit = cleaned.charAt(0);
+    const validStartDigits = ['2', '3', '4', '5', '7', '8', '9'];
+    
+    if (!validStartDigits.includes(firstDigit)) {
+        return "Numéro invalide. Doit commencer par 2,3,4,5,7,8 ou 9";
+    }
+    
+    /*/ Messages spécifiques par opérateur
+    if (firstDigit === '2') {
+        return "✓ Numéro fixe Tunisie Telecom valide";
+    } else if (firstDigit === '3') {
+        return "✓ Numéro Ooredoo valide";
+    } else if (firstDigit === '4' || firstDigit === '9') {
+        return "✓ Numéro Orange valide";
+    } else if (firstDigit === '5') {
+        return "✓ Numéro Ooredoo/Orange valide";
+    } else if (firstDigit === '7' || firstDigit === '8') {
+        return "✓ Numéro fixe valide";
+    }*/
+    
+    return "Format de téléphone tunisien invalide";
+}
+
+// Fonction pour afficher l'indice de validation en temps réel
+function updatePhoneHint(phoneNumber) {
+    const hintDiv = document.getElementById('phone-hint');
+    if (!hintDiv) return;
+    
+    if (!phoneNumber || phoneNumber.trim() === '') {
+        hintDiv.innerHTML = '📱 Exemple: 23 456 789 ou 98 765 432';
+        hintDiv.className = 'phone-hint';
+        return;
+    }
+    
+    const isValid = validateTunisianPhone(phoneNumber);
+    
+    if (isValid) {
+        const formatted = formatTunisianPhone(phoneNumber);
+        let operatorMessage = '';
+        
+        let cleaned = phoneNumber.replace(/\s/g, '');
+        if (cleaned.startsWith('+216')) cleaned = cleaned.substring(4);
+        if (cleaned.startsWith('00216')) cleaned = cleaned.substring(5);
+        
+        const firstDigit = cleaned.charAt(0);
+        
+        if (firstDigit === '2') operatorMessage = '🏢 Tunisie Telecom (fixe)';
+        else if (firstDigit === '3') operatorMessage = '📱 Ooredoo';
+        else if (firstDigit === '4' || firstDigit === '9') operatorMessage = '📱 Orange';
+        else if (firstDigit === '5') operatorMessage = '📱 Ooredoo/Orange';
+        else if (firstDigit === '7' || firstDigit === '8') operatorMessage = '🏢 Ligne fixe';
+        
+        hintDiv.innerHTML = `✅ ${operatorMessage} - Format: ${formatted}`;
+        hintDiv.className = 'phone-hint valid';
+    } else {
+        hintDiv.innerHTML = `❌ ${getPhoneErrorMessage(phoneNumber)}`;
+        hintDiv.className = 'phone-hint invalid';
+    }
+}
+
+// ==================== FONCTIONS POUR LE MOT DE PASSE ====================
+
+// Fonction pour générer un mot de passe complexe et sécurisé
+function generateComplexPassword() {
+    const uppercaseLetters = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+    const lowercaseLetters = 'abcdefghijkmnpqrstuvwxyz';
+    const numbers = '23456789';
+    const symbols = '!@#$%^&*';
+    
+    let password = '';
+    
+    for (let i = 0; i < 2; i++) {
+        const randomIndex = Math.floor(Math.random() * uppercaseLetters.length);
+        password += uppercaseLetters[randomIndex];
+    }
+    
+    for (let i = 0; i < 3; i++) {
+        const randomIndex = Math.floor(Math.random() * lowercaseLetters.length);
+        password += lowercaseLetters[randomIndex];
+    }
+    
+    for (let i = 0; i < 2; i++) {
+        const randomIndex = Math.floor(Math.random() * numbers.length);
+        password += numbers[randomIndex];
+    }
+    
+    for (let i = 0; i < 2; i++) {
+        const randomIndex = Math.floor(Math.random() * symbols.length);
+        password += symbols[randomIndex];
+    }
+    
+    password = shuffleString(password);
+    
+    const targetLength = Math.floor(Math.random() * (16 - 12 + 1) + 12);
+    
+    while (password.length < targetLength) {
+        const allChars = uppercaseLetters + lowercaseLetters + numbers + symbols;
+        const randomChar = allChars[Math.floor(Math.random() * allChars.length)];
+        const insertPos = Math.floor(Math.random() * (password.length + 1));
+        password = password.slice(0, insertPos) + randomChar + password.slice(insertPos);
+    }
+    
+    const hasNumber = /[0-9]/.test(password);
+    const hasLetter = /[a-zA-Z]/.test(password);
+    const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+    
+    if (!hasNumber || !hasLetter || !hasSymbol || !hasUppercase || !hasLowercase || password.length < 8) {
+        return generateComplexPassword();
+    }
+    
+    return password;
+}
+
+function shuffleString(str) {
+    const array = str.split('');
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array.join('');
+}
+
+function showToast(message, isSuccess = true) {
+    const existingToasts = document.querySelectorAll('.toast-notification');
+    existingToasts.forEach(toast => toast.remove());
+    
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.innerHTML = isSuccess ? 
+        `✅ ${message}` : 
+        `❌ ${message}`;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => {
+            if (toast.parentNode) toast.remove();
+        }, 500);
+    }, 4000);
+}
+
+function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Mot de passe copié dans le presse-papier ! 📋');
+        }).catch(() => {
+            fallbackCopy(text);
+        });
+    } else {
+        fallbackCopy(text);
+    }
+}
+
+function fallbackCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+        document.execCommand('copy');
+        showToast('Mot de passe copié dans le presse-papier ! 📋');
+    } catch (err) {
+        showToast('Impossible de copier automatiquement', false);
+    }
+    document.body.removeChild(textarea);
+}
+
 function isPasswordValid(password) {
-    // Vérifier la longueur minimale de 8 caractères
     if (password.length < 8) {
         return false;
     }
     
-    // Vérifier la présence de chiffres
     var hasNumber = /[0-9]/.test(password);
-    // Vérifier la présence de lettres
     var hasLetter = /[a-zA-Z]/.test(password);
-    // Vérifier la présence de symboles
-    var hasSymbol = /[/;!@#$%^&*(),.?":{}|<>]/.test(password);
+    var hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(password);
     
-    // Le mot de passe est valide UNIQUEMENT s'il contient TOUS les éléments
     return (hasNumber && hasLetter && hasSymbol);
 }
 
-// Fonction pour obtenir le message d'erreur
 function getPasswordErrorMessage(password) {
     if (password.length < 8) {
         return "Le mot de passe doit contenir au moins 8 caractères";
@@ -251,7 +610,6 @@ function getPasswordErrorMessage(password) {
     return "Mot de passe invalide";
 }
 
-// Fonctions de validation
 function showError(id, message) {
     var errorDiv = document.getElementById(id);
     var inputField = document.getElementById(id.replace('-error', ''));
@@ -279,6 +637,65 @@ function clearErrors() {
         inputs[i].className = inputs[i].className.replace('is-invalid', '');
     }
 }
+
+/*/ Événement pour générer le mot de passe
+document.getElementById("generatePasswordBtn").addEventListener("click", function() {
+    const generatedPassword = generateComplexPassword();
+    const passwordField = document.getElementById("mot_de_passe");
+    const confirmField = document.getElementById("confirm_password");
+    
+    passwordField.value = generatedPassword;
+    confirmField.value = generatedPassword;
+    
+    showToast('🔐 Mot de passe sécurisé généré et copié automatiquement !', true);
+    copyToClipboard(generatedPassword);
+    
+    const inputEvent = new Event('input', { bubbles: true });
+    passwordField.dispatchEvent(inputEvent);
+    
+    clearErrors();
+    document.getElementById("email").focus();
+});
+
+// Validation du téléphone en temps réel
+const phoneInput = document.getElementById("telephone");
+if (phoneInput) {
+    // Formater en temps réel
+    phoneInput.addEventListener('input', function(e) {
+        let rawValue = this.value;
+        
+        // Sauvegarder la position du curseur
+        const cursorPos = this.selectionStart;
+        
+        // Formater le numéro
+        let formatted = formatTunisianPhone(rawValue);
+        
+        // Mettre à jour la valeur
+        this.value = formatted;
+        
+        // Mettre à jour l'indice
+        updatePhoneHint(formatted);
+        
+        // Nettoyer l'erreur si présente
+        const errorDiv = document.getElementById('telephone-error');
+        if (errorDiv) {
+            errorDiv.className = 'error-message';
+        }
+        this.className = this.className.replace(' is-invalid', '');
+        this.className = this.className.replace('is-invalid', '');
+    });
+    
+    // Valider à la perte de focus
+    phoneInput.addEventListener('blur', function() {
+        const phoneNumber = this.value;
+        if (phoneNumber && phoneNumber.trim() !== '') {
+            if (!validateTunisianPhone(phoneNumber)) {
+                showError("telephone-error", getPhoneErrorMessage(phoneNumber));
+                this.className = this.className + ' is-invalid';
+            }
+        }
+    });
+}*/
 
 // Gestion de l'envoi du formulaire
 document.getElementById("userForm").addEventListener("submit", function(e) {
@@ -310,7 +727,6 @@ document.getElementById("userForm").addEventListener("submit", function(e) {
         valid = false;
     }
 
-    // Vérification du mot de passe
     if (password === "") {
         showError("password-error", "Mot de passe requis");
         valid = false;
@@ -337,8 +753,9 @@ document.getElementById("userForm").addEventListener("submit", function(e) {
         valid = false;
     }
     
-    if (telephone !== "" && !/^\+?\d{7,15}$/.test(telephone)) {
-        showError("telephone-error", "Numéro de téléphone invalide");
+    // Validation du téléphone tunisien
+    if (telephone !== "" && !validateTunisianPhone(telephone)) {
+        showError("telephone-error", getPhoneErrorMessage(telephone));
         valid = false;
     }
 
@@ -346,13 +763,20 @@ document.getElementById("userForm").addEventListener("submit", function(e) {
         var path = window.location.pathname;
         var addUserUrl = window.location.origin + path.substring(0, path.lastIndexOf('/') + 1) + 'adduser.php';
 
-        // Désactiver le bouton pendant l'envoi
         var submitBtn = document.querySelector('button[type="submit"]');
         var originalText = submitBtn.innerHTML;
         submitBtn.innerHTML = '⏳ Envoi en cours...';
         submitBtn.disabled = true;
 
-        // Préparer les données à envoyer
+        // Nettoyer le téléphone avant envoi
+        let cleanPhone = telephone.replace(/\s/g, '');
+        if (cleanPhone.startsWith('+216')) {
+            cleanPhone = cleanPhone.substring(4);
+        }
+        if (cleanPhone.startsWith('00216')) {
+            cleanPhone = cleanPhone.substring(5);
+        }
+
         var userData = {
             nom: nom,
             email: email,
@@ -360,7 +784,7 @@ document.getElementById("userForm").addEventListener("submit", function(e) {
             adresse: adresse,
             role: role,
             date_naissance: date_naissance,
-            telephone: telephone,
+            telephone: cleanPhone,
             description: description
         };
 
@@ -382,15 +806,17 @@ document.getElementById("userForm").addEventListener("submit", function(e) {
         })
         .then(function(data) {
             if (data.success) {
-                alert(data.message || "Utilisateur ajouté avec succès!");
-                window.location.href = "login.html";
+                showToast(data.message || "Utilisateur ajouté avec succès!", true);
+                setTimeout(function() {
+                    window.location.href = "login.html";
+                }, 2000);
             } else {
-                alert(data.message || "Erreur lors de l'ajout");
+                showToast(data.message || "Erreur lors de l'ajout", false);
             }
         })
         .catch(function(error) {
             console.error('Erreur adduser:', error);
-            alert('Erreur lors de l\'ajout : ' + error.message);
+            showToast('Erreur lors de l\'ajout : ' + error.message, false);
         })
         .finally(function() {
             submitBtn.innerHTML = originalText;
@@ -411,7 +837,6 @@ for (var i = 0; i < inputs.length; i++) {
             errorDiv.className = 'error-message';
         }
         
-        // Nettoyer le message de complexité du mot de passe
         if (this.id === 'mot_de_passe') {
             var complexityMsg = document.getElementById("password-complexity");
             if (complexityMsg) {
@@ -421,10 +846,10 @@ for (var i = 0; i < inputs.length; i++) {
     });
 }
 
-// Ajouter un événement en temps réel pour vérifier le mot de passe
-var passwordInput = document.getElementById("mot_de_passe");
-if (passwordInput) {
-    passwordInput.addEventListener('input', function() {
+// Vérification du mot de passe en temps réel
+var passwordInputCheck = document.getElementById("mot_de_passe");
+if (passwordInputCheck) {
+    passwordInputCheck.addEventListener('input', function() {
         var password = this.value;
         var complexityMsg = document.getElementById("password-complexity");
         

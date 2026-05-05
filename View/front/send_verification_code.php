@@ -66,8 +66,8 @@ try {
     $mail->isSMTP();
     $mail->Host       = 'smtp.gmail.com';
     $mail->SMTPAuth   = true;
-    $mail->Username   = 'sofieallani@gmail.com';     // ⚠️ REMPLACE PAR TON EMAIL GMAIL
-    $mail->Password   = 'ocqr iraw dbzq rywp';           // ⚠️ REMPLACE PAR TON MOT DE PASSE D'APPLICATION
+    $mail->Username   = 'contact.asclepia@gmail.com';     // ⚠️ REMPLACE PAR TON EMAIL GMAIL
+    $mail->Password   = 'gjpa zkeo tnyy prvt';           // ⚠️ REMPLACE PAR TON MOT DE PASSE D'APPLICATION
     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
     $mail->Port       = 587;
     

@@ -983,7 +983,7 @@ $adminEmail = $_SESSION['user_email'] ?? '';
             
             <div class="form-group">
                 <label class="form-label">Téléphone</label>
-                <input type="tel" class="form-control" id="userTelephone" placeholder="+212 XXX XXX XXX">
+                <input type="tel" class="form-control" id="userTelephone" placeholder="+216 XX XXX XXX">
             </div>
             
             <div class="form-group">
