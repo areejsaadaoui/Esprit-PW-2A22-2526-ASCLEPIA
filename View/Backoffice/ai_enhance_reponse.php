@@ -8,7 +8,7 @@ if (strlen($contenu) < 5) {
     exit;
 }
 
-// Votre clé API Groq
+// clé API Groq
 $apiKey = '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';
 
 $payload = json_encode([

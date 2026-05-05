@@ -831,6 +831,7 @@ echo embedYouTube($contenu);
             <i class="fas fa-magic"></i>
         </button>
         
+        
         <!-- Bouton Suggestions IA (vert) -->
         <button type="button" id="suggestReplyBtn" 
                 onclick="getAISuggestions(<?= $post->getIdPost() ?>)"
@@ -870,6 +871,22 @@ echo embedYouTube($contenu);
         </button>
     </div>
     <div id="suggestionsList" style="display: flex; flex-direction: column; gap: 12px;"></div>
+</div>
+<!-- Preview amélioration IA (s'affiche en dessous) -->
+<div id="aiPreviewReponse" style="display: none; margin-top: 10px; padding: 12px; background: #f0fdf4; border-radius: 12px; border-left: 4px solid #10b981;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <strong style="font-size: 0.85rem;">🤖 Version améliorée :</strong>
+        <span id="aiLoadingReponse" style="display: none; font-size: 0.7rem; color: #10b981;">⏳ Amélioration...</span>
+    </div>
+    <p id="aiPreviewTextReponse" style="margin: 0 0 10px 0; font-size: 0.9rem; line-height: 1.5;"></p>
+    <div style="display: flex; gap: 8px;">
+        <button type="button" id="acceptAIReponse" class="btn btn-success btn-sm" style="padding: 4px 12px; font-size: 0.75rem;">
+            <i class="fas fa-check"></i> Accepter
+        </button>
+        <button type="button" id="rejectAIReponse" class="btn btn-outline btn-sm" style="padding: 4px 12px; font-size: 0.75rem;">
+            <i class="fas fa-times"></i> Annuler
+        </button>
+    </div>
 </div>
         
         <div style="text-align: right; margin-top: 10px;">

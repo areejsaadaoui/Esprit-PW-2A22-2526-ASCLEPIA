@@ -17,10 +17,10 @@ header('Expires: 0');
 
 $output = fopen('php://output', 'w');
 
-// BOM UTF-8 pour Excel (affichage correct des accents)
+// affichage correct des accents
 fputs($output, "\xEF\xBB\xBF");
 
-// En-têtes CSV
+// En-têtes
 fputcsv($output, [
     'ID', 'Contenu', 'Date publication', 'Likes',
     'Signalements', 'Nb réponses'
@@ -29,7 +29,7 @@ fputcsv($output, [
 foreach ($rows as $row) {
     fputcsv($output, [
         $row['id_post'],
-        // Supprimer les retours à la ligne dans le CSV
+        // Supprimer les retours à la ligne
         str_replace(["\r\n", "\r", "\n"], ' ', strip_tags($row['contenu'])),
         $row['date_post'],
         $row['likes'],

@@ -8,7 +8,7 @@ if (strlen($contenu) < 5) {
     exit;
 }
 
-// Votre clé API Groq
+//  clé API Groq
 $apiKey = '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';
 
 $payload = json_encode([
@@ -23,7 +23,7 @@ $payload = json_encode([
             'content' => "Corrige ce texte :\n\n" . $contenu
         ]
     ],
-    'temperature' => 0.1,  // Faible température pour rester fidèle au texte original
+    'temperature' => 0.1,  
     'max_tokens' => 500
 ]);
 

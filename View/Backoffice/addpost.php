@@ -564,7 +564,7 @@ body.dark-mode .gif-result {
         <i class="fas fa-magic"></i> ✨ Améliorer avec l’IA
     </button>
     <small style="color:#64748b; margin-left:10px;">
-        Rend le texte plus professionnel et engageant
+        Rend le texte plus professionnel et engageant avec ASCLEPIA AI 
     </small>
 </div>
                         

@@ -45,7 +45,7 @@ $reactions = [];
 if ($row && !empty($row['reactions'])) {
     $reactions = json_decode($row['reactions'], true) ?? [];
 }
-// Filtrer les emojis à 0
+// Filtrer les emojis
 $reactions = array_filter($reactions, fn($v) => $v > 0);
 
 echo json_encode([

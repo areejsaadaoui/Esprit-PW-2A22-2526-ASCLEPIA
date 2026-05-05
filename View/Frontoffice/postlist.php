@@ -331,7 +331,7 @@ body.dark-mode .btn-danger {
         }
 
         /* ===== PAGINATION ===== */
-       /* ===== PAGINATION STYLES - VERSION CERCLES MODERNES ===== */
+      
 .pagination {
     display: flex !important;
     justify-content: center !important;
@@ -886,55 +886,58 @@ body.dark-mode .share-option {
     ?>
         <div style="width: calc(33.333% - 17px); min-width: 280px;">
             <a href="../Backoffice/showpost.php?id=<?= $post->getIdPost() ?>" style="text-decoration: none; display: block;">
-                <div class="card post-card" style="padding: 14px; background: white; border-radius: 18px; box-shadow: 0 6px 20px rgba(0,0,0,0.08); transition: all 0.3s; height: 100%;">
+                <div class="card post-card" style="padding: 14px; background: white; border-radius: 18px; box-shadow: 0 6px 20px rgba(0,0,0,0.08); transition: all 0.3s; height: 100%; display: flex; flex-direction: column;">
                     
-                    <?php if ($hasVideo): ?>
-                        <div class="video-badge">
-                            <i class="fa-solid fa-video"></i> 🎬 Vidéo YouTube
-                        </div>
-                    <?php endif; ?>
-                    
-                    <!-- Image ou GIF -->
-                    <?php 
-                    $mediaPath = $post->getImage();
-                    if (!empty($mediaPath)):
-                        $isGif = (strpos($mediaPath, '.gif') !== false || strpos($mediaPath, 'giphy.com') !== false);
-                        if (!$isGif && !filter_var($mediaPath, FILTER_VALIDATE_URL)) {
-                            $mediaPath = '../Backoffice/' . $mediaPath;
-                        }
-                        $imgStyle = $isGif ? 'object-fit: contain; max-height: 140px;' : 'object-fit: cover; height: 140px;';
-                    ?>
-                        <img src="<?= $mediaPath ?>" 
-                             alt="Post media" 
-                             style="width: 100%; <?= $imgStyle ?> border-radius: 12px; margin-bottom: 12px; cursor: pointer;">
-                    <?php endif; ?>
-
-                    <!-- Post meta -->
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                        <div class="post-avatar" style="background: linear-gradient(135deg, #0ea5e9, #3b82f6); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
-                            <?= strtoupper(substr($post->getIdUtilisateur() ?? 'U', 0, 2)) ?>
-                        </div>
-                        <div>
-                            <div class="post-date" style="font-size: 0.75rem; color: #64748b;">
-                                <i class="fa-regular fa-calendar"></i>
-                                <?= (new DateTime($post->getDatePost()))->format('d/m/Y à H:i') ?>
+                    <!-- Contenu principal -->
+                    <div style="flex: 1;">
+                        <!-- Post meta - en haut -->
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <div class="post-avatar" style="background: linear-gradient(135deg, #0ea5e9, #3b82f6); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                                <?= strtoupper(substr($post->getIdUtilisateur() ?? 'U', 0, 2)) ?>
+                            </div>
+                            <div>
+                                <div class="post-date" style="font-size: 0.75rem; color: #64748b;">
+                                    <i class="fa-regular fa-calendar"></i>
+                                    <?= (new DateTime($post->getDatePost()))->format('d/m/Y à H:i') ?>
+                                </div>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Post content -->
-                    <div class="post-content">
-                        <p style="font-size: 0.85rem; line-height: 1.6; color: #555; margin-bottom: 12px;">
-                            <?= nl2br(htmlspecialchars(substr($textePur, 0, 120))) ?>
-                            <?php if (strlen($textePur) > 120): ?>...<?php endif; ?>
-                        </p>
+                        
                         <?php if ($hasVideo): ?>
-                            <?= $contenuAvecYouTube ?>
+                            <div class="video-badge">
+                                <i class="fa-solid fa-video"></i> 🎬 Vidéo YouTube
+                            </div>
                         <?php endif; ?>
+                        
+                        <!-- Image ou GIF -->
+                        <?php 
+                        $mediaPath = $post->getImage();
+                        if (!empty($mediaPath)):
+                            $isGif = (strpos($mediaPath, '.gif') !== false || strpos($mediaPath, 'giphy.com') !== false);
+                            if (!$isGif && !filter_var($mediaPath, FILTER_VALIDATE_URL)) {
+                                $mediaPath = '../Backoffice/' . $mediaPath;
+                            }
+                            $imgStyle = $isGif ? 'object-fit: contain; max-height: 140px;' : 'object-fit: cover; height: 140px;';
+                        ?>
+                            <img src="<?= $mediaPath ?>" 
+                                 alt="Post media" 
+                                 style="width: 100%; <?= $imgStyle ?> border-radius: 12px; margin-bottom: 12px; cursor: pointer;">
+                        <?php endif; ?>
+
+                        <!-- Post content -->
+                        <div class="post-content">
+                            <p style="font-size: 0.85rem; line-height: 1.6; color: #555; margin-bottom: 12px;">
+                                <?= nl2br(htmlspecialchars(substr($textePur, 0, 120))) ?>
+                                <?php if (strlen($textePur) > 120): ?>...<?php endif; ?>
+                            </p>
+                            <?php if ($hasVideo): ?>
+                                <?= $contenuAvecYouTube ?>
+                            <?php endif; ?>
+                        </div>
                     </div>
 
-                    <!-- Post footer -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 35px; gap: 8px;">
+                    <!-- Post footer - toujours en bas -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 15px; gap: 8px; border-top: 1px solid #f1f5f9;">
                         <!-- Bouton LIKE -->
                         <?php 
                         $likedPosts = isset($_COOKIE['liked_posts']) ? explode(',', $_COOKIE['liked_posts']) : [];
