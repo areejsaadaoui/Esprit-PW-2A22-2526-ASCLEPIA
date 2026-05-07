@@ -29,6 +29,11 @@ if ($isLoggedIn && $userId) {
     }
 }
 ?>
+<?php
+require_once '../../Controller/ContratController.php';
+$controller = new ContratController();
+$topAssurances = $controller->getTopAssurances();
+?>
 
 <!DOCTYPE html>
 <html lang="fr">
@@ -287,7 +292,7 @@ if ($isLoggedIn && $userId) {
           </div>
           <h3>Assurances & Contrats</h3>
           <p>Gérez vos contrats d'assurance santé. Consultez vos taux de remboursement et dates de validité.</p>
-          <a href="assurance.php" class="btn btn-outline btn-sm mt-3">
+         <a href="../frontoffice/assurancefront.php" class="btn btn-outline btn-sm mt-3">
             Consulter <i class="fa-solid fa-arrow-right"></i>
           </a>
         </div>
@@ -461,67 +466,36 @@ if ($isLoggedIn && $userId) {
       <p class="section-desc">Des couvertures adaptées à chaque profil avec les meilleurs taux de remboursement.</p>
     </div>
 
-    <div class="row">
+    <div class="row" style="padding-top: 20px;">
+    <?php foreach($topAssurances as $index => $a): ?>
       <div class="col-4">
-        <div class="card assurance-card">
-          <div class="icon-box icon-box-lg" style="margin: 0 auto 20px; background: linear-gradient(135deg,#f59e0b,#d97706);">
-            <i class="fa-solid fa-star"></i>
-          </div>
-          <h3>STAR Assurance</h3>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin: 8px 0;">Couverture complète hospitalisation + ambulatoire</p>
-          <div class="rate">85<span>%</span></div>
-          <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Taux de remboursement</div>
-          <div class="progress-bar-wrap">
-            <div class="progress-bar" style="width: 85%;"></div>
-          </div>
-          <a href="assurance.php" class="btn btn-primary btn-sm mt-3" style="width: 100%; justify-content: center;">
-            En savoir plus
-          </a>
-        </div>
-      </div>
-
-      <div class="col-4">
-        <div class="card assurance-card" style="border: 2px solid var(--primary); position: relative;">
-          <div style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%);">
-            <span class="badge badge-primary" style="padding: 6px 16px; font-size: 0.75rem;">⭐ Populaire</span>
-          </div>
+        <div class="card assurance-card" <?= $index === 0 ? 'style="border: 2px solid var(--primary); position: relative;"' : '' ?>>
+          <?php if($index === 0): ?>
+            <div style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%);">
+              <span class="badge badge-primary" style="padding: 6px 16px; font-size: 0.75rem;">⭐ Populaire</span>
+            </div>
+          <?php endif; ?>
           <div class="icon-box icon-box-lg" style="margin: 0 auto 20px; background: var(--gradient-primary);">
             <i class="fa-solid fa-shield-halved"></i>
           </div>
-          <h3>CNAM Plus</h3>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin: 8px 0;">Remboursements rapides avec réseau élargi</p>
-          <div class="rate">90<span>%</span></div>
+          <h3><?= htmlspecialchars($a['nom_assurance']) ?></h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin: 8px 0;">
+            <?= htmlspecialchars($a['description']) ?>
+          </p>
+          <div class="rate"><?= $a['taux_remboursement'] ?><span>%</span></div>
           <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Taux de remboursement</div>
           <div class="progress-bar-wrap">
-            <div class="progress-bar" style="width: 90%;"></div>
+            <div class="progress-bar" style="width: <?= $a['taux_remboursement'] ?>%;"></div>
           </div>
-          <a href="assurance.php" class="btn btn-primary btn-sm mt-3" style="width: 100%; justify-content: center;">
+          <a href="../frontoffice/assurancefront.php" class="btn btn-primary btn-sm mt-3" style="width: 100%; justify-content: center;">
             En savoir plus
           </a>
         </div>
       </div>
-
-      <div class="col-4">
-        <div class="card assurance-card">
-          <div class="icon-box icon-box-lg" style="margin: 0 auto 20px; background: linear-gradient(135deg,#6366f1,#8b5cf6);">
-            <i class="fa-solid fa-gem"></i>
-          </div>
-          <h3>GAT Premium</h3>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin: 8px 0;">Formule premium avec assistance internationale</p>
-          <div class="rate">95<span>%</span></div>
-          <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Taux de remboursement</div>
-          <div class="progress-bar-wrap">
-            <div class="progress-bar" style="width: 95%; background: linear-gradient(90deg,#6366f1,#8b5cf6);"></div>
-          </div>
-          <a href="assurance.php" class="btn btn-outline btn-sm mt-3" style="width: 100%; justify-content: center;">
-            En savoir plus
-          </a>
-        </div>
-      </div>
+    <?php endforeach; ?>
     </div>
   </div>
 </section>
-
 <!-- ================================================
      FORUM SECTION
      ================================================ -->
@@ -759,7 +733,7 @@ if ($isLoggedIn && $userId) {
             <li><a href="consultation.php"><i class="fa-solid fa-stethoscope"></i> Consultations</a></li>
             <li><a href="consultation.php"><i class="fa-solid fa-file-prescription"></i> Ordonnances</a></li>
             <li><a href="addpharmacie.php"><i class="fa-solid fa-pills"></i> Pharmacies</a></li>
-            <li><a href="assurance.php"><i class="fa-solid fa-shield-halved"></i> Assurances</a></li>
+            <li><a href="../frontoffice/assurancefront.php"><i class="fa-solid fa-shield-halved"></i> Assurances</a></li>
             <li><a href="forum.php"><i class="fa-solid fa-comments"></i> Forum santé</a></li>
           </ul>
         </div>

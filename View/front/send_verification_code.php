@@ -36,6 +36,7 @@ if (empty($email)) {
     exit();
 }
 
+
 // Vérifier si l'email existe dans la base
 $stmt = $pdo->prepare("SELECT id_user, nom FROM utilisateur WHERE email = :email");
 $stmt->execute([':email' => $email]);
@@ -70,6 +71,13 @@ try {
     $mail->Password   = 'gjpa zkeo tnyy prvt';           // ⚠️ REMPLACE PAR TON MOT DE PASSE D'APPLICATION
     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
     $mail->Port       = 587;
+      $mail->SMTPOptions = array(
+    'ssl' => array(
+        'verify_peer' => false,
+        'verify_peer_name' => false,
+        'allow_self_signed' => true
+    )
+);
     
     // Encodage UTF-8 pour éviter les problèmes d'accents
     $mail->CharSet = 'UTF-8';

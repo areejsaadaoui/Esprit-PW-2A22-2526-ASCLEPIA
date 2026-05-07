@@ -16,6 +16,13 @@ function sendWelcomeEmail($email, $nom, $role) {
         $mail->Password   = 'gjpa zkeo tnyy prvt';          // ⚠️ REMPLACEZ PAR VOTRE MOT DE PASSE
         $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
+        $mail->SMTPOptions = array(
+    'ssl' => array(
+        'verify_peer' => false,
+        'verify_peer_name' => false,
+        'allow_self_signed' => true
+    )
+);
         
         // Encodage UTF-8
         $mail->CharSet = 'UTF-8';
@@ -68,7 +75,7 @@ function sendWelcomeEmail($email, $nom, $role) {
         return true;
         
     } catch (Exception $e) {
-        error_log("Erreur envoi email: " . $mail->ErrorInfo);
+        echo "Erreur: " . $mail->ErrorInfo;
         return false;
     }
 }

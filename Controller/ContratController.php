@@ -200,5 +200,20 @@ public function getExpiringContrats($id_patient, $days = 30) {
     $query->execute([':id_patient' => $id_patient, ':days' => $days]);
     return $query->fetchAll();
 }
+public function getTopAssurances() {
+    $sql = "SELECT a.id_assurance, a.nom_assurance, a.description, a.taux_remboursement, 
+            COUNT(c.id_contrat) as nb_contrats
+            FROM assurance a
+            LEFT JOIN contrat c ON a.id_assurance = c.id_assurance
+            GROUP BY a.id_assurance
+            ORDER BY nb_contrats DESC
+            LIMIT 3";
+    $db = config::getConnexion();
+    try {
+        return $db->query($sql)->fetchAll();
+    } catch (Exception $e) {
+        die('Error: ' . $e->getMessage());
+    }
+}
 }
 ?>

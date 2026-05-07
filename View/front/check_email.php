@@ -23,6 +23,7 @@ if (empty($email)) {
     exit();
 }
 
+
 $stmt = $pdo->prepare("SELECT id_user FROM utilisateur WHERE email = :email");
 $stmt->execute([':email' => $email]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);

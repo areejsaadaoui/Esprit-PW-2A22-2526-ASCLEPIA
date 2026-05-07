@@ -82,5 +82,6 @@ class AssuranceController {
             die('Error: ' . $e->getMessage());
         }
     }
+    
 }
 ?>

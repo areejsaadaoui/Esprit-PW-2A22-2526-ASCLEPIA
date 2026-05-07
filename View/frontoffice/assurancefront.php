@@ -74,7 +74,7 @@ $isRtl = $i18n['isRtl'];
             <div class="navbar-name">ASCL<span>EPIA</span></div>
         </a>
         <div class="nav-links" id="navLinks">
-            <a href="#" class="nav-link"><?= htmlspecialchars(i18n_t('home', $lang)) ?></a>
+            <a href="../front/indexp.php" class="nav-link"><?= htmlspecialchars(i18n_t('home', $lang)) ?></a>
             <a href="#" class="nav-link active"><?= htmlspecialchars(i18n_t('insurances', $lang)) ?></a>
             <a href="#" class="nav-link"><?= htmlspecialchars(i18n_t('doctors', $lang)) ?></a>
             <a href="#" class="nav-link"><?= htmlspecialchars(i18n_t('contact', $lang)) ?></a>
