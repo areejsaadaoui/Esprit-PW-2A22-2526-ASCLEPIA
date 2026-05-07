@@ -769,7 +769,7 @@ $adminEmail = $_SESSION['user_email'] ?? '';
                     <div style="display: flex; gap: 10px; align-items: center; flex: 1;">
                         <div class="search-bar" style="max-width: 300px; position: relative;">
                             <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gray-light);"></i>
-                            <input type="text" id="searchPatient" placeholder="Rechercher un patient..." style="padding-left: 38px;">
+                            <input type="text" id="searchPatient" placeholder="Rechercher un patient..." style="padding-left: 38px;" onkeyup="filterPatients()">
                         </div>
                         <button class="btn-outline btn-sm" onclick="toggleSortMenu('patients')" title="Trier" style="display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-arrow-down-wide-short"></i> Trier
@@ -843,7 +843,7 @@ $adminEmail = $_SESSION['user_email'] ?? '';
                     <div style="display: flex; gap: 10px; align-items: center; flex: 1;">
                         <div class="search-bar" style="max-width: 300px; position: relative;">
                             <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gray-light);"></i>
-                            <input type="text" id="searchMedecin" placeholder="Rechercher un médecin..." style="padding-left: 38px;">
+                            <input type="text" id="searchMedecin" placeholder="Rechercher un médecin..." style="padding-left: 38px;" onkeyup="filterMedecins()">
                         </div>
                         <button class="btn-outline btn-sm" onclick="toggleSortMenu('medecins')" title="Trier" style="display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-arrow-down-wide-short"></i> Trier
@@ -1058,7 +1058,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
     </div>
 </div>
 
-<!-- Modal Bannissement -->
 <div id="banModal" class="modal">
     <div class="modal-content" style="max-width: 400px;">
         <div class="modal-header">
@@ -1107,6 +1106,32 @@ $adminEmail = $_SESSION['user_email'] ?? '';
 
     document.addEventListener('DOMContentLoaded', function() {
         loadUsers();
+        
+        // Initialisation des écouteurs d'événements pour la recherche (alternative à onkeyup)
+        const searchPatient = document.getElementById('searchPatient');
+        if (searchPatient) {
+            searchPatient.addEventListener('input', function() {
+                patientsCurrentPage = 1;
+                filterPatients();
+            });
+        }
+        
+        const searchMedecin = document.getElementById('searchMedecin');
+        if (searchMedecin) {
+            searchMedecin.addEventListener('input', function() {
+                medecinsCurrentPage = 1;
+                filterMedecins();
+            });
+        }
+        
+        // Checkbox mot de passe
+        const resetPasswordCheckbox = document.getElementById('resetPassword');
+        if (resetPasswordCheckbox) {
+            resetPasswordCheckbox.addEventListener('change', function() {
+                const passwordField = document.getElementById('passwordField');
+                if (passwordField) passwordField.style.display = this.checked ? 'block' : 'none';
+            });
+        }
     });
     
     function loadUsers() {
@@ -1146,7 +1171,7 @@ $adminEmail = $_SESSION['user_email'] ?? '';
             );
         }
         
-        if (currentSort.patients.column) {
+        if (currentSort.patients.column && currentSort.patients.column !== 'id') {
             filteredPatients.sort((a, b) => {
                 let valueA, valueB;
                 if (currentSort.patients.column === 'nom') {
@@ -1176,7 +1201,7 @@ $adminEmail = $_SESSION['user_email'] ?? '';
             );
         }
         
-        if (currentSort.medecins.column) {
+        if (currentSort.medecins.column && currentSort.medecins.column !== 'id') {
             filteredMedecins.sort((a, b) => {
                 let valueA, valueB;
                 if (currentSort.medecins.column === 'nom') {
@@ -1689,7 +1714,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
         setTimeout(() => alertDiv.remove(), 3000);
     }
     
-    // Fonctions pour le bannissement
     function openBanModal(userId) {
         document.getElementById('banUserId').value = userId;
         document.getElementById('banModal').classList.add('active');
@@ -1754,30 +1778,24 @@ $adminEmail = $_SESSION['user_email'] ?? '';
         }
     }
     
-    // Écouteurs d'événements    const resetPasswordCheckbox = document.getElementById('resetPassword');
-    if (resetPasswordCheckbox) {
-        resetPasswordCheckbox.addEventListener('change', function() {
-            const passwordField = document.getElementById('passwordField');
-            if (passwordField) passwordField.style.display = this.checked ? 'block' : 'none';
-        });
+    // Fermer les modals au clic externe
+    window.onclick = function(event) {
+        if (event.target.classList && event.target.classList.contains('modal')) {
+            event.target.classList.remove('active');
+        }
+        if (event.target.classList && event.target.classList.contains('stats-overlay')) {
+            closeStatsModal();
+        }
     }
     
-    const searchPatient = document.getElementById('searchPatient');
-    if (searchPatient) searchPatient.addEventListener('input', filterPatients);
-    
-    const searchMedecin = document.getElementById('searchMedecin');
-    if (searchMedecin) searchMedecin.addEventListener('input', filterMedecins);
-    
+    // Fermer les menus de tri au clic ailleurs
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.sort-menu') && !e.target.closest('.btn-outline')) {
-            document.querySelectorAll('.sort-menu').forEach(menu => menu.style.display = 'none');
+            document.querySelectorAll('.sort-menu').forEach(menu => {
+                if (menu) menu.style.display = 'none';
+            });
         }
     });
-    
-    window.onclick = function(event) {
-        if (event.target.classList.contains('modal')) event.target.classList.remove('active');
-        if (event.target.classList.contains('stats-overlay')) closeStatsModal();
-    }
 </script>
 </body>
 </html>
