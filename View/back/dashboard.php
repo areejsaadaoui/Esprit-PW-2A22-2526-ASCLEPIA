@@ -669,11 +669,10 @@ $adminEmail = $_SESSION['user_email'] ?? '';
             </div>
             
             <div class="nav-item has-sub">
-                <a onclick="toggleSubMenu(this)">
-                    <i class="fas fa-comments nav-icon"></i>
-                    <span>Forum</span>
-                    <i class="fas fa-chevron-right nav-arrow"></i>
-                </a>
+               <a href="../Backoffice/dashboard.php">
+        <i class="fas fa-comments nav-icon"></i>
+        <span>Forum</span>
+    </a>
                 <div class="sub-menu">
                     <a href="../Frontoffice/postList.php">Tous les posts</a>
                     <a href="addpost.php">Ajouter un post</a>

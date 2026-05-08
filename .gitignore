@@ -2,3 +2,9 @@ mailconfig.php
 stripe_config.php
 libs/stripe/stripe-php-20.1.0/README.md
 
+ai_enhance.php
+ai_enhance_reponse.php
+showpost.php
+ai_suggest_reponse.php
+summarize_post.php
+libs/stripe/README.md
