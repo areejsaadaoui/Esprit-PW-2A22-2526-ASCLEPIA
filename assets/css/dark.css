@@ -1,0 +1,159 @@
+/* ============================================
+   ASCLEPIA - Dark Mode
+   ============================================ */
+
+body.dark-mode {
+    --primary: #38bdf8;
+    --primary-dark: #0ea5e9;
+    --primary-light: #0c4a6e;
+    --dark: #f1f5f9;
+    --dark-2: #e2e8f0;
+    --dark-3: #cbd5e1;
+    --gray: #94a3b8;
+    --gray-light: #64748b;
+    --border: #334155;
+    --bg: #0f172a;
+    --bg-card: #1e293b;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --white: #1e293b;
+    background: #0f172a;
+    color: #f1f5f9;
+}
+
+body.dark-mode .sidebar {
+    background: #0f172a;
+    border-right: 1px solid #334155;
+}
+
+body.dark-mode .main-content {
+    background: #0f172a;
+}
+
+body.dark-mode .topbar {
+    background: #1e293b;
+    border-bottom: 1px solid #334155;
+}
+
+body.dark-mode .card {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+body.dark-mode .table-wrapper {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+body.dark-mode .table thead {
+    background: #0f172a;
+}
+
+body.dark-mode .table tbody tr:hover {
+    background: rgba(56,189,248,0.05);
+}
+
+body.dark-mode .table td {
+    color: #f1f5f9;
+    border-color: #334155;
+}
+
+body.dark-mode .form-control {
+    background: #0f172a;
+    border-color: #334155;
+    color: #f1f5f9;
+}
+
+body.dark-mode .form-control:focus {
+    border-color: #38bdf8;
+    background: #0f172a;
+}
+
+body.dark-mode .stat-card {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+body.dark-mode .stat-card-value {
+    color: #f1f5f9;
+}
+
+body.dark-mode .alert-success {
+    background: #052e16;
+    border-color: #166534;
+    color: #86efac;
+}
+
+body.dark-mode .alert-danger {
+    background: #450a0a;
+    border-color: #991b1b;
+    color: #fca5a5;
+}
+
+body.dark-mode .alert-warning {
+    background: #422006;
+    border-color: #92400e;
+    color: #fcd34d;
+}
+
+body.dark-mode .alert-info {
+    background: #0c4a6e;
+    border-color: #0369a1;
+    color: #bae6fd;
+}
+
+body.dark-mode .btn-outline {
+    border-color: #334155;
+    color: #94a3b8;
+}
+
+body.dark-mode .btn-outline:hover {
+    background: #334155;
+    color: #f1f5f9;
+}
+
+body.dark-mode .page-title {
+    color: #f1f5f9;
+}
+
+body.dark-mode .breadcrumb {
+    color: #94a3b8;
+}
+
+body.dark-mode #suggestions_diag,
+body.dark-mode #suggestions_med {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+body.dark-mode #suggestions_diag div,
+body.dark-mode #suggestions_med div {
+    color: #f1f5f9;
+}
+
+body.dark-mode #suggestions_diag div:hover,
+body.dark-mode #suggestions_med div:hover {
+    background: #334155 !important;
+}
+
+/* Toggle button */
+.dark-toggle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--gray);
+    font-size: 1rem;
+    transition: var(--transition-fast);
+}
+
+.dark-toggle:hover {
+    background: var(--bg);
+    color: var(--primary);
+    border-color: var(--primary);
+}
