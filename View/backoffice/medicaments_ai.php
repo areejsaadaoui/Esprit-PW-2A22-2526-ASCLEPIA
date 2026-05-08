@@ -1,4 +1,5 @@
 <?php
+require_once '../../config.php';
 header('Content-Type: application/json');
 
 // récupérer la recherche
@@ -10,7 +11,7 @@ if (strlen($q) < 2) {
 }
 
 // 🔴 MET TA NOUVELLE CLÉ ICI (ne la partage jamais)
-$apiKey = "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";
+$apiKey = API_KEY;
 
 try {
 
