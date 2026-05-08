@@ -1,519 +1,232 @@
 <?php
-session_start();
-include '../../Controller/PostController.php';
-require_once __DIR__ . '/../../Model/Post.php';
+require_once "../../Controller/PharmacieC.php";
+require_once "../../Controller/MedicamentC.php";
 
-$postC = new PostController();
-$posts = $postC->listPosts();
-$totalPosts = count($posts);
+$pharmacieC = new pharmacieC();
+$medicamentC = new medicamentC();
 
-// Recherche
-$searchTerm = '';
-if (isset($_GET['ch']) && !empty($_GET['ch'])) {
-    $searchTerm = $_GET['ch'];
-    $filteredPosts = array_filter($posts, function($post) use ($searchTerm) {
-        return stripos($post->getContenu(), $searchTerm) !== false;
-    });
-    $displayPosts = $filteredPosts;
-} else {
-    $displayPosts = $posts;
-}
+$listePharmacies = $pharmacieC->listepharmacie();
+$totalPharmacies = $listePharmacies->rowCount();
 
-// Posts avec image
-$postsWithImages = 0;
-foreach ($posts as $post) {
-    if (!empty($post->getImage())) $postsWithImages++;
-}
+$listeMedicaments = $medicamentC->afficherMedicaments();
+$totalMedicaments = $listeMedicaments->rowCount();
 
-// Derniers posts = tous (pour le tableau)
-$latestPosts = $posts;
-
-// Préparation des données pour le graphique (posts par mois, sur 12 mois)
-$months = [];
-$monthlyCounts = [];
-for ($i = 11; $i >= 0; $i--) {
-    $month = date('Y-m', strtotime("-$i months"));
-    $months[] = date('M', strtotime("-$i months"));
-    $count = 0;
-    foreach ($posts as $post) {
-        if (date('Y-m', strtotime($post->getDatePost())) == $month) $count++;
-    }
-    $monthlyCounts[] = $count;
-}
+include "header_back.php";
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASCLEPIA - Dashboard Admin</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="../assets/css/style.css">
-    <link rel="stylesheet" href="../assets/css/backoffice.css">
-    <!-- Chart.js pour le graphique -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        /* ---------- ANIMATIONS GLOBALES ---------- */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeInLeft {
-            from { opacity: 0; transform: translateX(-30px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: var(--shadow); }
-            50% { transform: scale(1.02); box-shadow: var(--shadow-lg); }
-            100% { transform: scale(1); box-shadow: var(--shadow); }
-        }
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
+<div class="admin-container container">
+    <div class="welcome-section mb-4">
+        <h1 class="display-4 fw-bold">Tableau de Bord</h1>
+        <p class="text-muted">Bienvenue dans l'interface d'administration d'ASCLEPIA. Voici un aperçu de votre activité.</p>
+    </div>
 
-        .animate-fadeUp {
-            animation: fadeInUp 0.6s ease forwards;
-            opacity: 0;
-        }
-        .animate-fadeLeft {
-            animation: fadeInLeft 0.6s ease forwards;
-            opacity: 0;
-        }
-
-        /* Cartes statistiques */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 24px;
-            margin-bottom: 40px;
-        }
-        .stat-circle {
-            text-align: center;
-            padding: 24px 20px;
-            background: var(--white);
-            border-radius: 24px;
-            box-shadow: var(--shadow);
-            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-            border: 1px solid rgba(0,0,0,0.03);
-            position: relative;
-            overflow: hidden;
-        }
-        .stat-circle::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: var(--gradient-primary);
-            transform: scaleX(0);
-            transition: transform 0.4s ease;
-        }
-        .stat-circle:hover::before {
-            transform: scaleX(1);
-        }
-        .stat-circle:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 30px -12px rgba(0,0,0,0.15);
-        }
-        .circle {
-            width: 85px;
-            height: 85px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 18px;
-            font-size: 2rem;
-            font-weight: 800;
-            color: white;
-            transition: transform 0.3s;
-        }
-        .stat-circle:hover .circle {
-            transform: scale(1.05);
-        }
-        .circle.blue { background: linear-gradient(135deg, #3b82f6, #1e40af); }
-        .circle.green { background: linear-gradient(135deg, #10b981, #047857); }
-        .circle.orange { background: linear-gradient(135deg, #f59e0b, #b45309); }
-        .circle.purple { background: linear-gradient(135deg, #8b5cf6, #5b21b6); }
-        .stat-circle h3 {
-            font-size: 2rem;
-            margin-bottom: 6px;
-            font-weight: 800;
-        }
-        .stat-circle p {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            margin-bottom: 8px;
-        }
-
-        /* Barre de recherche améliorée */
-        .search-wrapper {
-            position: relative;
-            transition: all 0.3s;
-        }
-        .search-wrapper i {
-            position: absolute;
-            left: 18px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--gray-light);
-            transition: color 0.2s;
-        }
-        .search-wrapper input {
-            width: 100%;
-            padding: 14px 20px 14px 48px;
-            border: 2px solid var(--border);
-            border-radius: 60px;
-            font-size: 1rem;
-            transition: all 0.2s;
-            background: var(--white);
-        }
-        .search-wrapper input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(14,165,233,0.15);
-            outline: none;
-        }
-        .search-wrapper:hover i {
-            color: var(--primary);
-        }
-
-        /* Cartes liens rapides (animation pulsation continue + hover) */
-        .quick-links-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin: 30px 0 40px;
-        }
-        .quick-card {
-            text-align: center;
-            padding: 28px 20px;
-            background: var(--white);
-            border-radius: 28px;
-            box-shadow: var(--shadow);
-            text-decoration: none;
-            transition: all 0.3s;
-            border: 1px solid var(--border);
-            animation: pulse 2.5s ease-in-out infinite;
-        }
-        .quick-card i {
-            font-size: 2.2rem;
-            display: block;
-            margin-bottom: 12px;
-            transition: transform 0.2s;
-        }
-        .quick-card span {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--dark);
-        }
-        .quick-card:nth-child(1) i { color: var(--primary); }
-        .quick-card:nth-child(2) i { color: var(--accent); }
-        .quick-card:hover {
-            transform: translateY(-6px);
-            box-shadow: var(--shadow-lg);
-            border-color: var(--primary);
-        }
-        .quick-card:hover i {
-            transform: scale(1.1);
-        }
-
-        /* Lignes du tableau animées */
-        .table tbody tr {
-            transition: all 0.2s;
-        }
-        .table tbody tr:hover {
-            background: rgba(14,165,233,0.05);
-            transform: translateX(4px);
-        }
-
-        /* Boutons d'action */
-        .btn-sm {
-            transition: all 0.2s;
-        }
-        .btn-sm:hover {
-            transform: translateY(-2px);
-        }
-
-        /* Graphique */
-        .chart-container {
-            background: var(--white);
-            border-radius: 24px;
-            padding: 20px;
-            margin-bottom: 30px;
-            box-shadow: var(--shadow);
-            transition: transform 0.3s;
-        }
-        .chart-container:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        /* Notification toast */
-        .toast-notify {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: var(--dark);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 50px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            z-index: 1000;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            transform: translateX(400px);
-            transition: transform 0.3s ease;
-            font-size: 0.9rem;
-        }
-        .toast-notify.show {
-            transform: translateX(0);
-        }
-    </style>
-</head>
-<body>
-
-<div class="admin-wrapper">
-    <!-- Sidebar identique à votre version -->
-    <aside class="sidebar">
-        <div class="sidebar-brand">
-            <div class="sidebar-logo">⚕️</div>
-            <div class="sidebar-title">ASC<span>LEPIA</span></div>
-        </div>
-        <div class="sidebar-user">
-            <div class="user-avatar">AD</div>
-            <div class="user-info">
-                <div class="name">Administrateur</div>
-                <div class="role">Super Admin</div>
+    <!-- statistics Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-6 col-lg-4">
+            <div class="stats-card">
+                <div class="stats-icon bg-primary-soft">
+                    <i class="fa-solid fa-hospital-user text-primary"></i>
+                </div>
+                <div class="stats-info">
+                    <h3><?php echo $totalPharmacies; ?></h3>
+                    <p>Pharmacies Partenaires</p>
+                </div>
+                <div class="stats-trend text-success">
+                    <i class="fa-solid fa-arrow-up"></i> Actives
+                </div>
             </div>
         </div>
-        <nav class="sidebar-nav">
-            <div class="nav-section-label">Menu Principal</div>
-            <div class="nav-item has-sub open">
-                <a onclick="toggleSubMenu(this)">
-                    <i class="fas fa-tachometer-alt nav-icon"></i>
-                    <span>Tableau de bord</span>
-                    <i class="fas fa-chevron-down nav-arrow"></i>
-                </a>
-                <div class="sub-menu">
-                    <a href="#stats">📊 Statistiques</a>
-                    <a href="addpost.php">➕ Ajouter un post</a>
-                    <a href="#search">🔍 Rechercher</a>
-                    <a href="#recent">📋 Tous les posts</a>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="stats-card">
+                <div class="stats-icon bg-success-soft">
+                    <i class="fa-solid fa-pills text-success"></i>
+                </div>
+                <div class="stats-info">
+                    <h3><?php echo $totalMedicaments; ?></h3>
+                    <p>Médicaments Référencés</p>
+                </div>
+                <div class="stats-trend text-success">
+                    <i class="fa-solid fa-check"></i> En Stock
                 </div>
             </div>
-            <div class="nav-item"><a href="addpost.php"><i class="fas fa-plus-circle nav-icon"></i><span>Nouveau post</span></a></div>
-            <div class="nav-item"><a href="showpost.php"><i class="fas fa-eye nav-icon"></i><span>Tous les posts</span></a></div>
-            <div class="nav-section-label">Autres</div>
-            <div class="nav-item"><a href="../Frontoffice/index.html"><i class="fas fa-globe nav-icon"></i><span>Voir le site</span></a></div>
-        </nav>
-        <div class="sidebar-footer">
-            <a href="#" class="btn btn-outline-white btn-sm" style="width:100%; justify-content:center;"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
-        </div>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="topbar">
-            <div class="topbar-left">
-                <button class="sidebar-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-                <div><div class="page-title">Tableau de bord</div><div class="breadcrumb"><span>Accueil</span><span>/</span><span>Dashboard</span></div></div>
-            </div>
-            <div class="topbar-right"><div class="topbar-user"><i class="fas fa-user-circle" style="font-size:1.5rem;"></i><div><div class="name">Admin</div><div class="role">Administrateur</div></div></div></div>
         </div>
 
-        <div class="page-content">
-            <!-- Statistiques en cercles (animées) -->
-            <div id="stats" class="stats-grid">
-                <div class="stat-circle animate-fadeUp" style="animation-delay:0.1s">
-                    <div class="circle blue"><?= $totalPosts ?></div>
-                    <h3><?= $totalPosts ?></h3>
-                    <p>Total posts</p>
-                    <small>📈 +12% ce mois</small>
+        <div class="col-md-6 col-lg-4">
+            <div class="stats-card">
+                <div class="stats-icon bg-info-soft">
+                    <i class="fa-solid fa-shield-halved text-info"></i>
                 </div>
-                <div class="stat-circle animate-fadeUp" style="animation-delay:0.2s">
-                    <div class="circle green"><?= $postsWithImages ?></div>
-                    <h3><?= $postsWithImages ?></h3>
-                    <p>Avec image</p>
-                    <small>🖼️ <?= $totalPosts ? round(($postsWithImages/$totalPosts)*100) : 0 ?>% du total</small>
+                <div class="stats-info">
+                    <h3>5</h3>
+                    <p>Assurances Connectées</p>
                 </div>
-                <div class="stat-circle animate-fadeUp" style="animation-delay:0.3s">
-                    <div class="circle orange"><?= date('m') ?></div>
-                    <h3><?= date('m') ?></h3>
-                    <p>Posts ce mois</p>
-                    <small>📅 <?= date('F Y') ?></small>
-                </div>
-                <div class="stat-circle animate-fadeUp" style="animation-delay:0.4s">
-                    <div class="circle purple"><?= count($latestPosts) ?></div>
-                    <h3><?= count($latestPosts) ?></h3>
-                    <p>Au total</p>
-                    <small>✨ Tous les posts</small>
+                <div class="stats-trend text-info">
+                    <i class="fa-solid fa-link"></i> Partenaires
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Graphique d'évolution (Chart.js) -->
-            <div class="chart-container animate-fadeLeft" style="animation-delay:0.2s">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3><i class="fas fa-chart-line" style="color:var(--primary)"></i> Évolution des posts (12 mois)</h3>
+    <!-- Quick Actions -->
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="crud-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="m-0"><i class="fa-solid fa-bolt me-2 text-warning"></i> Actions Rapides</h4>
                 </div>
-                <canvas id="postsChart" width="400" height="200" style="max-height: 280px;"></canvas>
+                <div class="quick-actions-grid">
+                    <a href="addpharmacie.php" class="quick-action-btn">
+                        <i class="fa-solid fa-plus-circle"></i>
+                        <span>Ajouter une Pharmacie</span>
+                    </a>
+                    <a href="listepharmacie.php" class="quick-action-btn">
+                        <i class="fa-solid fa-list-check"></i>
+                        <span>Gérer les Pharmacies</span>
+                    </a>
+                    <a href="addmedicament.php" class="quick-action-btn">
+                        <i class="fa-solid fa-folder-plus"></i>
+                        <span>Ajouter un Médicament</span>
+                    </a>
+                    <a href="../frontoffice/index.php" target="_blank" class="quick-action-btn">
+                        <i class="fa-solid fa-eye"></i>
+                        <span>Voir le Site Public</span>
+                    </a>
+                    <a href="statistiques.php" class="quick-action-btn">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span>Voir les Statistiques</span>
+                    </a>
+                </div>
             </div>
+        </div>
 
-            <!-- Liens rapides (2 cartes animées) -->
-            <div class="quick-links-grid">
-                <a href="addpost.php" class="quick-card">
-                    <i class="fas fa-plus-circle"></i>
-                    <span>➕ Ajouter un post</span>
-                </a>
-                <a href="../Frontoffice/postlist.php" class="quick-card">
-                    <i class="fas fa-globe"></i>
-                    <span>🌍 Voir le forum public</span>
-                </a>
-            </div>
-
-            <!-- Barre de recherche -->
-            <div id="search" class="card" style="padding: 24px; margin-bottom: 30px; border-radius: 32px;">
-                <h3 style="margin-bottom: 20px;"><i class="fas fa-search"></i> Rechercher un post</h3>
-                <form method="GET" action="">
-                    <div class="search-wrapper">
-                        <i class="fas fa-search"></i>
-                        <input type="text" name="ch" placeholder="Rechercher par mot-clé..." value="<?= htmlspecialchars($searchTerm) ?>">
+        <div class="col-lg-4">
+            <div class="crud-card h-100">
+                <h4 class="mb-4"><i class="fa-solid fa-clock-rotate-left me-2 text-primary"></i> État Système</h4>
+                <div class="system-status">
+                    <div class="status-item">
+                        <span class="status-label">Base de données</span>
+                        <span class="badge bg-success">Connecté</span>
                     </div>
-                </form>
-                <?php if ($searchTerm): ?>
-                    <div class="result-count" style="margin-top: 20px;">
-                        <i class="fas fa-chart-simple"></i> <?= count($displayPosts) ?> résultat(s) pour "<strong><?= htmlspecialchars($searchTerm) ?></strong>"
-                        <a href="dashboard.php" style="float:right;">✖ Effacer</a>
+                    <div class="status-item">
+                        <span class="status-label">Version Plateforme</span>
+                        <span class="text-muted">v2.1.0</span>
                     </div>
-                    <div class="search-results">
-                        <?php if (count($displayPosts) > 0): ?>
-                            <?php foreach ($displayPosts as $post): ?>
-                                <div class="post-result">
-                                    <h4><i class="fas fa-comment"></i> Post #<?= $post->getIdPost() ?></h4>
-                                    <p><?= htmlspecialchars(substr($post->getContenu(), 0, 150)) ?>…</p>
-                                    <small><i class="fas fa-calendar"></i> <?= date('d/m/Y H:i', strtotime($post->getDatePost())) ?>
-                                    <?php if (!empty($post->getImage())): ?> <span style="color:var(--accent)"><i class="fas fa-image"></i> Avec image</span><?php endif; ?>
-                                    </small>
-                                    <div class="post-actions" style="margin-top:10px">
-                                        <a href="showpost.php?id=<?= $post->getIdPost() ?>" class="btn btn-outline btn-sm"><i class="fas fa-eye"></i> Voir</a>
-                                        
-                                        <a href="deletepost.php?id=<?= $post->getIdPost() ?>" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ce post ?')"><i class="fas fa-trash"></i> Supprimer</a>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Aucun post correspondant.</div>
-                        <?php endif; ?>
+                    <div class="status-item">
+                        <span class="status-label">Dernière Mise à Jour</span>
+                        <span class="text-muted"><?php echo date('d/m/Y'); ?></span>
                     </div>
-                <?php endif; ?>
-            </div>
-
-            <!-- Tableau de tous les posts -->
-            <div id="recent" class="card" style="padding:0; overflow:hidden; border-radius: 28px;">
-                <div style="padding:20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
-                    <h3><i class="fas fa-table-list"></i> Tous les posts</h3>
-                    <a href="../Frontoffice/postlist.php" class="btn btn-outline btn-sm">Gérer <i class="fas fa-arrow-right"></i></a>
-                </div>
-                <div style="overflow-x:auto;">
-                    <table class="table">
-                        <thead><tr><th>ID</th><th>Contenu</th><th>Image</th><th>Date</th><th>Actions</th></tr></thead>
-                        <tbody>
-                            <?php if (empty($latestPosts)): ?>
-                                <tr><td colspan="5" style="text-align:center">Aucun post</td></tr>
-                            <?php else: ?>
-                                <?php foreach ($latestPosts as $post): ?>
-                                    <tr>
-                                        <td><?= $post->getIdPost() ?></td>
-                                        <td style="max-width:400px"><?= htmlspecialchars(substr($post->getContenu(),0,80)) ?>…</td>
-                                        <td style="text-align:center"><?= !empty($post->getImage()) ? '<i class="fas fa-check-circle" style="color:var(--accent)"></i>' : '<i class="fas fa-times-circle" style="color:var(--gray-light)"></i>' ?></td>
-                                        <td><?= date('d/m/Y', strtotime($post->getDatePost())) ?></td>
-                                        <td class="table-actions">
-                                            <a href="showpost.php?id=<?= $post->getIdPost() ?>" class="btn btn-outline btn-sm"><i class="fas fa-eye"></i></a>
-                                            <a href="deletepost.php?id=<?= $post->getIdPost() ?>" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ?')"><i class="fas fa-trash"></i></a>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </div>
-    </main>
+    </div>
 </div>
 
-<!-- Toast de notification (exemple si action via GET) -->
-<div id="toastMsg" class="toast-notify"><i class="fas fa-check-circle"></i> <span id="toastText"></span></div>
+<style>
+    /* Dashboard Specific Styles */
+    .bg-primary-soft { background: rgba(13, 110, 253, 0.1); }
+    .bg-success-soft { background: rgba(25, 135, 84, 0.1); }
+    .bg-info-soft { background: rgba(13, 202, 240, 0.1); }
 
-<script>
-    // Sidebar toggle
-    function toggleSidebar() {
-        document.querySelector('.sidebar').classList.toggle('open');
+    .stats-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: 25px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        box-shadow: var(--shadow-sm);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid rgba(0,0,0,0.05);
     }
-    // Sous-menu
-    function toggleSubMenu(element) {
-        const parent = element.closest('.has-sub');
-        parent.classList.toggle('open');
-        const subMenu = parent.querySelector('.sub-menu');
-        if (subMenu) subMenu.classList.toggle('open');
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-md);
     }
-    // Smooth scroll
-    document.querySelectorAll('.sub-menu a').forEach(link => {
-        link.addEventListener('click', function(e) {
-            const targetId = this.getAttribute('href');
-            if (targetId && targetId.startsWith('#')) {
-                e.preventDefault();
-                const target = document.querySelector(targetId);
-                if (target) target.scrollIntoView({ behavior: 'smooth' });
-            }
-        });
-    });
+    .stats-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+    .stats-info h3 {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--text-main);
+    }
+    .stats-info p {
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+    .stats-trend {
+        margin-left: auto;
+        font-size: 0.8rem;
+        font-weight: 600;
+        background: rgba(0,0,0,0.03);
+        padding: 5px 10px;
+        border-radius: 20px;
+    }
 
-    // Graphique avec Chart.js
-    const ctx = document.getElementById('postsChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: <?= json_encode($months) ?>,
-            datasets: [{
-                label: 'Nombre de posts',
-                data: <?= json_encode($monthlyCounts) ?>,
-                borderColor: '#0ea5e9',
-                backgroundColor: 'rgba(14,165,233,0.05)',
-                borderWidth: 3,
-                pointRadius: 4,
-                pointBackgroundColor: '#0ea5e9',
-                pointBorderColor: '#fff',
-                pointHoverRadius: 6,
-                tension: 0.3,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: { legend: { position: 'top' }, tooltip: { mode: 'index' } },
-            scales: { y: { beginAtZero: true, grid: { color: '#e2e8f0' }, title: { display: true, text: 'Posts' } },
-                      x: { grid: { display: false }, title: { display: true, text: 'Mois' } } }
-        }
-    });
-
-    // Afficher une notification toast si un message est passé en GET (ex: ?success=deleted)
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('success')) {
-        let msg = '';
-        if (urlParams.get('success') === 'deleted') msg = 'Post supprimé avec succès !';
-        
-        else msg = 'Action réussie !';
-        const toast = document.getElementById('toastMsg');
-        document.getElementById('toastText').innerText = msg;
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 3000);
+    .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
     }
-</script>
-</body>
-</html>
+    .quick-action-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        color: var(--text-main);
+        font-weight: 600;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+    }
+    .quick-action-btn i {
+        font-size: 1.5rem;
+        color: var(--primary);
+    }
+    .quick-action-btn:hover {
+        background: white;
+        border-color: var(--primary);
+        color: var(--primary);
+        box-shadow: var(--shadow-sm);
+    }
+    .quick-action-btn.disabled {
+        opacity: 0.5;
+        pointer-events: none;
+        filter: grayscale(1);
+    }
+
+    .system-status {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    .status-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 10px;
+        border-bottom: 1px dashed var(--border);
+    }
+    .status-item:last-child {
+        border-bottom: none;
+    }
+    .status-label {
+        font-weight: 500;
+        color: var(--text-muted);
+    }
+</style>
+
+<?php include "footer_back.php"; ?>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>si-nafseni | Find Balance, Feel Better</title>
+    <meta name="description" content="Confidentiel psychological assessment for university students. Get actionable solutions in 3 minutes.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">si-nafseni</div>
+            <button id="lang-toggle" class="btn-secondary">عربي</button>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Page 1: Landing -->
+        <section id="page-landing" class="page active">
+            <div class="container hero">
+                <h1 data-i18n="hero-title">Find balance, feel better</h1>
+                <p class="subtitle" data-i18n="hero-subtitle">سريع، آمن، ومباشر</p>
+                <p data-i18n="hero-desc">Bilan confidentiel, 8 questions, 10 DT pour des solutions concrètes.</p>
+                
+                <div class="features">
+                    <div class="feature-card">
+                        <span class="icon">⚡</span>
+                        <h3 data-i18n="feat-1-title">Quick Assessment</h3>
+                        <p data-i18n="feat-1-desc">Takes only 1-3 minutes</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="icon">🔒</span>
+                        <h3 data-i18n="feat-2-title">Confidential</h3>
+                        <p data-i18n="feat-2-desc">No data stored on server</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="icon">🛠️</span>
+                        <h3 data-i18n="feat-3-title">Actionable</h3>
+                        <p data-i18n="feat-3-desc">Solutions tailored for you</p>
+                    </div>
+                </div>
+
+                <div class="consent-box">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="consent-check">
+                        <span class="checkmark"></span>
+                        <span data-i18n="consent-text">Je confirme être étudiant universitaire et j'accepte la politique de confidentialité</span>
+                    </label>
+                    <p class="privacy-note" data-i18n="privacy-note">Note: This is a client-side tool. Your data is never saved or shared.</p>
+                </div>
+
+                <button id="start-btn" class="btn-primary" disabled data-i18n="start-btn">Start Assessment — ابدأ التقييم</button>
+                
+                <div class="how-it-works" id="how-it-works">
+                    <h2 data-i18n="how-title">How it works</h2>
+                    <div class="steps">
+                        <div class="step"><span>1</span> <p data-i18n="step-1">Accept Privacy Policy</p></div>
+                        <div class="step-arrow">→</div>
+                        <div class="step"><span>2</span> <p data-i18n="step-2">Answer 8 Questions</p></div>
+                        <div class="step-arrow">→</div>
+                        <div class="step"><span>3</span> <p data-i18n="step-3">Pay 10 DT</p></div>
+                        <div class="step-arrow">→</div>
+                        <div class="step"><span>4</span> <p data-i18n="step-4">See Solutions</p></div>
+                    </div>
+                    <p class="emergency-link" data-i18n="emergency-link">In case of emergency, contact your university counseling center or local emergency services.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Page 3: Questionnaire -->
+        <section id="page-quiz" class="page">
+            <div class="container quiz-container">
+                <div class="progress-bar">
+                    <div id="progress" style="width: 0%;"></div>
+                </div>
+                <div id="question-box">
+                    <h2 id="q-title">Question 1</h2>
+                    <p id="q-text"></p>
+                    <div id="options-box" class="options-grid"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Page 4: Payment -->
+        <section id="page-payment" class="page">
+            <div class="container text-center">
+                <h2 data-i18n="pay-title">Final Step: Secure Payment</h2>
+                <p data-i18n="pay-desc">Pay 10 DT to access your personalized psychological report and solutions.</p>
+                <div class="payment-mock">
+                    <div class="card-demo">
+                        <p>10 Dinars</p>
+                        <hr>
+                        <p>si-nafseni assessment</p>
+                    </div>
+                    <button id="pay-btn" class="btn-primary btn-amber" data-i18n="pay-btn">Pay 10 Dinars — ادفع 10 دنانير</button>
+                </div>
+                <p class="disclaimer" data-i18n="medical-disclaimer">Disclaimer: This tool is not a substitute for professional diagnosis. If symptoms are severe, seek emergency help.</p>
+            </div>
+        </section>
+
+        <!-- Page 5: Results -->
+        <section id="page-results" class="page">
+            <div class="container">
+                <div class="result-header">
+                    <h2 data-i18n="results-title">Your Personalized Assessment</h2>
+                    <p data-i18n="results-subtitle">Based on your responses, here are some insights and concrete steps.</p>
+                </div>
+                <div id="result-content" class="result-card">
+                    <!-- Dynamic Content -->
+                </div>
+                <div class="emergency-box">
+                    <h3 data-i18n="next-steps-title">Next Steps</h3>
+                    <p id="next-steps-text"></p>
+                    <hr>
+                    <p class="emergency-info" data-i18n="emergency-info">If you are in crisis, please call emergency services immediately.</p>
+                </div>
+                <button onclick="location.reload()" class="btn-secondary" data-i18n="restart-btn">Restart (Reset all data)</button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="container">
+        <p>&copy; 2026 si-nafseni. <a href="#" data-i18n="privacy-link">Privacy Policy</a></p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
