@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion — ASCLEPIA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <!-- Script reCAPTCHA avec callback de chargement -->
+  <script src="https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=explicit" async defer></script>
+  <style>
+    body { background: var(--dark); min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+
+    .auth-bg {
+      position: fixed; inset: 0;
+      background: var(--gradient-hero);
+      z-index: 0;
+    }
+
+    .auth-bg::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%230ea5e9' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .auth-glow {
+      position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.25;
+    }
+    .glow-1 { width: 500px; height: 500px; background: var(--primary); top: -200px; right: -100px; }
+    .glow-2 { width: 400px; height: 400px; background: var(--accent); bottom: -150px; left: -100px; }
+
+    .auth-container {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 460px;
+      padding: 24px;
+    }
+
+    .auth-card {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(40px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 28px;
+      padding: 44px 40px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.4);
+    }
+
+    .auth-logo {
+      display: flex; align-items: center; gap: 12px;
+      justify-content: center;
+      margin-bottom: 32px;
+      text-decoration: none;
+    }
+
+    .auth-logo-icon {
+      width: 48px; height: 48px;
+      background: var(--gradient-primary);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 8px 24px rgba(14,165,233,0.4);
+    }
+
+    .auth-logo-name {
+      font-size: 1.6rem; font-weight: 800; color: var(--white);
+    }
+    .auth-logo-name span { background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+    .auth-title {
+      text-align: center; color: var(--white);
+      font-size: 1.5rem; font-weight: 700; margin-bottom: 6px;
+    }
+
+    .auth-subtitle {
+      text-align: center; color: rgba(255,255,255,0.45);
+      font-size: 0.88rem; margin-bottom: 32px;
+    }
+
+    .glass-input-wrap { position: relative; margin-bottom: 16px; }
+
+    .glass-input-wrap .input-icon {
+      position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+      color: rgba(255,255,255,0.35); font-size: 0.95rem;
+    }
+
+    .glass-input {
+      width: 100%;
+      padding: 14px 16px 14px 44px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius);
+      color: var(--white);
+      font-size: 0.95rem;
+      font-family: var(--font-main);
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .glass-input::placeholder { color: rgba(255,255,255,0.3); }
+
+    .glass-input:focus {
+      border-color: var(--primary);
+      background: rgba(14,165,233,0.1);
+      box-shadow: 0 0 0 4px rgba(14,165,233,0.15);
+    }
+
+    .glass-label {
+      display: block; font-size: 0.82rem; font-weight: 600;
+      color: rgba(255,255,255,0.6); margin-bottom: 8px;
+    }
+
+    .eye-toggle {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      color: rgba(255,255,255,0.3); cursor: pointer; background: none; border: none; font-size: 0.9rem;
+      transition: var(--transition-fast);
+    }
+    .eye-toggle:hover { color: var(--primary); }
+
+    .auth-options {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .checkbox-wrap {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.84rem; color: rgba(255,255,255,0.55); cursor: pointer;
+    }
+
+    .checkbox-wrap input[type="checkbox"] {
+      width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer;
+    }
+
+    .forgot-link { font-size: 0.84rem; color: var(--primary); }
+    .forgot-link:hover { color: #38bdf8; }
+
+    .auth-footer {
+      text-align: center; margin-top: 24px;
+      font-size: 0.86rem; color: rgba(255,255,255,0.4);
+    }
+
+    .auth-footer a { color: var(--primary); font-weight: 600; }
+    .auth-footer a:hover { color: #38bdf8; }
+
+    .btn-auth {
+      width: 100%;
+      padding: 14px;
+      background: var(--gradient-primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 0.98rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: var(--font-main);
+      box-shadow: 0 4px 20px rgba(14,165,233,0.4);
+      transition: var(--transition);
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+
+    .btn-auth:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(14,165,233,0.5);
+    }
+
+    .btn-auth:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .error-msg {
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+      color: #fca5a5; padding: 12px 16px; border-radius: var(--radius);
+      font-size: 0.84rem; margin-bottom: 20px; display: none;
+      align-items: center; gap: 8px;
+    }
+
+    .error-msg.show {
+      display: flex;
+    }
+    
+    .form-error {
+      font-size: 0.78rem;
+      margin-top: 6px;
+      display: none;
+    }
+    
+    .form-error.show {
+      display: block;
+    }
+    
+    .recaptcha-container {
+      margin: 20px 0;
+      display: flex;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+<div class="auth-bg">
+  <div class="auth-glow glow-1"></div>
+  <div class="auth-glow glow-2"></div>
+</div>
+
+<div class="auth-container">
+  <a href="index.html" class="auth-logo">
+    <div class="auth-logo-icon">⚕️</div>
+    <div class="auth-logo-name">ASC<span>LEPIA</span></div>
+  </a>
+
+  <div class="auth-card">
+    <h1 class="auth-title">Bon retour 👋</h1>
+    <p class="auth-subtitle">Connectez-vous à votre espace personnel</p>
+
+    <div id="alertInscription" class="error-msg">
+      <i class="fa-solid fa-user-plus"></i>
+      <span>Aucun compte trouvé avec cette adresse email. <a href="loginuser.html" style="color: white; text-decoration: underline;">S'inscrire</a></span>
+    </div>
+
+    <div id="alertPassword" class="error-msg">
+      <i class="fa-solid fa-key"></i>
+      <span>Mot de passe incorrect. Veuillez réessayer.</span>
+    </div>
+
+    <div id="alertGeneric" class="error-msg">
+      <i class="fa-solid fa-circle-info"></i>
+      <span>Une erreur est survenue. Veuillez réessayer.</span>
+    </div>
+    
+    <div id="alertCaptcha" class="error-msg">
+      <i class="fa-solid fa-robot"></i>
+      <span>reCAPTCHA non validé. Veuillez cocher la case.</span>
+    </div>
+
+    <!-- NOUVEAU - ALERTE BANNISSEMENT -->
+    <div id="alertBan" class="error-msg">
+      <i class="fa-solid fa-ban"></i>
+      <span id="banMessage"></span>
+    </div>
+
+    <form id="loginForm" method="POST" action="login.php" novalidate>
+      <div style="margin-bottom: 16px;">
+        <label class="glass-label">Adresse email</label>
+        <div class="glass-input-wrap" style="margin-bottom: 0;">
+          <i class="fa-solid fa-envelope input-icon"></i>
+          <input type="email" class="glass-input" id="email" name="email"
+            placeholder="votre@email.com" autocomplete="email">
+        </div>
+        <div class="form-error" id="emailError" style="color: #fca5a5;"></div>
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <label class="glass-label">Mot de passe</label>
+        <div class="glass-input-wrap" style="margin-bottom: 0; position: relative;">
+          <i class="fa-solid fa-lock input-icon"></i>
+          <input type="password" class="glass-input" id="password" name="mot_de_passe"
+            placeholder="Votre mot de passe" autocomplete="current-password">
+          <button type="button" class="eye-toggle" onclick="togglePassword('password', this)">
+            <i class="fa-regular fa-eye"></i>
+          </button>
+        </div>
+        <div class="form-error" id="passwordError" style="color: #fca5a5;"></div>
+      </div>
+
+      <!-- reCAPTCHA avec ID pour contrôle -->
+      <div class="recaptcha-container">
+        <div id="recaptchaContainer"></div>
+      </div>
+      <div class="form-error" id="captchaError" style="color: #fca5a5; text-align: center;"></div>
+
+      <div class="auth-options">
+        <label class="checkbox-wrap">
+          <input type="checkbox" name="remember" id="remember">
+          Se souvenir de moi
+        </label>
+        <a href="reset_password.html" class="forgot-link">Mot de passe oublié ?</a>
+      </div>
+
+      <button type="submit" class="btn-auth" id="submitBtn">
+        <i class="fa-solid fa-sign-in-alt"></i>
+        Se connecter
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      Pas encore de compte ?
+      <a href="loginuser.html">Créer un compte</a>
+    </div>
+
+    <div style="text-align: center; margin-top: 20px;">
+      <a href="index.html" style="font-size: 0.82rem; color: rgba(255,255,255,0.3);">
+        <i class="fa-solid fa-arrow-left"></i> Retour à l'accueil
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Variables globales
+  var recaptchaWidgetId = null;
+  var recaptchaReady = false;
+  var recaptchaToken = '';
+
+  // Fonction appelée quand reCAPTCHA est chargé
+  function onRecaptchaLoad() {
+    console.log("✅ reCAPTCHA chargé, initialisation...");
+    var container = document.getElementById('recaptchaContainer');
+    if (container) {
+      recaptchaWidgetId = grecaptcha.render('recaptchaContainer', {
+        'sitekey': '6LcxldQsAAAAAHJG7uOqAEsu8p3hd2WmvU2nM9WC',
+        'callback': onCaptchaSuccess,
+        'expired-callback': onCaptchaExpired,
+        'error-callback': onCaptchaError
+      });
+      recaptchaReady = true;
+      console.log("✅ reCAPTCHA initialisé, Widget ID: " + recaptchaWidgetId);
+    }
+  }
+  
+  // Fonction appelée quand le reCAPTCHA est validé avec succès
+  function onCaptchaSuccess(response) {
+    console.log("✅ reCAPTCHA validé !");
+    recaptchaToken = response;
+    document.getElementById('captchaError').classList.remove('show');
+    document.getElementById('alertCaptcha').classList.remove('show');
+  }
+  
+  // Fonction appelée quand le reCAPTCHA expire
+  function onCaptchaExpired() {
+    console.log("⚠️ reCAPTCHA expiré");
+    recaptchaToken = '';
+    document.getElementById('captchaError').textContent = 'Le reCAPTCHA a expiré, veuillez recommencer';
+    document.getElementById('captchaError').classList.add('show');
+  }
+  
+  // Fonction appelée en cas d'erreur reCAPTCHA
+  function onCaptchaError() {
+    console.log("❌ Erreur reCAPTCHA");
+    recaptchaToken = '';
+    document.getElementById('captchaError').textContent = 'Erreur reCAPTCHA, veuillez rafraîchir la page';
+    document.getElementById('captchaError').classList.add('show');
+  }
+
+  // Fonctions UI
+  function hideAllAlerts() {
+    document.getElementById('alertInscription').classList.remove('show');
+    document.getElementById('alertPassword').classList.remove('show');
+    document.getElementById('alertGeneric').classList.remove('show');
+    document.getElementById('alertCaptcha').classList.remove('show');
+    document.getElementById('alertBan').classList.remove('show');
+  }
+
+  function showAlert(id, autoHide) {
+    hideAllAlerts();
+    document.getElementById(id).classList.add('show');
+    if (autoHide) {
+      setTimeout(function() {
+        document.getElementById(id).classList.remove('show');
+      }, 6000);
+    }
+  }
+
+  function setFieldError(inputId, errorId, message) {
+    var input = document.getElementById(inputId);
+    var error = document.getElementById(errorId);
+    if (input) input.classList.add('input-error');
+    if (error) {
+      error.textContent = message;
+      error.classList.add('show');
+    }
+  }
+
+  function clearFieldError(inputId, errorId) {
+    var input = document.getElementById(inputId);
+    if (input) input.classList.remove('input-error');
+    var error = document.getElementById(errorId);
+    if (error) error.classList.remove('show');
+  }
+
+  function clearAllFieldErrors() {
+    clearFieldError('email', 'emailError');
+    clearFieldError('password', 'passwordError');
+    clearFieldError('captchaError', 'captchaError');
+  }
+
+  function validateEmail(email) {
+    var re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  }
+
+  function validateForm() {
+    var email = document.getElementById('email').value.trim();
+    var password = document.getElementById('password').value;
+    var valid = true;
+
+    clearAllFieldErrors();
+    hideAllAlerts();
+
+    if (email === '') {
+      setFieldError('email', 'emailError', 'L\'adresse email est requise.');
+      valid = false;
+    } else if (!validateEmail(email)) {
+      setFieldError('email', 'emailError', 'Format d\'email invalide (ex: nom@domaine.com).');
+      valid = false;
+    }
+
+    if (password === '') {
+      setFieldError('password', 'passwordError', 'Le mot de passe est requis.');
+      valid = false;
+    } else if (password.length < 4) {
+      setFieldError('password', 'passwordError', 'Le mot de passe est trop court.');
+      valid = false;
+    }
+    
+    // Vérifier reCAPTCHA (avec un délai pour s'assurer qu'il est chargé)
+    if (!recaptchaReady || recaptchaWidgetId === null) {
+      document.getElementById('captchaError').textContent = 'Chargement du reCAPTCHA en cours... Veuillez patienter';
+      document.getElementById('captchaError').classList.add('show');
+      valid = false;
+    } else {
+      try {
+        var token = grecaptcha.getResponse(recaptchaWidgetId);
+        if (!token || token.length === 0) {
+          document.getElementById('captchaError').textContent = 'Veuillez cocher la case "Je ne suis pas un robot"';
+          document.getElementById('captchaError').classList.add('show');
+          valid = false;
+        } else {
+          console.log("✅ Token reCAPTCHA valide (longueur: " + token.length + ")");
+        }
+      } catch(e) {
+        console.log("❌ Erreur lors de la récupération du token: " + e);
+        document.getElementById('captchaError').textContent = 'Erreur reCAPTCHA, veuillez rafraîchir la page';
+        document.getElementById('captchaError').classList.add('show');
+        valid = false;
+      }
+    }
+
+    return valid;
+  }
+
+  // Soumission du formulaire
+  document.getElementById('loginForm').addEventListener('submit', function(e) {
+    console.log("📤 Soumission du formulaire...");
+    if (!validateForm()) {
+      e.preventDefault();
+      console.log("❌ Formulaire invalidé, soumission bloquée");
+      return;
+    }
+    console.log("✅ Formulaire valide, soumission autorisée");
+    
+    // Désactiver le bouton
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connexion en cours...';
+  });
+
+  // Nettoyage en temps réel
+  document.getElementById('email').addEventListener('input', function() {
+    clearFieldError('email', 'emailError');
+    hideAllAlerts();
+  });
+
+  document.getElementById('password').addEventListener('input', function() {
+    clearFieldError('password', 'passwordError');
+    hideAllAlerts();
+  });
+
+  // Lecture erreurs URL
+  window.addEventListener('DOMContentLoaded', function() {
+    var params = new URLSearchParams(window.location.search);
+    var error = params.get('error');
+    var message = params.get('message');
+
+    console.log("Paramètre error détecté: " + error);
+
+    if (error === '1') {
+      showAlert('alertInscription', false);
+      document.getElementById('email').classList.add('input-error');
+    } else if (error === '2') {
+      showAlert('alertPassword', true);
+      document.getElementById('password').classList.add('input-error');
+    } else if (error === '3') {
+      showAlert('alertCaptcha', true);
+    } else if (error === '4') {
+      var banMessageSpan = document.getElementById('banMessage');
+      if (message && banMessageSpan) {
+        banMessageSpan.innerHTML = decodeURIComponent(message);
+      }
+      showAlert('alertBan', false);
+    }
+
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-sign-in-alt"></i> Se connecter';
+  });
+
+  function togglePassword(inputId, btn) {
+    var input = document.getElementById(inputId);
+    var icon = btn.querySelector('i');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.className = 'fa-regular fa-eye-slash';
+    } else {
+      input.type = 'password';
+      icon.className = 'fa-regular fa-eye';
+    }
+  }
+</script>
+
+</body>
+</html>

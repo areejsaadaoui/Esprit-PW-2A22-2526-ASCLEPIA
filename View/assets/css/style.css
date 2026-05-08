@@ -553,6 +553,7 @@ select.form-control { cursor: pointer; }
   .btn { padding: 10px 20px; font-size: 0.85rem; }
   .card { padding: 20px; }
 }
+<<<<<<< HEAD
 
 
 
@@ -653,3 +654,5 @@ select.form-control { cursor: pointer; }
             border-top: 1px solid var(--border);
             flex-wrap: wrap;
         }
+=======
+>>>>>>> f22b3861a3aaa27bcde9008d0489e945a62d84f6

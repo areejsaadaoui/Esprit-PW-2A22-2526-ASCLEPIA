@@ -12,27 +12,14 @@ class config
                 self::$pdo = new PDO("mysql:host=$servername;dbname=$dbname",
                         $username,
                         $password
-                   
                 );
                 self::$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 self::$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-               
-               
             } catch (Exception $e) {
-                die('Erreur: ' . $e->getMessage());
+                throw new Exception('Erreur de connexion à la base de données : ' . $e->getMessage());
             }
         }
         return self::$pdo;
     }
 }
-config::getConnexion();
 ?>
-
-
-
-
-
-
-
-
-

@@ -1,0 +1,897 @@
+<?php
+// indexp.php - Dans View/front/
+session_start();
+
+require_once '../../config.php';
+
+// Utiliser la classe config pour la connexion
+$conn = config::getConnexion();
+
+$isLoggedIn = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
+$userNom = $_SESSION['user_nom'] ?? '';
+$userEmail = $_SESSION['user_email'] ?? '';
+$userRole = $_SESSION['user_role'] ?? '';
+$userId = $_SESSION['user_id'] ?? null;
+
+// Récupérer l'avatar de l'utilisateur
+$userAvatar = 'default';
+if ($isLoggedIn && $userId) {
+    try {
+        $sql = "SELECT avatar_style FROM utilisateur WHERE id_user = :id_user";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([':id_user' => $userId]);
+        $row = $stmt->fetch();
+        if ($row && !empty($row['avatar_style'])) {
+            $userAvatar = $row['avatar_style'];
+        }
+    } catch (Exception $e) {
+        $userAvatar = 'default';
+    }
+}
+?>
+<?php
+require_once '../../Controller/ContratController.php';
+$controller = new ContratController();
+$topAssurances = $controller->getTopAssurances();
+?>
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ASCLEPIA - Plateforme médicale en ligne. Consultations, ordonnances, pharmacies, assurances et forum santé.">
+  <title>ASCLEPIA — Votre Plateforme Médicale</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- Styles -->
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/frontoffice.css">
+  <link rel="stylesheet" href="../assets/css/avatar.css">
+</head>
+
+<body>
+
+<!-- ================================================
+     NAVBAR (avec session)
+     ================================================ -->
+<nav class="navbar" id="navbar">
+  <a href="indexp.php" class="navbar-brand">
+    <div class="navbar-logo"></div>
+    <div class="navbar-name">ASC<span>LEPIA</span></div>
+  </a>
+
+  <div class="nav-links" id="navLinks">
+    <a href="#accueil" class="nav-link active">Accueil</a>
+    <a href="#services" class="nav-link">Services</a>
+    <a href="#pharmacies" class="nav-link">Pharmacies</a>
+    <a href="#assurances" class="nav-link">Assurances</a>
+    <a href="#forum" class="nav-link">Post&Reponse</a>
+    <a href="#avis" class="nav-link">Avis</a>
+    <a href="#medecins" class="nav-link">Médecins</a>
+  </div>
+
+  <div class="nav-actions">
+    <?php if ($isLoggedIn): ?>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="avatar-css avatar-<?php echo $userAvatar; ?> small"></div>
+        <span style="color: white; font-weight: 500;">Bonjour, <?php echo htmlspecialchars($userNom); ?></span>
+        
+        <!-- Afficher le bouton Profile seulement si ce n'est pas un admin -->
+        <?php if ($userRole !== 'admin'): ?>
+          <a href="profile.php" class="btn btn-outline-white btn-sm">
+            <i class="fa-solid fa-face-smile"></i> Profile
+          </a>
+        <?php endif; ?>
+        
+        <?php if ($userRole === 'admin'): ?>
+          <a href="../back/dashboard.php" class="btn btn-outline-white btn-sm">
+            <i class="fa-solid fa-shield-haltered"></i> Admin
+          </a>
+        <?php endif; ?>
+        
+        <a href="../back/logout.php" class="btn btn-outline-white btn-sm">
+          <i class="fa-solid fa-sign-out-alt"></i> Déconnexion
+        </a>
+      </div>
+    <?php else: ?>
+      <a href="login.html" class="btn btn-outline-white btn-sm">Se connecter</a>
+      <a href="loginuser.html" class="btn btn-primary btn-sm">S'inscrire</a>
+    <?php endif; ?>
+    <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+</nav>
+
+<!-- ================================================
+     HERO SECTION
+     ================================================ -->
+<section class="hero" id="accueil">
+  <div class="hero-glow hero-glow-1"></div>
+  <div class="hero-glow hero-glow-2"></div>
+
+  <div class="container">
+    <div class="d-flex align-center justify-between" style="gap: 48px;">
+
+      <!-- Left Content -->
+      <div class="hero-content animate-fadeInUp">
+        <div class="hero-badge">
+          <i class="fa-solid fa-circle-check"></i>
+          Plateforme médicale certifiée
+        </div>
+
+        <h1 class="hero-title">
+          Votre santé,<br>
+          <span class="highlight">notre priorité</span><br>
+          absolue
+        </h1>
+
+        <p class="hero-subtitle">
+          ASCLEPIA réunit médecins, pharmacies et assurances en un seul endroit.
+          Gérez vos consultations, ordonnances et remboursements facilement.
+        </p>
+
+        <div class="hero-actions">
+          <?php if (!$isLoggedIn): ?>
+            <a href="login.html" class="btn btn-primary btn-lg">
+              <i class="fa-solid fa-user-plus"></i>
+              Commencer gratuitement
+            </a>
+          <?php endif; ?>
+          <a href="#services" class="btn btn-outline-white btn-lg">
+            <i class="fa-solid fa-play"></i>
+            Découvrir
+          </a>
+        </div>
+
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="number">500<span>+</span></div>
+            <div class="label">Médecins</div>
+          </div>
+          <div class="hero-stat">
+            <div class="number">50<span>K+</span></div>
+            <div class="label">Patients</div>
+          </div>
+          <div class="hero-stat">
+            <div class="number">120<span>+</span></div>
+            <div class="label">Pharmacies</div>
+          </div>
+          <div class="hero-stat">
+            <div class="number">98<span>%</span></div>
+            <div class="label">Satisfaction</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Visual -->
+      <div class="hero-visual d-none-mobile" style="flex: 0 0 400px;">
+        <div class="hero-card-float hero-card-1">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 36px; height: 36px; background: var(--gradient-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem;">✅</div>
+            <div>
+              <div style="font-size: 0.78rem; font-weight: 700; color: white;">Consultation approuvée</div>
+              <div style="font-size: 0.7rem; color: rgba(255,255,255,0.5);">Dr. Lamine Ben Ali · il y a 5 min</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-main-card">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 3rem; margin-bottom: 8px;">🏥</div>
+            <h3 style="color: white; font-size: 1.1rem; margin-bottom: 4px;">Tableau de bord</h3>
+            <p style="color: rgba(255,255,255,0.5); font-size: 0.82rem;">Votre espace personnel</p>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="background: rgba(255,255,255,0.06); border-radius: 12px; padding: 14px; display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">🩺 Consultations</span>
+              <span style="color: var(--primary); font-weight: 700;">12</span>
+            </div>
+            <div style="background: rgba(255,255,255,0.06); border-radius: 12px; padding: 14px; display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">💊 Ordonnances</span>
+              <span style="color: var(--accent); font-weight: 700;">5</span>
+            </div>
+            <div style="background: rgba(255,255,255,0.06); border-radius: 12px; padding: 14px; display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">🛡️ Assurance active</span>
+              <span class="badge badge-success" style="font-size: 0.72rem;">Active</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-card-float hero-card-2">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="font-size: 1.5rem;">💊</div>
+            <div>
+              <div style="font-size: 0.78rem; font-weight: 700; color: white;">Médicament disponible</div>
+              <div style="font-size: 0.7rem; color: rgba(255,255,255,0.5);">Pharmacie Al Amal · Prêt</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ================================================
+     SERVICES SECTION
+     ================================================ -->
+<section class="section-padding services-section" id="services">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">
+        <i class="fa-solid fa-star"></i>
+        Nos Modules
+      </div>
+      <h2 class="section-title">5 Services pour votre santé</h2>
+      <p class="section-desc">
+        Une plateforme complète qui couvre tous vos besoins médicaux, de la consultation jusqu'au remboursement.
+      </p>
+    </div>
+
+    <div class="row">
+
+      <!-- Module 1: Authentification -->
+      <div class="col-4">
+        <div class="card service-card">
+          <div class="icon-box icon-box-lg" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);">
+            <i class="fa-solid fa-user-shield"></i>
+          </div>
+          <h3>Espace Personnel</h3>
+          <p>Créez votre compte patient ou médecin. Accédez à votre espace sécurisé avec gestion complète de votre profil.</p>
+          <?php if (!$isLoggedIn): ?>
+            <a href="loginuser.html" class="btn btn-outline btn-sm mt-3">
+              S'inscrire <i class="fa-solid fa-arrow-right"></i>
+            </a>
+          <?php else: ?>
+            <a href="profile.php" class="btn btn-outline btn-sm mt-3">
+              Mon profil <i class="fa-solid fa-arrow-right"></i>
+            </a>
+          <?php endif; ?>
+        </div>
+      </div>
+
+      <!-- Module 2: Consultation -->
+      <div class="col-4">
+        <div class="card service-card">
+          <div class="icon-box icon-box-lg" style="background: linear-gradient(135deg,#0ea5e9,#06b6d4);">
+            <i class="fa-solid fa-stethoscope"></i>
+          </div>
+          <h3>Consultations & Ordonnances</h3>
+          <p>Suivez vos consultations et accédez à vos ordonnances numériques. Diagnostics et notes médicales centralisés.</p>
+          <a href="consultation.php" class="btn btn-outline btn-sm mt-3">
+            Voir <i class="fa-solid fa-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Module 3: Pharmacie -->
+      <div class="col-4">
+        <div class="card service-card">
+          <div class="icon-box icon-box-lg" style="background: linear-gradient(135deg,#10b981,#059669);">
+            <i class="fa-solid fa-pills"></i>
+          </div>
+          <h3>Pharmacies & Médicamentos</h3>
+          <p>Trouvez les médicaments disponibles dans les pharmacies partenaires. Vérifiez les stocks en temps réel.</p>
+          <a href="pharmacie.php" class="btn btn-outline btn-sm mt-3">
+            Explorer <i class="fa-solid fa-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Module 4: Assurance -->
+      <div class="col-4">
+        <div class="card service-card">
+          <div class="icon-box icon-box-lg" style="background: linear-gradient(135deg,#f59e0b,#d97706);">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <h3>Assurances & Contrats</h3>
+          <p>Gérez vos contrats d'assurance santé. Consultez vos taux de remboursement et dates de validité.</p>
+         <a href="../frontoffice/assurancefront.php" class="btn btn-outline btn-sm mt-3">
+            Consulter <i class="fa-solid fa-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Module 5: Forum -->
+      <div class="col-4">
+        <div class="card service-card">
+          <div class="icon-box icon-box-lg" style="background: linear-gradient(135deg,#ec4899,#db2777);">
+            <i class="fa-solid fa-comments"></i>
+          </div>
+          <h3>Forum & Communauté</h3>
+          <p>Partagez vos expériences, posez des questions. Rejoignez notre communauté de patients et professionnels de santé.</p>
+          <a href="forum.php" class="btn btn-outline btn-sm mt-3">
+            Participer <i class="fa-solid fa-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- CTA Card -->
+      <div class="col-4">
+        <div class="card service-card" style="background: var(--gradient-hero); border: none;">
+          <div style="font-size: 3rem; margin-bottom: 16px;">🚀</div>
+          <h3 style="color: white;">Commencez aujourd'hui</h3>
+          <p style="color: rgba(255,255,255,0.7);">Rejoignez des milliers de patients qui gèrent leur santé intelligemment avec ASCLEPIA.</p>
+          <?php if (!$isLoggedIn): ?>
+            <a href="loginuser.html" class="btn btn-outline-white btn-sm mt-3">
+              Créer un compte <i class="fa-solid fa-arrow-right"></i>
+            </a>
+          <?php else: ?>
+            <a href="profile.php" class="btn btn-outline-white btn-sm mt-3">
+              Accéder à mon espace <i class="fa-solid fa-arrow-right"></i>
+            </a>
+          <?php endif; ?>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ================================================
+     PHARMACIES SECTION
+     ================================================ -->
+<section class="section-padding" id="pharmacies" style="background: white;">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">
+        <i class="fa-solid fa-pills"></i>
+        Réseau Pharmacies
+      </div>
+      <h2 class="section-title">Pharmacies Partenaires</h2>
+      <p class="section-desc">Trouvez les médicaments dont vous avez besoin dans notre réseau de pharmacies vérifiées.</p>
+    </div>
+
+    <div style="max-width: 480px; margin: 0 auto 48px; position: relative;">
+      <i class="fa-solid fa-search" style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--gray-light);"></i>
+      <input type="text" placeholder="Rechercher une pharmacie ou médicament..." id="pharmSearch"
+        style="width: 100%; padding: 14px 18px 14px 48px; border: 2px solid var(--border); border-radius: var(--radius-full); font-size: 0.95rem; outline: none; background: var(--bg); font-family: var(--font-main);"
+        onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+    </div>
+
+    <div class="row" id="pharmaciesGrid">
+      <div class="col-4">
+        <div class="card pharmacie-card" style="gap: 16px; flex-direction: column; padding: 24px;">
+          <div class="d-flex align-center" style="gap: 16px;">
+            <div class="icon-box" style="background: linear-gradient(135deg,#10b981,#059669);">
+              <i class="fa-solid fa-mortar-pestle"></i>
+            </div>
+            <div>
+              <h3 style="font-size: 1rem; margin-bottom: 2px;">Pharmacie Al Amal</h3>
+              <span class="badge badge-success">Ouverte</span>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
+              <i class="fa-solid fa-location-dot" style="color: var(--primary); width: 16px;"></i>
+              Rue Habib Bourguiba, Tunis
+            </div>
+            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
+              <i class="fa-solid fa-phone" style="color: var(--primary); width: 16px;"></i>
+              +216 71 123 456
+            </div>
+            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
+              <i class="fa-solid fa-envelope" style="color: var(--primary); width: 16px;"></i>
+              alalampharmacy@email.tn
+            </div>
+          </div>
+          <a href="pharmacie.php" class="btn btn-outline btn-sm" style="align-self: flex-start;">
+            Voir médicaments
+          </a>
+        </div>
+      </div>
+
+      <div class="col-4">
+        <div class="card pharmacie-card" style="gap: 16px; flex-direction: column; padding: 24px;">
+          <div class="d-flex align-center" style="gap: 16px;">
+            <div class="icon-box" style="background: linear-gradient(135deg,#10b981,#059669);">
+              <i class="fa-solid fa-mortar-pestle"></i>
+            </div>
+            <div>
+              <h3 style="font-size: 1rem; margin-bottom: 2px;">Pharmacie Centrale</h3>
+              <span class="badge badge-success">Ouverte</span>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
+              <i class="fa-solid fa-location-dot" style="color: var(--primary); width: 16px;"></i>
+              Avenue de la Liberté, Sfax
+            </div>
+            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
+              <i class="fa-solid fa-phone" style="color: var(--primary); width: 16px;"></i>
+              +216 74 234 567
+            </div>
+            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
+              <i class="fa-solid fa-envelope" style="color: var(--primary); width: 16px;"></i>
+              centrale.pharm@email.tn
+            </div>
+          </div>
+          <a href="pharmacie.php" class="btn btn-outline btn-sm" style="align-self: flex-start;">
+            Voir médicaments
+          </a>
+        </div>
+      </div>
+
+      <div class="col-4">
+        <div class="card pharmacie-card" style="gap: 16px; flex-direction: column; padding: 24px;">
+          <div class="d-flex align-center" style="gap: 16px;">
+            <div class="icon-box" style="background: linear-gradient(135deg,#10b981,#059669);">
+              <i class="fa-solid fa-mortar-pestle"></i>
+            </div>
+            <div>
+              <h3 style="font-size: 1rem; margin-bottom: 2px;">Pharmacie du Lac</h3>
+              <span class="badge badge-warning">Garde</span>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
+              <i class="fa-solid fa-location-dot" style="color: var(--primary); width: 16px;"></i>
+              Les Berges du Lac, Tunis
+            </div>
+            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
+              <i class="fa-solid fa-phone" style="color: var(--primary); width: 16px;"></i>
+              +216 71 345 678
+            </div>
+            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
+              <i class="fa-solid fa-envelope" style="color: var(--primary); width: 16px;"></i>
+              phlac@email.tn
+            </div>
+          </div>
+          <a href="pharmacie.php" class="btn btn-outline btn-sm" style="align-self: flex-start;">
+            Voir médicaments
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================
+     ASSURANCES SECTION
+     ================================================ -->
+<section class="section-padding" id="assurances" style="background: var(--bg);">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">
+        <i class="fa-solid fa-shield-halved"></i>
+        Protection Santé
+      </div>
+      <h2 class="section-title">Nos Partenaires Assurance</h2>
+      <p class="section-desc">Des couvertures adaptées à chaque profil avec les meilleurs taux de remboursement.</p>
+    </div>
+
+    <div class="row" style="padding-top: 20px;">
+    <?php foreach($topAssurances as $index => $a): ?>
+      <div class="col-4">
+        <div class="card assurance-card" <?= $index === 0 ? 'style="border: 2px solid var(--primary); position: relative;"' : '' ?>>
+          <?php if($index === 0): ?>
+            <div style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%);">
+              <span class="badge badge-primary" style="padding: 6px 16px; font-size: 0.75rem;">⭐ Populaire</span>
+            </div>
+          <?php endif; ?>
+          <div class="icon-box icon-box-lg" style="margin: 0 auto 20px; background: var(--gradient-primary);">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <h3><?= htmlspecialchars($a['nom_assurance']) ?></h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin: 8px 0;">
+            <?= htmlspecialchars($a['description']) ?>
+          </p>
+          <div class="rate"><?= $a['taux_remboursement'] ?><span>%</span></div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Taux de remboursement</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar" style="width: <?= $a['taux_remboursement'] ?>%;"></div>
+          </div>
+          <a href="../frontoffice/assurancefront.php" class="btn btn-primary btn-sm mt-3" style="width: 100%; justify-content: center;">
+            En savoir plus
+          </a>
+        </div>
+      </div>
+    <?php endforeach; ?>
+    </div>
+  </div>
+</section>
+<!-- ================================================
+     FORUM SECTION
+     ================================================ -->
+<section class="section-padding" id="forum" style="background: white;">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">
+        <i class="fa-solid fa-comments"></i>
+        Communauté
+      </div>
+      <h2 class="section-title">Forum Santé</h2>
+      <p class="section-desc">Échangez avec la communauté. Posez vos questions et partagez votre expérience.</p>
+    </div>
+
+    <div class="row">
+      <div class="col-4">
+        <div class="card post-card">
+          <div class="post-meta">
+            <div class="post-avatar">MA</div>
+            <div>
+              <div class="post-author">Mohamed Amri</div>
+              <div class="post-date">Il y a 2 heures</div>
+            </div>
+            <span class="badge badge-primary" style="margin-left: auto;">💬 12</span>
+          </div>
+          <h3>Quelle assurance pour les maladies chroniques ?</h3>
+          <p>Je souffre de diabète et je cherche une assurance qui couvre bien les consultations régulières et les médicaments...</p>
+          <div class="post-footer">
+            <div class="post-stat"><i class="fa-regular fa-heart"></i> 24 J'aime</div>
+            <div class="post-stat"><i class="fa-regular fa-comment"></i> 12 Réponses</div>
+            <a href="forum.php" class="btn btn-outline btn-sm">Lire</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-4">
+        <div class="card post-card">
+          <div class="post-meta">
+            <div class="post-avatar" style="background: linear-gradient(135deg,#10b981,#059669);">SB</div>
+            <div>
+              <div class="post-author">Sana Belhaj</div>
+              <div class="post-date">Il y a 5 heures</div>
+            </div>
+            <span class="badge badge-success" style="margin-left: auto;">💬 8</span>
+          </div>
+          <h3>Comment lire une ordonnance médicale ?</h3>
+          <p>Mon médecin m'a prescrit plusieurs médicaments et j'ai du mal à comprendre les dosages et les instructions...</p>
+          <div class="post-footer">
+            <div class="post-stat"><i class="fa-regular fa-heart"></i> 18 J'aime</div>
+            <div class="post-stat"><i class="fa-regular fa-comment"></i> 8 Réponses</div>
+            <a href="forum.php" class="btn btn-outline btn-sm">Lire</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-4">
+        <div class="card post-card">
+          <div class="post-meta">
+            <div class="post-avatar" style="background: linear-gradient(135deg,#f59e0b,#d97706);">KM</div>
+            <div>
+              <div class="post-author">Karim Mansouri</div>
+              <div class="post-date">Il y a 1 jour</div>
+            </div>
+            <span class="badge badge-warning" style="margin-left: auto;">💬 31</span>
+          </div>
+          <h3>Meilleures pharmacies de garde à Tunis ?</h3>
+          <p>Je cherche une liste à jour des pharmacies de garde dans le gouvernorat de Tunis pour les urgences nocturnes...</p>
+          <div class="post-footer">
+            <div class="post-stat"><i class="fa-regular fa-heart"></i> 45 J'aime</div>
+            <div class="post-stat"><i class="fa-regular fa-comment"></i> 31 Réponses</div>
+            <a href="forum.php" class="btn btn-outline btn-sm">Lire</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 40px;">
+      <a href="forum.php" class="btn btn-primary btn-lg">
+        <i class="fa-solid fa-comments"></i>
+        Voir tout le forum
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================
+     AVIS SECTION
+     ================================================ -->
+<section class="section-padding avis-section" id="avis">
+  <div class="container" style="position: relative; z-index: 1;">
+    <div class="section-header">
+      <div class="section-tag">⭐ Témoignages</div>
+      <h2 class="section-title">Ce que disent nos patients</h2>
+      <p class="section-desc" style="color: rgba(255,255,255,0.6);">Des milliers de patients font confiance à ASCLEPIA pour leur santé.</p>
+    </div>
+
+    <div class="row">
+      <div class="col-4">
+        <div class="avis-card">
+          <div class="avis-quote">"</div>
+          <p class="avis-text">
+            ASCLEPIA a complètement changé ma façon de gérer ma santé. Je peux voir mes ordonnances, trouver des pharmacies et suivre mes remboursements depuis une seule application.
+          </p>
+          <div class="stars">★★★★★</div>
+          <div class="avis-author mt-2">
+            <div class="avis-avatar">LB</div>
+            <div class="avis-author-info">
+              <div class="name">Leila Bchir</div>
+              <div class="role">Patiente · Tunis</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-4">
+        <div class="avis-card">
+          <div class="avis-quote">"</div>
+          <p class="avis-text">
+            En tant que médecin, ASCLEPIA simplifie énormément mon travail. Je peux émettre des ordonnances numériques et suivre mes patients efficacement.
+          </p>
+          <div class="stars">★★★★★</div>
+          <div class="avis-author mt-2">
+            <div class="avis-avatar" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);">AM</div>
+            <div class="avis-author-info">
+              <div class="name">Dr. Ahmed Mrad</div>
+              <div class="role">Cardiologue · Sfax</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-4">
+        <div class="avis-card">
+          <div class="avis-quote">"</div>
+          <p class="avis-text">
+            Le forum est très utile ! J'ai trouvé des réponses à mes questions rapidement. La communauté est bienveillante et les informations sont fiables.
+          </p>
+          <div class="stars">★★★★☆</div>
+          <div class="avis-author mt-2">
+            <div class="avis-avatar" style="background: linear-gradient(135deg,#10b981,#059669);">FZ</div>
+            <div class="avis-author-info">
+              <div class="name">Fatma Zouari</div>
+              <div class="role">Patiente · Sousse</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================
+     MEDECINS SECTION
+     ================================================ -->
+<section class="section-padding" id="medecins" style="background: white;">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">
+        <i class="fa-solid fa-user-doctor"></i>
+        Notre Équipe
+      </div>
+      <h2 class="section-title">Nos Médecins</h2>
+      <p class="section-desc">Consultez notre équipe de médecins qualifiés et prenez rendez-vous facilement.</p>
+    </div>
+    <div class="row" id="medecinsGrid">
+      <p id="medecinLoading" style="text-align:center;color:var(--text-muted);width:100%;">Chargement...</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================
+     CTA SECTION
+     ================================================ -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-content">
+      <div class="section-tag" style="justify-content: center; margin-bottom: 20px;">
+        <i class="fa-solid fa-rocket"></i>
+        Rejoignez-nous
+      </div>
+      <h2>Prêt à prendre soin de votre santé ?</h2>
+      <p>Créez votre compte gratuitement et accédez à tous les services ASCLEPIA dès aujourd'hui.</p>
+      <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+        <?php if (!$isLoggedIn): ?>
+          <a href="loginuser.html" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-user-plus"></i>
+            Créer un compte patient
+          </a>
+          <a href="login.html" class="btn btn-outline-white btn-lg">
+            <i class="fa-solid fa-sign-in-alt"></i>
+            Se connecter
+          </a>
+        <?php else: ?>
+          <a href="profile.php" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-calendar-check"></i>
+            Mon profil
+          </a>
+          <a href="#" class="btn btn-outline-white btn-lg">
+            <i class="fa-solid fa-file-prescription"></i>
+            Mes ordonnances
+          </a>
+        <?php endif; ?>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================
+     FOOTER
+     ================================================ -->
+<footer class="footer">
+  <div class="container">
+    <div class="row" style="gap: 48px;">
+
+      <div style="flex: 0 0 260px;">
+        <div class="footer-brand">
+          <div class="navbar-brand" style="margin-bottom: 16px;">
+            <div class="navbar-logo">⚕️</div>
+            <div class="navbar-name" style="font-size: 1.2rem;">ASC<span class="text-primary">LEPIA</span></div>
+          </div>
+          <p>Votre plateforme médicale complète. Consultations, ordonnances, pharmacies, assurances et communauté santé.</p>
+          <div class="social-links">
+            <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="footer-section">
+          <h4>Services</h4>
+          <ul class="footer-links">
+            <li><a href="consultation.php"><i class="fa-solid fa-stethoscope"></i> Consultations</a></li>
+            <li><a href="consultation.php"><i class="fa-solid fa-file-prescription"></i> Ordonnances</a></li>
+            <li><a href="addpharmacie.php"><i class="fa-solid fa-pills"></i> Pharmacies</a></li>
+            <li><a href="../frontoffice/assurancefront.php"><i class="fa-solid fa-shield-halved"></i> Assurances</a></li>
+            <li><a href="forum.php"><i class="fa-solid fa-comments"></i> Forum santé</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="footer-section">
+          <h4>Liens utiles</h4>
+          <ul class="footer-links">
+            <li><a href="indexp.php"><i class="fa-solid fa-home"></i> Accueil</a></li>
+            <?php if (!$isLoggedIn): ?>
+              <li><a href="loginuser.html"><i class="fa-solid fa-user-plus"></i> S'inscrire</a></li>
+              <li><a href="login.html"><i class="fa-solid fa-sign-in-alt"></i> Se connecter</a></li>
+            <?php else: ?>
+              <li><a href="profile.php"><i class="fa-solid fa-user"></i> Mon profil</a></li>
+              <li><a href="choose_avatar.php"><i class="fa-solid fa-face-smile"></i> Changer avatar</a></li>
+              <li><a href="../back/logout.php"><i class="fa-solid fa-sign-out-alt"></i> Déconnexion</a></li>
+            <?php endif; ?>
+            <li><a href="#avis"><i class="fa-solid fa-star"></i> Témoignages</a></li>
+            <li><a href="#"><i class="fa-solid fa-file-lines"></i> Confidentialité</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="footer-section">
+          <h4>Contact</h4>
+          <div class="footer-contact-item">
+            <i class="fa-solid fa-location-dot icon"></i>
+            <span>Rue de l'Innovation, Tunis 1002, Tunisie</span>
+          </div>
+          <div class="footer-contact-item">
+            <i class="fa-solid fa-phone icon"></i>
+            <span>+216 71 000 000</span>
+          </div>
+          <div class="footer-contact-item">
+            <i class="fa-solid fa-envelope icon"></i>
+            <span>contact@asclepia.tn</span>
+          </div>
+          <div class="footer-contact-item">
+            <i class="fa-solid fa-clock icon"></i>
+            <span>24h/7j — Service disponible en permanence</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="footer-bottom">
+      <p>© 2026 <a href="indexp.php">ASCLEPIA</a>. Tous droits réservés.</p>
+      <p>Conçu avec ❤️ pour une meilleure santé</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Navbar scroll effect
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 30);
+  });
+
+  // Mobile menu
+  function toggleMenu() {
+    document.getElementById('navLinks').classList.toggle('open');
+  }
+
+  // Smooth scroll for nav links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.getElementById('navLinks').classList.remove('open');
+      }
+    });
+  });
+
+  // Active nav link on scroll
+  const sections = document.querySelectorAll('section[id], div[id]');
+  const navLinks = document.querySelectorAll('.nav-link');
+
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(section => {
+      const sectionTop = section.offsetTop - 100;
+      if (window.scrollY >= sectionTop) current = section.getAttribute('id');
+    });
+    navLinks.forEach(link => {
+      link.classList.remove('active');
+      if (link.getAttribute('href') === `#${current}`) link.classList.add('active');
+    });
+  });
+
+  // Animate progress bars on scroll
+  const progressBars = document.querySelectorAll('.progress-bar');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.width = entry.target.getAttribute('data-width') || entry.target.style.width;
+      }
+    });
+  }, { threshold: 0.5 });
+  progressBars.forEach(bar => observer.observe(bar));
+
+  // Cards entrance animation
+  const cards = document.querySelectorAll('.card, .avis-card');
+  const cardObserver = new IntersectionObserver(entries => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }, i * 80);
+        cardObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  cards.forEach(card => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(20px)';
+    card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    cardObserver.observe(card);
+  });
+
+  // Charger les médecins depuis la BD
+  fetch('index.php')
+    .then(response => response.json())
+    .then(data => {
+        const grid = document.getElementById('medecinsGrid');
+        if (data.success && data.medecins && data.medecins.length > 0) {
+            grid.innerHTML = data.medecins.map(medecin => `
+                <div class="col-4">
+                    <div class="card" style="text-align:center; padding:28px;">
+                        <div style="width:80px;height:80px;background:var(--gradient-primary);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.5rem;font-weight:700;color:white;">
+                            ${(medecin.nom ? medecin.nom.substring(0,2).toUpperCase() : 'DR')}
+                        </div>
+                        <h3 style="margin-bottom:8px;">Dr. ${medecin.nom || 'Médecin'}</h3>
+                        ${medecin.adresse ? `<p style="color:var(--text-muted);"><i class="fa-solid fa-location-dot"></i> ${medecin.adresse}</p>` : ''}
+                        ${medecin.telephone ? `<p style="color:var(--text-muted);"><i class="fa-solid fa-phone"></i> ${medecin.telephone}</p>` : ''}
+                        ${medecin.description ? `<p style="color:var(--text-muted); margin-top:8px;">${medecin.description}</p>` : ''}
+                        <a href="consultation.php" class="btn btn-outline btn-sm mt-3" style="margin-top:16px;">
+                            Prendre rendez-vous <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            grid.innerHTML = '<p style="text-align:center;color:var(--text-muted);width:100%;">Aucun médecin disponible pour le moment.</p>';
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        document.getElementById('medecinsGrid').innerHTML = '<p style="text-align:center;color:var(--danger);width:100%;">Erreur de chargement des médecins.</p>';
+    });
+</script>
+
+</body>
+</html>

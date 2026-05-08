@@ -1,0 +1,65 @@
+/* avatar.css - Version avec émojis */
+.avatar-css {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.avatar-css.small {
+    width: 35px;
+    height: 35px;
+    font-size: 1.2rem;
+}
+
+.avatar-css.medium {
+    width: 60px;
+    height: 60px;
+    font-size: 2rem;
+}
+
+.avatar-css.large {
+    width: 80px;
+    height: 80px;
+    font-size: 2.5rem;
+}
+
+.avatar-css.xlarge {
+    width: 120px;
+    height: 120px;
+    font-size: 4rem;
+}
+
+/* Styles par genre/catégorie */
+.avatar-default::before { content: "👤"; }
+.avatar-homme_cheveux_noirs::before { content: "👨"; }
+.avatar-homme_cheveux_bruns::before { content: "👨‍🦱"; }
+.avatar-homme_cheveux_blancs::before { content: "👨‍🦳"; }
+.avatar-homme_barbu::before { content: "🧔"; }
+.avatar-homme_jeune::before { content: "👨"; }
+.avatar-homme_age::before { content: "👴"; }
+.avatar-femme_cheveux_noirs::before { content: "👩"; }
+.avatar-femme_cheveux_blonds::before { content: "👩‍🦳"; }
+.avatar-femme_cheveux_bruns::before { content: "👩‍🦰"; }
+.avatar-femme_voilee::before { content: "🧕"; }
+.avatar-femme_agee::before { content: "👵"; }
+.avatar-medecin::before { content: "👨‍⚕️"; }
+.avatar-infirmiere::before { content: "👩‍⚕️"; }
+.avatar-pharmacien::before { content: "💊"; }
+.avatar-patient::before { content: "🧑"; }
+.avatar-enfant::before { content: "👧"; }
+
+/* Couleurs de fond différentes selon le style */
+.avatar-homme_cheveux_noirs { background: linear-gradient(135deg, #2c3e50, #1a1a2e); }
+.avatar-homme_cheveux_bruns { background: linear-gradient(135deg, #8B4513, #654321); }
+.avatar-femme_cheveux_noirs { background: linear-gradient(135deg, #4a1a4a, #2d1b4e); }
+.avatar-femme_cheveux_blonds { background: linear-gradient(135deg, #F0D06B, #D4A017); }
+.avatar-femme_voilee { background: linear-gradient(135deg, #6B5B95, #55487A); }
+.avatar-medecin { background: linear-gradient(135deg, #2196F3, #0b5e8a); }
+.avatar-infirmiere { background: linear-gradient(135deg, #00BCD4, #0097A7); }
+.avatar-default { background: linear-gradient(135deg, #667eea, #764ba2); }
