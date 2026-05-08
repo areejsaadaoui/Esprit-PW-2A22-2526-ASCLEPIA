@@ -1,4 +1,13 @@
 
+/* ============================================z
+=======
+/* ============================================
+>>>>>>> f22b3861a3aaa27bcde9008d0489e945a62d84f6
+=======
+/* ============================================
+>>>>>>> pharmacie/medicament
+   ASCLEPIA - FrontOffice Styles
+   ============================================ */
 
 /* ---- NAVBAR ---- */
 .navbar {
@@ -645,7 +654,4 @@
   .hero-visual { display: none; }
 
   .footer-bottom { text-align: center; justify-content: center; }
-}
-body{
-    font-family: Arial, sans-serif;
 }
