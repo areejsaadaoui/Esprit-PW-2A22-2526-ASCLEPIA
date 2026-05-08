@@ -503,7 +503,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <!-- Sécurité Section -->
                 <div class="profile-section" id="securitySection">
-                    <form method="POST" action="change_password.php" id="passwordForm">
+                    <form method="POST" action="reset_password.html" id="passwordForm">
                         <div class="form-group">
                             <label><i class="fa-solid fa-key"></i> Nouveau mot de passe</label>
                             <input type="password" name="new_password" placeholder="••••••••" required>

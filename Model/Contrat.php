@@ -6,6 +6,7 @@ class Contrat {
     private ?int $id_assurance;
     private ?float $montant;
     private ?string $statut;
+    private ?int $id_patient;
 
     public function __construct(
         ?int $id_contrat,
@@ -13,7 +14,8 @@ class Contrat {
         ?string $date_f,
         ?int $id_assurance,
         ?float $montant,
-        ?string $statut
+        ?string $statut,
+        ?int $id_patient = null
     ) {
         $this->id_contrat   = $id_contrat;
         $this->date_d       = $date_d;
@@ -21,6 +23,7 @@ class Contrat {
         $this->id_assurance = $id_assurance;
         $this->montant      = $montant;
         $this->statut       = $statut;
+        $this->id_patient   = $id_patient;
     }
 
     public function show() {
@@ -55,5 +58,8 @@ class Contrat {
     public function setIdAssurance(?int $id): void    { $this->id_assurance = $id; }
     public function setMontant(?float $m): void       { $this->montant = $m; }
     public function setStatut(?string $s): void       { $this->statut = $s; }
+
+     public function getIdPatient(): ?int          { return $this->id_patient; }
+    public function setIdPatient(?int $id): void  { $this->id_patient = $id; }
 }
 ?>

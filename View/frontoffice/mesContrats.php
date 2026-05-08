@@ -1,17 +1,36 @@
 <?php
 session_start();
 require_once __DIR__ . '/langue.php';
-include '../../Controller/ContratController.php';
 
-$contratC = new ContratController();
-$i18n = i18n_boot('fr');
-$lang = $i18n['lang'];
-$isRtl = $i18n['isRtl'];
+require_once '../../controller/ContratController.php';
+require_once '../../controller/UserController.php';
 
-// TODO: remplacer 1 par $_SESSION['id_user'] après intégration auth
-$list = $contratC->listActiveContrats(1);
+// === SESSION ===
+$isLoggedIn = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
+$userId     = $_SESSION['user_id']    ?? null;
+$userNom    = $_SESSION['user_nom']   ?? '';
+$userRole   = $_SESSION['user_role']  ?? '';
+$isAdmin    = ($userRole === 'admin');
+
+// Redirection si non connecté
+if (!$isLoggedIn || !$userId) {
+    header('Location: login.html');
+    exit();
+}
+
+// Récupérer l'avatar via le controller
+$userC      = new UserController();
+$userAvatar = $userC->getAvatarByUserId($userId);
+
+// === LOGIQUE MÉTIER ===
+$contratC        = new ContratController();
+$i18n            = i18n_boot('fr');
+$lang            = $i18n['lang'];
+$isRtl           = $i18n['isRtl'];
+$list            = $contratC->listActiveContrats($userId);
+$expiringContrats = $contratC->getExpiringContrats($userId);
+
 $contrats = [];
-$expiringContrats = $contratC->getExpiringContrats(1);
 foreach ($list as $c) { $contrats[] = $c; }
 
 function daysBetween($start, $end) {
@@ -36,7 +55,12 @@ function clampPercent($v) {
     <link rel="stylesheet" href="../../assets/css/style.css">
     <link rel="stylesheet" href="../../assets/css/frontoffice.css">
     <link rel="stylesheet" href="../../assets/css/assurance.css">
+    <link rel="stylesheet" href="../assets/css/avatar.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .nav-user-info { display:flex; align-items:center; gap:8px; color:white; font-size:0.9rem; }
+        .nav-user-info .avatar-css { flex-shrink:0; border:2px solid rgba(255,255,255,0.4); }
+    </style>
 </head>
 <body id="body">
     <nav class="navbar" id="navbar">
@@ -53,6 +77,21 @@ function clampPercent($v) {
             </a>
         </div>
         <div class="nav-actions">
+            <!-- Utilisateur connecté : avatar + nom + déconnexion -->
+            <div class="nav-user-info">
+                <div class="avatar-css small avatar-<?= htmlspecialchars($userAvatar) ?>"></div>
+                <span><?= htmlspecialchars($userNom) ?></span>
+            </div>
+            <?php if ($isAdmin): ?>
+                <a href="../back/dashboard.php" class="btn btn-outline-white btn-sm">
+                    <i class="fa-solid fa-gauge"></i> Admin
+                </a>
+            <?php endif; ?>
+            <a href="../back/logout.php" class="btn btn-outline-white btn-sm">
+                <i class="fa-solid fa-right-from-bracket"></i> <?= htmlspecialchars(i18n_t('logout', $lang)) ?>
+            </a>
+
+            <!-- Sélecteur de langue -->
             <div style="display:flex; gap:8px; align-items:center; margin-left:12px;">
                 <a class="btn btn-outline-white btn-sm" href="<?= htmlspecialchars(i18n_lang_url('fr')) ?>">FR</a>
                 <a class="btn btn-outline-white btn-sm" href="<?= htmlspecialchars(i18n_lang_url('en')) ?>">EN</a>
@@ -87,7 +126,7 @@ function clampPercent($v) {
                         $start = $c['date_d'];
                         $end   = !empty($c['date_f']) ? $c['date_f'] : null;
                         $today = date('Y-m-d');
-                        $pct = 0;
+                        $pct   = 0;
                         if ($end) {
                             $totalDays = daysBetween($start, $end);
                             $doneDays  = daysBetween($start, $today);
@@ -131,37 +170,39 @@ function clampPercent($v) {
             </div>
         </div>
     </section>
-<?php if (!empty($expiringContrats)): ?>
-<div id="notif-overlay" class="notif-overlay">
-    <div class="notif-box">
-        <div class="notif-header">
-            <div class="notif-icon">🔔</div>
-            <div class="notif-header-text">
-                <h3>Contrats expirant bientôt</h3>
-                <p>Dans moins de 30 jours</p>
-            </div>
-        </div>
 
-        <?php foreach ($expiringContrats as $exp): ?>
-            <?php $daysLeft = (int)floor((strtotime($exp['date_f']) - time()) / 86400); ?>
-            <div class="notif-item">
-                <div class="notif-item-info">
-                    <strong><?= htmlspecialchars($exp['nom_assurance']) ?></strong>
-                    <p>Expire le <?= htmlspecialchars($exp['date_f']) ?></p>
+    <?php if (!empty($expiringContrats)): ?>
+    <div id="notif-overlay" class="notif-overlay">
+        <div class="notif-box">
+            <div class="notif-header">
+                <div class="notif-icon">🔔</div>
+                <div class="notif-header-text">
+                    <h3>Contrats expirant bientôt</h3>
+                    <p>Dans moins de 30 jours</p>
                 </div>
-                <span class="notif-badge">
-                    <?= $daysLeft === 0 ? "Aujourd'hui!" : "J-$daysLeft" ?>
-                </span>
             </div>
-        <?php endforeach; ?>
 
-        <button onclick="document.getElementById('notif-overlay').remove()" 
-                class="btn btn-primary notif-close-btn">
-            <i class="fa-solid fa-check"></i> J'ai compris
-        </button>
+            <?php foreach ($expiringContrats as $exp): ?>
+                <?php $daysLeft = (int)floor((strtotime($exp['date_f']) - time()) / 86400); ?>
+                <div class="notif-item">
+                    <div class="notif-item-info">
+                        <strong><?= htmlspecialchars($exp['nom_assurance']) ?></strong>
+                        <p>Expire le <?= htmlspecialchars($exp['date_f']) ?></p>
+                    </div>
+                    <span class="notif-badge">
+                        <?= $daysLeft === 0 ? "Aujourd'hui!" : "J-$daysLeft" ?>
+                    </span>
+                </div>
+            <?php endforeach; ?>
+
+            <button onclick="document.getElementById('notif-overlay').remove()"
+                    class="btn btn-primary notif-close-btn">
+                <i class="fa-solid fa-check"></i> J'ai compris
+            </button>
+        </div>
     </div>
-</div>
-<?php endif; ?>
+    <?php endif; ?>
+
 <script>
     async function refreshStatuses() {
         const cards = Array.from(document.querySelectorAll('[data-contrat-id]'));

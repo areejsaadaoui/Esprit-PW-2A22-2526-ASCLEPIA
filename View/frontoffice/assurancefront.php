@@ -1,7 +1,24 @@
 <?php
+// assurancefront.php - View/front/
 session_start();
 require_once __DIR__ . '/langue.php';
+//require_once '../../config.php';
 include '../../controller/AssuranceController.php';
+include '../../controller/UserController.php';
+
+// === SESSION ===
+$isLoggedIn = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
+$userId     = $_SESSION['user_id']    ?? null;
+$userNom    = $_SESSION['user_nom']   ?? '';
+$userEmail  = $_SESSION['user_email'] ?? '';
+$userRole   = $_SESSION['user_role']  ?? '';
+$isAdmin    = ($userRole === 'admin');
+
+// Récupérer l'avatar via le controller
+$userC      = new UserController();
+$userAvatar = ($isLoggedIn && $userId) ? $userC->getAvatarByUserId($userId) : 'default';
+
+// === LOGIQUE MÉTIER ===
 $assuranceC = new AssuranceController();
 $list       = $assuranceC->listAssurances();
 
@@ -36,8 +53,8 @@ if (isset($_GET['comp1'], $_GET['comp2'])) {
     }
 }
 
-$i18n = i18n_boot('fr');
-$lang = $i18n['lang'];
+$i18n  = i18n_boot('fr');
+$lang  = $i18n['lang'];
 $isRtl = $i18n['isRtl'];
 ?>
 <!DOCTYPE html>
@@ -50,6 +67,7 @@ $isRtl = $i18n['isRtl'];
     <link rel="stylesheet" href="../../assets/css/frontoffice.css">
     <link rel="stylesheet" href="../../assets/css/assurance.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+     <link rel="stylesheet" href="../assets/css/avatar.css">
     <style>
         .pagination { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:24px; flex-wrap:wrap; }
         .pagination button, .pagination span { display:inline-flex; align-items:center; justify-content:center; min-width:38px; height:38px; padding:0 10px; border-radius:var(--radius); font-size:0.88rem; font-weight:600; border:1px solid var(--border); background:var(--white); color:var(--text); }
@@ -63,6 +81,13 @@ $isRtl = $i18n['isRtl'];
         html[dir="rtl"] body { direction: rtl; text-align: right; }
         html[dir="rtl"] .nav-links { direction: rtl; }
         html[dir="rtl"] .compare-bar { direction: rtl; }
+
+        /* Utilisateur connecté dans la navbar */
+        .nav-user-info { display:flex; align-items:center; gap:8px; color:white; font-size:0.9rem; }
+        .nav-user-info .user-avatar { width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.4); }
+
+        /* Badge "Souscrire" désactivé si non connecté */
+        .btn-subscribe-locked { opacity:0.6; cursor:not-allowed; position:relative; }
     </style>
 </head>
 <body id="body">
@@ -80,8 +105,28 @@ $isRtl = $i18n['isRtl'];
             <a href="#" class="nav-link"><?= htmlspecialchars(i18n_t('contact', $lang)) ?></a>
         </div>
         <div class="nav-actions">
-            <a href="#" class="btn btn-outline-white btn-sm"><?= htmlspecialchars(i18n_t('login', $lang)) ?></a>
-            <a href="#" class="btn btn-primary btn-sm"><?= htmlspecialchars(i18n_t('signup', $lang)) ?></a>
+
+            <?php if ($isLoggedIn): ?>
+                <!-- Utilisateur connecté : avatar image + nom + liens contextuels -->
+                <div class="nav-user-info">
+    <div class="avatar-css small avatar-<?= htmlspecialchars($userAvatar) ?>"></div>
+    <span><?= htmlspecialchars($userNom) ?></span>
+</div>
+                <?php if ($isAdmin): ?>
+                    <a href="../back/dashboard.php" class="btn btn-outline-white btn-sm">
+                        <i class="fa-solid fa-gauge"></i> Admin
+                    </a>
+                <?php endif; ?>
+                <a href="../back/logout.php" class="btn btn-outline-white btn-sm">
+                    <i class="fa-solid fa-right-from-bracket"></i> <?= htmlspecialchars(i18n_t('deconnection', $lang)) ?>
+                </a>
+            <?php else: ?>
+                <!-- Visiteur non connecté : boutons connexion / inscription -->
+                <a href="login.html" class="btn btn-outline-white btn-sm"><?= htmlspecialchars(i18n_t('login', $lang)) ?></a>
+                <a href="loginuser.html" class="btn btn-primary btn-sm"><?= htmlspecialchars(i18n_t('signup', $lang)) ?></a>
+            <?php endif; ?>
+
+            <!-- Sélecteur de langue -->
             <div style="display:flex; gap:8px; align-items:center; margin-left:12px;">
                 <a class="btn btn-outline-white btn-sm" href="<?= htmlspecialchars(i18n_lang_url('fr')) ?>">FR</a>
                 <a class="btn btn-outline-white btn-sm" href="<?= htmlspecialchars(i18n_lang_url('en')) ?>">EN</a>
@@ -102,6 +147,11 @@ $isRtl = $i18n['isRtl'];
                 <div class="hero-badge"><?= htmlspecialchars(i18n_t('offers', $lang)) ?></div>
                 <h1 class="hero-title"><?= htmlspecialchars(i18n_t('choose_health_insurance', $lang)) ?></h1>
                 <p class="hero-subtitle" style="margin: 0 auto;"><?= htmlspecialchars(i18n_t('subtitle', $lang)) ?></p>
+                <?php if ($isLoggedIn): ?>
+                    <p style="margin-top:12px; color:rgba(255,255,255,0.8); font-size:0.95rem;">
+                        👋 <?= htmlspecialchars(i18n_t('welcome_back', $lang)) ?> <strong><?= htmlspecialchars($userNom) ?></strong>
+                    </p>
+                <?php endif; ?>
             </div>
         </div>
     </section>
@@ -109,6 +159,15 @@ $isRtl = $i18n['isRtl'];
     <!-- ASSURANCES SECTION -->
     <section class="section-padding" style="background: var(--bg);">
         <div class="container">
+
+            <!-- Alerte si non connecté -->
+            <?php if (!$isLoggedIn): ?>
+            <div class="alert alert-info" style="margin-bottom:24px; text-align:center; padding:14px 20px; background:var(--primary-light, #e8f4fd); border-radius:var(--radius); color:var(--primary);">
+                <i class="fa-solid fa-circle-info"></i>
+                <?= htmlspecialchars(i18n_t('login_to_subscribe', $lang)) ?>
+                <a href="login.html" style="font-weight:700; margin-left:6px;"><?= htmlspecialchars(i18n_t('login', $lang)) ?></a>
+            </div>
+            <?php endif; ?>
 
             <!-- COMPARATEUR RÉSULTAT -->
             <?php if ($compare1 && $compare2): ?>
@@ -216,11 +275,23 @@ $isRtl = $i18n['isRtl'];
                                    data-nom="<?= htmlspecialchars($a['nom_assurance']) ?>">
                             <?= htmlspecialchars(i18n_t('add_compare', $lang)) ?>
                         </label>
-                        <a href="souscrireContrat.php?<?= htmlspecialchars(http_build_query(['id_assurance' => $a['id_assurance'], 'lang' => $lang])) ?>" 
-   class="btn btn-primary" 
-   style="width:100%; justify-content:center; margin-top:12px;">
-    <?= htmlspecialchars(i18n_t('subscribe', $lang)) ?> <i class="fa-solid fa-arrow-right"></i>
-</a>
+
+                        <?php if ($isLoggedIn): ?>
+                            <!-- Connecté : bouton Souscrire actif -->
+                            <a href="souscrireContrat.php?<?= htmlspecialchars(http_build_query(['id_assurance' => $a['id_assurance'], 'lang' => $lang])) ?>"
+                               class="btn btn-primary"
+                               style="width:100%; justify-content:center; margin-top:12px;">
+                                <?= htmlspecialchars(i18n_t('subscribe', $lang)) ?> <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                        <?php else: ?>
+                            <!-- Non connecté : bouton verrouillé avec redirection login -->
+                            <a href="login.html?redirect=<?= urlencode('assurancefront.php?lang=' . $lang) ?>"
+                               class="btn btn-primary btn-subscribe-locked"
+                               style="width:100%; justify-content:center; margin-top:12px;"
+                               title="<?= htmlspecialchars(i18n_t('login_to_subscribe', $lang)) ?>">
+                                <i class="fa-solid fa-lock"></i> <?= htmlspecialchars(i18n_t('subscribe', $lang)) ?>
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <?php endforeach; ?>
@@ -250,14 +321,19 @@ $isRtl = $i18n['isRtl'];
             </button>
         </div>
     </div>
-<button class="mes-contrats-fab" onclick="goToContrats()">
+
+    <?php if ($isLoggedIn): ?>
+    <button class="mes-contrats-fab" onclick="goToContrats()">
         <i class="fa-solid fa-file-contract"></i>
         <span>Mes contrats</span>
     </button>
-   <button class="ai-fab" onclick="goToDoctor()" title="Dr. ASCLEPIA">
+    <?php endif; ?>
+
+    <button class="ai-fab" onclick="goToDoctor()" title="Dr. ASCLEPIA">
         🤖
     </button>
     <div id="transitionOverlay"></div>
+
     <!-- BOUTON MODE SOMBRE -->
     <button class="dark-toggle" id="darkToggle" onclick="toggleDark()" title="<?= htmlspecialchars(i18n_t('dark_mode', $lang)) ?>">
         🌙
@@ -276,10 +352,11 @@ $isRtl = $i18n['isRtl'];
 <script>
     var i18n = <?= json_encode([
         'alert_only_2' => i18n_t('alert_only_2', $lang),
-        'page' => i18n_t('page', $lang),
-        'on' => i18n_t('on', $lang),
+        'page'         => i18n_t('page', $lang),
+        'on'           => i18n_t('on', $lang),
     ], JSON_UNESCAPED_UNICODE) ?>;
     var currentLang = <?= json_encode($lang, JSON_UNESCAPED_UNICODE) ?>;
+    var isLoggedIn  = <?= json_encode($isLoggedIn) ?>;
 
     // Navbar scroll
     window.addEventListener('scroll', function() {
@@ -305,12 +382,11 @@ $isRtl = $i18n['isRtl'];
         appliquerDark();
     }
 
-    // Appliquer au chargement
     appliquerDark();
 
     // ---- RECHERCHE + FILTRE + PAGINATION ----
-    var activeType = '';
-    var currentPage = 1;
+    var activeType   = '';
+    var currentPage  = 1;
     var itemsPerPage = 6;
 
     function getCartesFiltrees() {
@@ -355,17 +431,17 @@ $isRtl = $i18n['isRtl'];
     }
 
     function filtrer() {
-        var toutesCartes = document.querySelectorAll('.carte-assurance');
+        var toutesCartes   = document.querySelectorAll('.carte-assurance');
         var cartesFiltrees = getCartesFiltrees();
-        var totalFiltrees = cartesFiltrees.length;
-        var totalPages = Math.max(1, Math.ceil(totalFiltrees / itemsPerPage));
+        var totalFiltrees  = cartesFiltrees.length;
+        var totalPages     = Math.max(1, Math.ceil(totalFiltrees / itemsPerPage));
 
         if (currentPage > totalPages) {
             currentPage = 1;
         }
 
         var start = (currentPage - 1) * itemsPerPage;
-        var end = start + itemsPerPage;
+        var end   = start + itemsPerPage;
 
         toutesCartes.forEach(function(carte) {
             carte.style.display = 'none';
@@ -383,15 +459,13 @@ $isRtl = $i18n['isRtl'];
         renderPagination(totalFiltrees === 0 ? 1 : totalPages);
     }
 
-    // Recherche en temps réel
     document.getElementById('searchInput').addEventListener('input', function() {
         currentPage = 1;
         filtrer();
     });
 
-    // Filtre par type
     function filtrerType(btn, type) {
-        activeType = type;
+        activeType  = type;
         currentPage = 1;
         document.querySelectorAll('.filter-btn').forEach(function(b) {
             b.classList.remove('active');
@@ -441,8 +515,8 @@ $isRtl = $i18n['isRtl'];
 
     function lancerComparaison() {
         if (selected.length === 2) {
-           window.location.href = '/projetweb/View/frontoffice/assurancefront.php?comp1='
-    + selected[0].id + '&comp2=' + selected[1].id + '&lang=' + encodeURIComponent(currentLang);
+            window.location.href = '/projetweb/View/frontoffice/assurancefront.php?comp1='
+                + selected[0].id + '&comp2=' + selected[1].id + '&lang=' + encodeURIComponent(currentLang);
         }
     }
 
@@ -451,13 +525,15 @@ $isRtl = $i18n['isRtl'];
         document.querySelectorAll('.compare-checkbox').forEach(function(cb) { cb.checked = false; });
         majBarre();
     }
+
     function goToContrats() {
         document.getElementById('transitionOverlay').classList.add('animate');
         setTimeout(function() {
             window.location.href = 'mesContrats.php?<?= htmlspecialchars(http_build_query(['lang' => $lang])) ?>';
         }, 480);
     }
-  function goToDoctor() {
+
+    function goToDoctor() {
         document.getElementById('transitionOverlay').classList.add('animate');
         setTimeout(function() {
             window.location.href = 'doctorAI.php';

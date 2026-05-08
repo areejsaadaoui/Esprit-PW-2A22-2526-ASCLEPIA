@@ -117,7 +117,7 @@ class ContratController {
         }
     }
 
-    public function listActiveContrats($id_patient = 1) {
+    public function listActiveContrats($id_patient) {
         $sql = "SELECT c.*, a.nom_assurance, a.TYPE AS type_assurance
                 FROM contrat c
                 JOIN assurance a ON c.id_assurance = a.id_assurance
@@ -143,7 +143,7 @@ class ContratController {
                 'id_assurance' => $contrat->getIdAssurance(),
                 'montant'      => $contrat->getMontant(),
                 'statut'       => $contrat->getStatut(),
-                'id_patient'   => 1,
+                'id_patient'   => $contrat->getIdPatient(),
                 'token'        => $token,
             ]);
         } catch (Exception $e) {

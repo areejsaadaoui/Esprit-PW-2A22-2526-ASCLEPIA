@@ -1,5 +1,5 @@
 <?php
-include(__DIR__ . '/../config.php');
+require_once(__DIR__ . '/../config.php');
 
 class UserController {
 
@@ -329,5 +329,20 @@ class UserController {
             return [];
         }
     }
+    public function getAvatarByUserId($id_user) {
+    $sql = "SELECT avatar_style FROM utilisateur WHERE id_user = :id_user";
+    $db = config::getConnexion();
+    try {
+        $stmt = $db->prepare($sql);
+        $stmt->execute([':id_user' => $id_user]);
+        $row = $stmt->fetch();
+        if ($row && !empty($row['avatar_style'])) {
+            return $row['avatar_style'];
+        }
+        return 'default';
+    } catch (Exception $e) {
+        return 'default';
+    }
+}
 }
 ?>

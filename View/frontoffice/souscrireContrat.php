@@ -2,8 +2,21 @@
 session_start();
 require_once __DIR__ . '/langue.php';
 include '../../Controller/ContratController.php';
+include '../../controller/UserController.php';
 require_once __DIR__ . '/../../Model/Contrat.php';
 require_once __DIR__ . '/../../mailconfig.php';
+
+// === SESSION ===
+$isLoggedIn = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
+$userId     = $_SESSION['user_id']    ?? null;
+$userNom    = $_SESSION['user_nom']   ?? '';
+$userEmail  = $_SESSION['user_email'] ?? '';
+$userRole   = $_SESSION['user_role']  ?? '';
+$isAdmin    = ($userRole === 'admin');
+
+// Récupérer l'avatar via le controller
+$userC      = new UserController();
+$userAvatar = ($isLoggedIn && $userId) ? $userC->getAvatarByUserId($userId) : 'default';
 
 $contratC       = new ContratController();
 $assurances     = $contratC->listAssurances();
@@ -29,11 +42,12 @@ if (isset($_POST['id_assurance'], $_POST['date_d'], $_POST['montant'])) {
             !empty($_POST['date_f']) ? $_POST['date_f'] : null,
             (int)$_POST['id_assurance'],
             (float)$_POST['montant'],
-            'En attente'
+            'En attente',
+            $userId ? (int)$userId : null
         );
         $contratC->addContratWithToken($contrat, $token);
 
-       $email = trim($contratC->getUserEmail(1));
+       $email = $isLoggedIn ? trim($userEmail) : trim($contratC->getUserEmail(1));
        // var_dump($email); die();
 
         require_once __DIR__ . '/../../libs/PHPMailer/src/PHPMailer.php';
@@ -119,7 +133,12 @@ if (!empty($error)) {
     <link rel="stylesheet" href="../../assets/css/frontoffice.css">
     <link rel="stylesheet" href="../../assets/css/assurance.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/avatar.css">
     <style>
+        /* Utilisateur connecté dans la navbar */
+        .nav-user-info { display:flex; align-items:center; gap:8px; color:white; font-size:0.9rem; }
+        .nav-user-info .user-avatar { width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.4); }
+
         .souscription-wrapper { max-width:680px; margin:0 auto; padding:40px 24px 80px; }
         .assurance-preview { background:rgba(14,165,233,0.06); border:1px solid rgba(14,165,233,0.2); border-radius:var(--radius-lg); padding:20px 24px; margin-bottom:24px; display:none; }
         .assurance-preview.visible { display:block; }
@@ -150,8 +169,25 @@ if (!empty($error)) {
             <a href="#" class="nav-link"><?= htmlspecialchars(i18n_t('contact', $lang)) ?></a>
         </div>
         <div class="nav-actions">
-            <a href="#" class="btn btn-outline-white btn-sm"><?= htmlspecialchars(i18n_t('login', $lang)) ?></a>
-            <a href="#" class="btn btn-primary btn-sm"><?= htmlspecialchars(i18n_t('signup', $lang)) ?></a>
+            <?php if ($isLoggedIn): ?>
+                <!-- Utilisateur connecté : avatar + nom + liens contextuels -->
+                <div class="nav-user-info">
+                    <div class="avatar-css small avatar-<?= htmlspecialchars($userAvatar) ?>"></div>
+                    <span><?= htmlspecialchars($userNom) ?></span>
+                </div>
+                <?php if ($isAdmin): ?>
+                    <a href="../back/dashboard.php" class="btn btn-outline-white btn-sm">
+                        <i class="fa-solid fa-gauge"></i> Admin
+                    </a>
+                <?php endif; ?>
+                <a href="../back/logout.php" class="btn btn-outline-white btn-sm">
+                    <i class="fa-solid fa-right-from-bracket"></i> <?= htmlspecialchars(i18n_t('deconnection', $lang)) ?>
+                </a>
+            <?php else: ?>
+                <!-- Visiteur non connecté -->
+                <a href="login.html" class="btn btn-outline-white btn-sm"><?= htmlspecialchars(i18n_t('login', $lang)) ?></a>
+                <a href="loginuser.html" class="btn btn-primary btn-sm"><?= htmlspecialchars(i18n_t('signup', $lang)) ?></a>
+            <?php endif; ?>
             <div style="display:flex; gap:8px; align-items:center; margin-left:12px;">
                 <a class="btn btn-outline-white btn-sm" href="<?= htmlspecialchars(i18n_lang_url('fr')) ?>">FR</a>
                 <a class="btn btn-outline-white btn-sm" href="<?= htmlspecialchars(i18n_lang_url('en')) ?>">EN</a>
@@ -178,6 +214,14 @@ if (!empty($error)) {
     <section style="background:var(--bg); padding:60px 0;">
         <div class="container">
             <div class="souscription-wrapper">
+
+                <?php if (!$isLoggedIn): ?>
+                <div class="alert alert-info" style="margin-bottom:24px; text-align:center; padding:14px 20px; background:var(--primary-light, #e8f4fd); border-radius:var(--radius); color:var(--primary);">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <?= htmlspecialchars(i18n_t('login_to_subscribe', $lang)) ?>
+                    <a href="login.html" style="font-weight:700; margin-left:6px;"><?= htmlspecialchars(i18n_t('login', $lang)) ?></a>
+                </div>
+                <?php endif; ?>
 
                 <?php if ($success): ?>
                 <div class="card">
@@ -277,7 +321,7 @@ if (!empty($error)) {
                         </div>
 
                         <div class="d-flex gap-2 mt-3">
-                            <button type="submit" class="btn btn-primary btn-lg" style="flex:1; justify-content:center;">
+                            <button type="submit" class="btn btn-primary btn-lg" style="flex:1; justify-content:center;" <?= !$isLoggedIn ? 'disabled title="' . htmlspecialchars(i18n_t('login_to_subscribe', $lang)) . '"' : '' ?>>
                                 <i class="fa-solid fa-check"></i> <?= htmlspecialchars(i18n_t('confirm', $lang)) ?>
                             </button>
                             <a href="assurancefront.php?<?= htmlspecialchars(http_build_query(['lang' => $lang])) ?>" class="btn btn-outline"><?= htmlspecialchars(i18n_t('cancel', $lang)) ?></a>
