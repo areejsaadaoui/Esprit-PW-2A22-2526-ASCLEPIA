@@ -1,47 +1,52 @@
 <?php
 class Post {
-    private ?int    $id_post;
-    private ?string $contenu;
-    private ?string $date_post;
-    private ?string $image;
-    private ?int    $id_utilisateur;
+    private $id_post;
+    private $contenu;
+    private $date_post;
+    private $image;
+    private $id_utilisateur;
+    private $likes;
+    private $signalements;
+    private $user_nom;
+    private $user_avatar;
 
-    // constructeur
-    public function __construct( ?int    $id_post, ?string $contenu, ?string $date_post, ?string $image, ?int    $id_utilisateur ) {
-        $this->id_post        = $id_post;
-        $this->contenu        = $contenu;
-        $this->date_post      = $date_post;
-        $this->image          = $image;
+    public function __construct($id_post, $contenu, $date_post, $image, $id_utilisateur, $likes = 0, $signalements = 0) {
+        $this->id_post = $id_post;
+        $this->contenu = $contenu;
+        $this->date_post = $date_post;
+        $this->image = $image;
         $this->id_utilisateur = $id_utilisateur;
+        $this->likes = $likes;
+        $this->signalements = $signalements;
     }
 
-    public function show() {
-        echo "<table border='1' cellpadding='5'>";
-        echo "<tr><th>ID</th><th>Contenu</th><th>Date de publication</th><th>Image</th><th>ID de l'utilisateur</th></tr>";
-        echo "<tr>";
-        echo "<td>{$this->id_post}</td>";
-        echo "<td>{$this->contenu}</td>";
-        echo "<td>{$this->date_post}</td>";
-        echo "<td>{$this->image}</td>";
-        echo "<td>{$this->id_utilisateur}</td>";
-        echo "</tr>";
-        echo "</table>";
+    // Getters
+    public function getIdPost() { return $this->id_post; }
+    public function getContenu() { return $this->contenu; }
+    public function getDatePost() { return $this->date_post; }
+    public function getImage() { return $this->image; }
+    public function getIdUtilisateur() { return $this->id_utilisateur; }
+    public function getLikes() { return $this->likes; }
+    public function getSignalements() { return $this->signalements; }
+    
+    public function setUserNom($nom) {
+        $this->user_nom = $nom;
+        return $this;
     }
-
-    // getters
-    public function getIdPost(): ?int {
-    return $this->id_post;
-}
-    public function getContenu():       ?string { return $this->contenu; }
-    public function getDatePost():      ?string { return $this->date_post; }
-    public function getImage():         ?string { return $this->image; }
-    public function getIdUtilisateur(): ?int    { return $this->id_utilisateur; }
- 
-    // setters
-    public function setIdPost(?int $id_post):               void { $this->id_post = $id_post; }
-    public function setContenu(?string $contenu):           void { $this->contenu = $contenu; }
-    public function setDatePost(?string $date_post):        void { $this->date_post = $date_post; }
-    public function setImage(?string $image):               void { $this->image = $image; }
-    public function setIdUtilisateur(?int $id_utilisateur): void { $this->id_utilisateur = $id_utilisateur;}
+    public function getUserNom() {
+        return $this->user_nom;
+    }
+    
+    public function getUserFullName() {
+        return $this->user_nom ?? 'Utilisateur #' . $this->id_utilisateur;
+    }
+    
+    public function setUserAvatar($avatar) {
+        $this->user_avatar = $avatar;
+        return $this;
+    }
+    public function getUserAvatar() {
+        return $this->user_avatar ?? 'default';
+    }
 }
 ?>

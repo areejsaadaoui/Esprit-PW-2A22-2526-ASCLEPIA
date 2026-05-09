@@ -1,6 +1,34 @@
 <?php
+session_start(); // ← AJOUTER CETTE LIGNE
+
 include '../../Controller/PostController.php';
 require_once __DIR__ . '/../../Model/Post.php';
+
+// Vérification de la session utilisateur
+$isLoggedIn = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
+$userNom = $_SESSION['user_nom'] ?? '';
+$userEmail = $_SESSION['user_email'] ?? '';
+$userRole = $_SESSION['user_role'] ?? '';
+$userId = $_SESSION['user_id'] ?? null;
+$userAvatar = $_SESSION['user_avatar'] ?? 'default';
+
+// Si l'utilisateur est connecté, récupérer l'avatar depuis la base si nécessaire
+if ($isLoggedIn && $userId) {
+    try {
+        require_once '../../config.php';
+        $conn = config::getConnexion();
+        $sql = "SELECT avatar_style FROM utilisateur WHERE id_user = :id_user";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([':id_user' => $userId]);
+        $row = $stmt->fetch();
+        if ($row && !empty($row['avatar_style'])) {
+            $userAvatar = $row['avatar_style'];
+            $_SESSION['user_avatar'] = $userAvatar;
+        }
+    } catch (Exception $e) {
+        $userAvatar = 'default';
+    }
+}
 
 $error = '';
 $success = '';
@@ -18,6 +46,15 @@ $post = $postC->getPostById($id_post);
 
 if (!$post) {
     header('Location: ../Frontoffice/postlist.php');
+    exit;
+}
+
+// ===== VÉRIFICATION DES DROITS =====
+// 🔒 Seul le propriétaire du post peut le modifier (admin NON autorisé)
+$isOwner = ($post->getIdUtilisateur() == $userId);
+
+if (!$isOwner) {
+    header('Location: ../Frontoffice/postlist.php?error=unauthorized');
     exit;
 }
 
@@ -74,6 +111,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $imagePath = $uploadResult['success'];
             }
         }
+        // Gestion du GIF (si l'utilisateur en a sélectionné un)
+$gifUrl = $_POST['gif_url'] ?? '';
+if (!empty($gifUrl)) {
+    $imagePath = $gifUrl;
+}
         
         // Supprimer l'image si demandé
         if (isset($_POST['delete_image']) && $_POST['delete_image'] == '1') {
@@ -104,6 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $error = "Veuillez remplir le contenu du message.";
     }
+    
 }
 ?>
 
@@ -118,7 +161,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/frontoffice.css">
+    <link rel="stylesheet" href="../assets/css/avatar.css">
     <style>
+            /* ===== AVATAR ===== */
+        .post-avatar {
+            width: 36px !important;
+            height: 36px !important;
+            font-size: 0.9rem !important;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            animation: floatSoft 3s infinite;
+            transition: 0.2s;
+        }
+        
+        .post-avatar:hover {
+            transform: scale(1.1);
+        }
         .image-preview-container {
             margin-top: 10px;
             position: relative;
@@ -176,26 +233,233 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             cursor: pointer;
             margin-top: 8px;
         }
+        /* ===== DARK MODE – VERSION MODIFPOST (COMPLÉMENT) ===== */
+
+/* Carte principale */
+body.dark-mode .card {
+    background: #16213e !important;
+    border-color: #2d2d44 !important;
+}
+/* Section principale */
+body.dark-mode .section-padding {
+    background: #1a1a2e !important;
+}
+
+/* Titres de section */
+body.dark-mode .section-title,
+body.dark-mode .section-desc,
+body.dark-mode .section-tag {
+    color: white !important;
+}
+
+body.dark-mode .section-tag i {
+    color: #0ea5e9 !important;
+}
+
+/* Labels et textes du formulaire */
+body.dark-mode .form-label {
+    color: white !important;
+}
+
+body.dark-mode .form-label i {
+    color: #0ea5e9 !important;
+}
+
+/* Champ contenu */
+body.dark-mode .form-control {
+    background: #0f0f1a !important;
+    border-color: #2d2d44 !important;
+    color: white !important;
+}
+
+body.dark-mode .form-control:focus {
+    border-color: #0ea5e9 !important;
+    box-shadow: 0 0 0 3px rgba(14,165,233,0.2) !important;
+}
+
+body.dark-mode .form-control::placeholder {
+    color: #a0a0c0 !important;
+}
+
+/* Compteur de caractères */
+body.dark-mode .form-hint {
+    color: #a0a0c0 !important;
+}
+
+/* Image actuelle */
+body.dark-mode .current-image {
+    background: #0f0f1a !important;
+    border: 1px solid #2d2d44 !important;
+}
+
+body.dark-mode .checkbox-label span {
+    color: #e0e0e0 !important;
+}
+
+/* Boutons */
+body.dark-mode .btn-primary {
+    background: #0ea5e9 !important;
+    border: none !important;
+    color: white !important;
+}
+
+body.dark-mode .btn-outline {
+    border-color: #475569 !important;
+    color: #cbd5e1 !important;
+}
+
+body.dark-mode .btn-outline:hover {
+    background: #334155 !important;
+    color: white !important;
+}
+
+/* Alertes */
+body.dark-mode .alert-danger {
+    background: #7f1a1a !important;
+    color: #fecaca !important;
+    border-color: #991b1b !important;
+}
+
+body.dark-mode .alert-success {
+    background: #14532d !important;
+    color: #bbf7d0 !important;
+    border-color: #166534 !important;
+}
+
+/* Aperçu image */
+body.dark-mode .image-preview {
+    background: #0f0f1a !important;
+    border-color: #2d2d44 !important;
+}
+/* Modal GIPHY */
+.gif-modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.7);
+    justify-content: center;
+    align-items: center;
+}
+
+.gif-modal-content {
+    background: white;
+    width: 80%;
+    max-width: 800px;
+    max-height: 80vh;
+    border-radius: 20px;
+    overflow: hidden;
+    animation: fadeInScale 0.3s ease;
+}
+
+.gif-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.gif-modal-header h3 {
+    margin: 0;
+    color: var(--primary);
+}
+
+.gif-modal-close {
+    font-size: 28px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.gif-modal-close:hover {
+    color: var(--danger);
+}
+
+.gif-modal-body {
+    padding: 20px;
+}
+
+#gifSearchInput {
+    margin-bottom: 20px;
+}
+
+.gif-results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+    max-height: 50vh;
+    overflow-y: auto;
+}
+
+.gif-result {
+    width: 100%;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.gif-result:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* Dark mode pour la modal */
+body.dark-mode .gif-modal-content {
+    background: #16213e;
+    border-color: #2d2d44;
+}
+
+body.dark-mode .gif-modal-header {
+    border-bottom-color: #2d2d44;
+}
+
+body.dark-mode .gif-modal-header h3 {
+    color: #0ea5e9;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
     </style>
 </head>
 <body>
-
 <nav class="navbar" id="navbar">
-    <a href="../frontoffice/index.html" class="navbar-brand">
+    <a href="../frontoffice/indexp.php" class="navbar-brand">
         <div class="navbar-logo"></div>
         <div class="navbar-name">ASC<span>LEPIA</span></div>
     </a>
     <div class="nav-links" id="navLinks">
-        <a href="../frontoffice/index.html#accueil" class="nav-link">Accueil</a>
-        <a href="../frontoffice/index.html#services" class="nav-link">Services</a>
-        <a href="../frontoffice/index.html#pharmacies" class="nav-link">Pharmacies</a>
-        <a href="../frontoffice/index.html#assurances" class="nav-link">Assurances</a>
-        <a href="../Frontoffice/postlist.php" class="nav-link active">Caummunauté</a>
-        <a href="../frontoffice/index.html#avis" class="nav-link">Plus</a>
+        <a href="../front/indexp.php#accueil" class="nav-link">Accueil</a>
+        <a href="../front/indexp.php#services" class="nav-link">Services</a>
+        <a href="../front/indexp.php#pharmacies" class="nav-link">Pharmacies</a>
+        <a href="../front/indexp.php#assurances" class="nav-link">Assurances</a>
+        <a href="../Frontoffice/postlist.php" class="nav-link active">Communauté</a>
+        <a href="../front/indexp.php#avis" class="nav-link">Plus</a>
     </div>
     <div class="nav-actions">
-        <a href="../frontoffice/login.html" class="btn btn-outline-white btn-sm">Se connecter</a>
-        <a href="../frontoffice/login.html" class="btn btn-primary btn-sm">S'inscrire</a>
+        <?php if ($isLoggedIn): ?>
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="avatar-css avatar-<?= htmlspecialchars($userAvatar) ?> small"
+             style="width: 36px; height: 36px; border-radius: 50%;"></div>
+        <span style="color: white;">Bonjour, <?= htmlspecialchars($userNom) ?></span>
+        <a href="../back/logout.php" class="btn btn-outline-white btn-sm">
+            <i class="fa-solid fa-sign-out-alt"></i> Déconnexion
+        </a>
+    </div>
+        <?php else: ?>
+            <a href="../frontoffice/login.html" class="btn btn-outline-white btn-sm">Se connecter</a>
+            <a href="../frontoffice/loginuser.html" class="btn btn-primary btn-sm">S'inscrire</a>
+        <?php endif; ?>
         <div class="hamburger" id="hamburger" onclick="toggleMenu()">
             <span></span><span></span><span></span>
         </div>
@@ -271,6 +535,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <label for="imageUpload" class="form-label">
                                 <i class="fa-solid fa-upload"></i> Changer l'image (optionnel)
                             </label>
+                            <!-- Bouton GIPHY -->
+<div class="form-group">
+    <button type="button" class="btn btn-outline" id="openGifBtn">
+        <i class="fa-brands fa-giphy"></i> Changer / Ajouter un GIF
+    </button>
+</div>
+
+<!-- Modal GIPHY -->
+<div id="gifModal" class="gif-modal">
+    <div class="gif-modal-content">
+        <div class="gif-modal-header">
+            <h3><i class="fa-brands fa-giphy"></i> Rechercher un GIF</h3>
+            <span class="gif-modal-close">&times;</span>
+        </div>
+        <div class="gif-modal-body">
+            <input type="text" id="gifSearchInput" placeholder="Rechercher un GIF (ex: bonjour, rire, santé...)" class="form-control">
+            <div id="gifResults" class="gif-results-grid"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Champ caché pour stocker l'URL du GIF -->
+<input type="hidden" id="gifUrl" name="gif_url" value="<?= htmlspecialchars($post->getImage() ?? '') ?>">
                             <div class="file-input-wrapper">
                                 <button type="button" class="btn btn-outline" onclick="document.getElementById('imageUpload').click()">
                                     <i class="fa-solid fa-upload"></i> Choisir une image
@@ -313,6 +600,138 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <script src="../Frontoffice/add.js"></script>
 
+<button class="theme-toggle" id="themeToggle">
+    <i class="fas fa-moon"></i>
+</button>
 
+<script>
+    // Dark Mode - modifreponse.php
+   (function() {
+    const themeToggle = document.getElementById('themeToggle');
+    if (!themeToggle) return;
+    
+    const body = document.body;
+    
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        body.classList.add('dark-mode');
+        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+    } else {
+        body.classList.remove('dark-mode');
+        themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+    }
+    
+    themeToggle.addEventListener('click', () => {
+        body.classList.toggle('dark-mode');
+        
+        if (body.classList.contains('dark-mode')) {
+            localStorage.setItem('theme', 'dark');
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        } else {
+            localStorage.setItem('theme', 'light');
+            themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+        }
+    });
+})();
+</script>
+
+
+<script>
+// ===== GIPHY INTEGRATION POUR MODIFPOST =====
+const GIPHY_API_KEY = 'yqqP8DPRQPO1Uph9Zg5EAptLuvWfRx0U';
+
+const openGifBtn = document.getElementById('openGifBtn');
+const gifModal = document.getElementById('gifModal');
+const closeModal = document.querySelector('.gif-modal-close');
+const gifSearchInput = document.getElementById('gifSearchInput');
+const gifResults = document.getElementById('gifResults');
+const gifUrlInput = document.getElementById('gifUrl');
+
+// Ouvrir la modal
+if (openGifBtn) {
+    openGifBtn.addEventListener('click', () => {
+        gifModal.style.display = 'flex';
+        gifSearchInput.value = '';
+        gifResults.innerHTML = '<div style="text-align:center; padding:40px;">🔍 Recherchez un GIF...</div>';
+    });
+}
+
+// Fermer la modal
+if (closeModal) {
+    closeModal.addEventListener('click', () => {
+        gifModal.style.display = 'none';
+    });
+}
+
+// Fermer en cliquant à l'extérieur
+window.addEventListener('click', (e) => {
+    if (e.target === gifModal) {
+        gifModal.style.display = 'none';
+    }
+});
+
+// Recherche de GIFs
+if (gifSearchInput) {
+    gifSearchInput.addEventListener('keyup', function() {
+        const query = this.value.trim();
+        if (query.length < 2) return;
+        
+        gifResults.innerHTML = '<div style="text-align:center; padding:40px;">🔍 Chargement des GIFs...</div>';
+        
+        fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query)}&limit=20&rating=g`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.data.length === 0) {
+                    gifResults.innerHTML = '<div style="text-align:center; padding:40px;">😢 Aucun GIF trouvé</div>';
+                    return;
+                }
+                
+                gifResults.innerHTML = '';
+                data.data.forEach(gif => {
+                    const img = document.createElement('img');
+                    img.src = gif.images.fixed_height_small.url;
+                    img.alt = gif.title;
+                    img.classList.add('gif-result');
+                    img.style.cursor = 'pointer';
+                    img.style.borderRadius = '12px';
+                    img.style.width = '100%';
+                    
+                    img.addEventListener('click', () => {
+                        gifUrlInput.value = gif.images.original.url;
+                        
+                        const previewContainer = document.getElementById('imagePreviewContainer');
+                        if (previewContainer) {
+                            previewContainer.innerHTML = `
+                                <div class="image-preview-container">
+                                    <img src="${gif.images.fixed_height_small.url}" class="image-preview" style="max-width: 200px; max-height: 200px; border-radius: 12px; border: 2px solid #e2e8f0; padding: 4px; background: white;">
+                                    <div class="remove-image" onclick="removeGif()">
+                                        <i class="fa-solid fa-times"></i>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        
+                        gifModal.style.display = 'none';
+                    });
+                    
+                    gifResults.appendChild(img);
+                });
+            })
+            .catch(error => {
+                console.error('Erreur GIPHY:', error);
+                gifResults.innerHTML = '<div style="text-align:center; padding:40px;">❌ Erreur de chargement</div>';
+            });
+    });
+}
+
+// Supprimer le GIF
+function removeGif() {
+    document.getElementById('gifUrl').value = '';
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    if (previewContainer) {
+        previewContainer.innerHTML = '';
+    }
+}
+</script>
 </body>
 </html>

@@ -64,6 +64,7 @@ $medicamentsApercu = array_slice($listeMedicaments, 0, 3);
   <link rel="stylesheet" href="../assets/css/frontoffice.css">
   <link rel="stylesheet" href="../assets/css/avatar.css">
   <style>
+
     /* CSS pour les Notifications */
     .notification-container {
       position: relative;
@@ -119,11 +120,65 @@ $medicamentsApercu = array_slice($listeMedicaments, 0, 3);
       font-size: 0.75rem;
       color: var(--text-muted);
     }
+
+    #avisList .avis-card {
+  background: white;
+  border-radius: 18px;
+  padding: 24px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+#avisList .avis-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 35px -12px rgba(15, 23, 42, 0.16);
+}
+
+/* Pagination styles */
+.pagination-container {
+  margin-top: 40px;
+}
+
+.pagination {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  background: white;
+  padding: 16px 24px;
+  border-radius: 40px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+/* Modal stars */
+.modal-star {
+  font-size: 36px;
+  cursor: pointer;
+  color: #cbd5e1;
+  transition: all 0.2s ease;
+}
+
+.modal-star.active, .modal-star:hover {
+  color: #fbbf24;
+  transform: translateY(-1px);
+}
+
   </style>
 </head>
 
 <body>
 
+<script>
+  //zeineb
+// ========== VARIABLES SESSION POUR JAVASCRIPT ==========
+var sessionUserId = <?= json_encode($userId ?? 0) ?>;
+var sessionUserRole = <?= json_encode($userRole ?? '') ?>;
+var sessionIsLoggedIn = <?= json_encode($isLoggedIn) ?>;
+</script>
 <!-- ================================================
      NAVBAR (avec session)
      ================================================ -->
@@ -380,7 +435,7 @@ $medicamentsApercu = array_slice($listeMedicaments, 0, 3);
           </div>
           <h3>Consultations & Ordonnances</h3>
           <p>Suivez vos consultations et accédez à vos ordonnances numériques. Diagnostics et notes médicales centralisés.</p>
-          <a href="consultation.php" class="btn btn-outline btn-sm mt-3">
+          <a href="../frontoffice/consultation_patient.php" class="btn btn-outline btn-sm mt-3">
             Voir <i class="fa-solid fa-arrow-right"></i>
           </a>
         </div>
@@ -414,19 +469,29 @@ $medicamentsApercu = array_slice($listeMedicaments, 0, 3);
         </div>
       </div>
 
-      <!-- Module 5: Forum -->
-      <div class="col-4">
-        <div class="card service-card">
-          <div class="icon-box icon-box-lg" style="background: linear-gradient(135deg,#ec4899,#db2777);">
+     <!-- Module 5: Forum -->
+<div class="col-4">
+    <div class="card service-card">
+        <div class="icon-box icon-box-lg" style="background: linear-gradient(135deg,#ec4899,#db2777);">
             <i class="fa-solid fa-comments"></i>
-          </div>
-          <h3>Forum & Communauté</h3>
-          <p>Partagez vos expériences, posez des questions. Rejoignez notre communauté de patients et professionnels de santé.</p>
-          <a href="forum.php" class="btn btn-outline btn-sm mt-3">
-            Participer <i class="fa-solid fa-arrow-right"></i>
-          </a>
         </div>
-      </div>
+        <h3>Forum & Communauté</h3>
+        <p>Partagez vos expériences, posez des questions. Rejoignez notre communauté de patients et professionnels de santé.</p>
+        <?php if ($isLoggedIn): ?>
+            <!-- Utilisateur connecté : accès direct au forum -->
+            <a href="../Frontoffice/postlist.php" class="btn btn-outline btn-sm mt-3">
+                Participer <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        <?php else: ?>
+            <!-- Utilisateur non connecté : redirection vers inscription -->
+            <a href="javascript:void(0);" 
+               onclick="checkForumAccess()" 
+               class="btn btn-outline btn-sm mt-3">
+                Participer <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        <?php endif; ?>
+    </div>
+</div>
 
       <!-- CTA Card -->
       <div class="col-4">
@@ -621,7 +686,7 @@ $medicamentsApercu = array_slice($listeMedicaments, 0, 3);
   </div>
 </section>
 <!-- ================================================
-     FORUM SECTION
+     FORUM SECTION - 3 DERNIERS POSTS DE LA BD
      ================================================ -->
 <section class="section-padding" id="forum" style="background: var(--white);">
   <div class="container">
@@ -643,66 +708,24 @@ $medicamentsApercu = array_slice($listeMedicaments, 0, 3);
               <div class="post-author">Mohamed Amri</div>
               <div class="post-date">Il y a 2 heures</div>
             </div>
-            <span class="badge badge-primary" style="margin-left: auto;">💬 12</span>
-          </div>
-          <h3>Quelle assurance pour les maladies chroniques ?</h3>
-          <p>Je souffre de diabète et je cherche une assurance qui couvre bien les consultations régulières et les médicaments...</p>
-          <div class="post-footer">
-            <div class="post-stat"><i class="fa-regular fa-heart"></i> 24 J'aime</div>
-            <div class="post-stat"><i class="fa-regular fa-comment"></i> 12 Réponses</div>
-            <a href="forum.php" class="btn btn-outline btn-sm">Lire</a>
-          </div>
+            <h2 class="section-title">Forum Santé</h2>
+            <p class="section-desc">Échangez avec la communauté. Posez vos questions et partagez votre expérience.</p>
         </div>
-      </div>
 
-      <div class="col-4">
-        <div class="card post-card">
-          <div class="post-meta">
-            <div class="post-avatar" style="background: linear-gradient(135deg,#10b981,#059669);">SB</div>
-            <div>
-              <div class="post-author">Sana Belhaj</div>
-              <div class="post-date">Il y a 5 heures</div>
-            </div>
-            <span class="badge badge-success" style="margin-left: auto;">💬 8</span>
-          </div>
-          <h3>Comment lire une ordonnance médicale ?</h3>
-          <p>Mon médecin m'a prescrit plusieurs médicaments et j'ai du mal à comprendre les dosages et les instructions...</p>
-          <div class="post-footer">
-            <div class="post-stat"><i class="fa-regular fa-heart"></i> 18 J'aime</div>
-            <div class="post-stat"><i class="fa-regular fa-comment"></i> 8 Réponses</div>
-            <a href="forum.php" class="btn btn-outline btn-sm">Lire</a>
-          </div>
+        <div style="text-align: center; margin-top: 40px;">
+            <?php if ($isLoggedIn): ?>
+                <a href="../Frontoffice/postlist.php" class="btn btn-primary btn-lg">
+                    <i class="fa-solid fa-comments"></i>
+                    Voir tout le forum
+                </a>
+            <?php else: ?>
+                <a href="loginuser.html" class="btn btn-primary btn-lg">
+                    <i class="fa-solid fa-comments"></i>
+                    Connectez-vous pour accéder au forum
+                </a>
+            <?php endif; ?>
         </div>
-      </div>
-
-      <div class="col-4">
-        <div class="card post-card">
-          <div class="post-meta">
-            <div class="post-avatar" style="background: linear-gradient(135deg,#f59e0b,#d97706);">KM</div>
-            <div>
-              <div class="post-author">Karim Mansouri</div>
-              <div class="post-date">Il y a 1 jour</div>
-            </div>
-            <span class="badge badge-warning" style="margin-left: auto;">💬 31</span>
-          </div>
-          <h3>Meilleures pharmacies de garde à Tunis ?</h3>
-          <p>Je cherche une liste à jour des pharmacies de garde dans le gouvernorat de Tunis pour les urgences nocturnes...</p>
-          <div class="post-footer">
-            <div class="post-stat"><i class="fa-regular fa-heart"></i> 45 J'aime</div>
-            <div class="post-stat"><i class="fa-regular fa-comment"></i> 31 Réponses</div>
-            <a href="forum.php" class="btn btn-outline btn-sm">Lire</a>
-          </div>
-        </div>
-      </div>
     </div>
-
-    <div style="text-align: center; margin-top: 40px;">
-      <a href="forum.php" class="btn btn-primary btn-lg">
-        <i class="fa-solid fa-comments"></i>
-        Voir tout le forum
-      </a>
-    </div>
-  </div>
 </section>
 
 <!-- ================================================
@@ -778,18 +801,47 @@ $medicamentsApercu = array_slice($listeMedicaments, 0, 3);
   <div class="container">
     <div class="section-header">
       <div class="section-tag">
-        <i class="fa-solid fa-user-doctor"></i>
-        Notre Équipe
+        <i class="fa-solid fa-star"></i>
+        Témoignages
       </div>
-      <h2 class="section-title">Nos Médecins</h2>
-      <p class="section-desc">Consultez notre équipe de médecins qualifiés et prenez rendez-vous facilement.</p>
+      <h2 class="section-title">Ce que nos utilisateurs disent</h2>
+      <p class="section-desc">Découvrez tous les avis de notre communauté</p>
     </div>
-    <div class="row" id="medecinsGrid">
-      <p id="medecinLoading" style="text-align:center;color:var(--text-muted);width:100%;">Chargement...</p>
+
+    <!-- Tous les avis avec pagination -->
+    <div class="row" id="avisList" style="gap: 24px;"></div>
+
+    <!-- Pagination -->
+    <div id="avisPagination" class="pagination-container" style="text-align: center; margin-top: 40px; display: none;">
+      <div class="pagination">
+        <button id="prevPage" class="btn btn-outline" disabled>&laquo; Précédent</button>
+        <span id="pageInfo" class="page-info"></span>
+        <button id="nextPage" class="btn btn-outline">Suivant &raquo;</button>
+      </div>
     </div>
+
+    <!-- Bouton donner avis -->
+    <!-- Bouton donner avis - Modifier selon session -->
+<div style="text-align: center; margin-top: 40px;">
+    <?php if ($isLoggedIn): ?>
+        <button onclick="openAvisModal()" class="btn btn-primary btn-lg">
+            <i class="fas fa-star"></i> Donner mon avis
+        </button>
+    <?php else: ?>
+        <a href="loginuser.html" class="btn btn-primary btn-lg">
+            <i class="fas fa-star"></i> Connectez-vous pour donner votre avis
+        </a>
+    <?php endif; ?>
+</div>
   </div>
 </section>
 
+<!-- Modal pour ajouter un avis (DOIT ÊTRE EN DEHORS DE LA SECTION) -->
+<div id="avisModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+  <div class="modal-content" style="background: white; border-radius: 32px; padding: 40px; max-width: 550px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(15,23,42,0.22); border: 1px solid rgba(148,163,184,0.2);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h2 id="modalTitle" style="font-size: 1.8rem; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 12px;"><i class="fas fa-star"></i> Donner mon avis</h2>
+      <button onclick="closeAvisModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
 <!-- ================================================
      CTA SECTION
      ================================================ -->
@@ -817,15 +869,59 @@ $medicamentsApercu = array_slice($listeMedicaments, 0, 3);
             <i class="fa-solid fa-calendar-check"></i>
             Mon profil
           </a>
-          <a href="#" class="btn btn-outline-white btn-lg">
+          <a href="../frontoffice/ordonnance_patient.php" class="btn btn-outline-white btn-lg">
             <i class="fa-solid fa-file-prescription"></i>
             Mes ordonnances
           </a>
         <?php endif; ?>
       </div>
     </div>
+    <p style="color: #475569; margin-bottom: 30px; font-size: 0.95rem;">Partagez votre expérience avec la communauté</p>
+
+    <div id="avisModalMsg" style="display: none;"></div>
+
+    <form id="avisModalForm" enctype="multipart/form-data">
+      <input type="hidden" name="id_avis" id="modalAvisId" value="">
+      
+      <div style="margin-bottom: 24px;">
+        <label style="display: block; font-weight: 700; color: #0f172a; margin-bottom: 10px;">⭐ Votre note</label>
+        <div style="display: flex; gap: 12px; margin-bottom: 10px;" id="modalStarsContainer">
+          <span class="modal-star" data-note="1">★</span>
+          <span class="modal-star" data-note="2">★</span>
+          <span class="modal-star" data-note="3">★</span>
+          <span class="modal-star" data-note="4">★</span>
+          <span class="modal-star" data-note="5">★</span>
+        </div>
+        <input type="hidden" name="note" id="modalNoteInput" value="0">
+        <div id="modalNoteError" style="color:#ef4444; font-size:0.8rem; margin-top:5px; display:none;">Veuillez sélectionner une note</div>
+      </div>
+
+      <div style="margin-bottom: 24px;">
+        <label style="display: block; font-weight: 700; color: #0f172a; margin-bottom: 10px;">📝 Votre avis</label>
+        <textarea name="contenu" id="modalContenuInput" rows="5" placeholder="Décrivez votre expérience... (minimum 10 caractères)" style="width: 100%; padding: 14px; border: 1px solid #cbd5e1; border-radius: 18px; font-family: inherit; font-size: 0.95rem; transition: all 0.2s ease; resize: vertical; background: white;"></textarea>
+        <div id="modalContenuError" style="color:#ef4444; font-size:0.8rem; margin-top:5px; display:none;">L'avis doit contenir au moins 10 caractères</div>
+      </div>
+
+      <div style="margin-bottom: 24px;">
+        <label style="display: block; font-weight: 700; color: #0f172a; margin-bottom: 10px;">🖼️ Image (optionnel)</label>
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <label style="background: #eff6ff; padding: 12px 20px; border-radius: 40px; cursor: pointer; font-weight: 600; color: #0f172a;" onclick="document.getElementById('modalImageInput').click()">
+            <i class="fas fa-upload"></i> Choisir une image
+          </label>
+          <input type="file" id="modalImageInput" name="image" accept="image/*" style="display: none;">
+          <span id="modalFileName" style="color:#64748b; font-size:0.85rem;">Aucun fichier sélectionné</span>
+        </div>
+        <div id="modalImagePreview"></div>
+        <div id="modalImageError" style="color:#ef4444; font-size:0.8rem; margin-top:5px; display:none;">Format ou taille invalide (max 5MB)</div>
+      </div>
+
+      <div style="display: flex; gap: 12px;">
+        <button id="modalSubmitButton" type="submit" class="btn btn-primary" style="flex: 1;"><i class="fas fa-paper-plane"></i> Publier mon avis</button>
+      </div>
+    </form>
   </div>
-</section>
+</div>
+
 
 <!-- ================================================
      FOOTER
@@ -1095,12 +1191,307 @@ $medicamentsApercu = array_slice($listeMedicaments, 0, 3);
       card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
       cardObserver.observe(card);
     });
+
   });
 
   function toggleMenu() {
     const navLinks = document.getElementById('navLinks');
     if (navLinks) navLinks.classList.toggle('open');
   }
+
+
+   // zeineb 
+function checkForumAccess() {
+    if (confirm("Vous devez être inscrit et connecté pour accéder au forum. Souhaitez-vous vous inscrire ou vous connecter ?")) {
+        window.location.href = "loginuser.html";
+    }
+}
+function openAvisModal() {
+    document.getElementById('modalAvisId').value = '';
+    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-star"></i> Donner mon avis';
+    document.getElementById('modalSubmitButton').innerHTML = '<i class="fas fa-paper-plane"></i> Publier mon avis';
+    document.getElementById('modalNoteInput').value = '0';
+    document.getElementById('modalContenuInput').value = '';
+    document.getElementById('avisModal').style.display = 'flex';
+    
+    // Reset stars
+    const stars = document.querySelectorAll('.modal-star');
+    stars.forEach(s => s.classList.remove('active'));
+}
+
+function closeAvisModal() {
+    document.getElementById('avisModal').style.display = 'none';
+
+}
+
+</script>
+<script>
+// ========== VARIABLES SESSION POUR JS ==========
+var sessionUserId = <?= json_encode($userId ?? 0) ?>;
+var sessionUserRole = <?= json_encode($userRole ?? '') ?>;
+var isLoggedIn = <?= json_encode($isLoggedIn) ?>;
+
+// ========== FONCTIONS AVIS ==========
+
+function openAvisModal() {
+    if (!isLoggedIn) {
+        window.location.href = "loginuser.html";
+        return;
+    }
+    document.getElementById('modalAvisId').value = '';
+    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-star"></i> Donner mon avis';
+    document.getElementById('modalSubmitButton').innerHTML = '<i class="fas fa-paper-plane"></i> Publier mon avis';
+    document.getElementById('modalNoteInput').value = '0';
+    document.getElementById('modalContenuInput').value = '';
+    document.getElementById('modalImageInput').value = '';
+    document.getElementById('modalImagePreview').innerHTML = '';
+    document.getElementById('modalFileName').textContent = 'Aucun fichier sélectionné';
+    document.getElementById('avisModalMsg').style.display = 'none';
+    document.getElementById('avisModal').style.display = 'flex';
+    
+    const stars = document.querySelectorAll('.modal-star');
+    stars.forEach(s => s.classList.remove('active'));
+}
+
+function closeAvisModal() {
+    document.getElementById('avisModal').style.display = 'none';
+}
+
+// Variables AVIS
+let currentPage = 1;
+const itemsPerPage = 6;
+let totalAvis = 0;
+let allAvis = [];
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function formatDateFr(isoOrMysql) {
+    if (!isoOrMysql) return '';
+    try {
+        return new Date(isoOrMysql).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch(e) { return isoOrMysql; }
+}
+
+function showNotification(msg, type) {
+    const div = document.createElement('div');
+    div.textContent = msg;
+    div.style.cssText = `position:fixed; top:20px; right:20px; padding:12px 24px; border-radius:12px; color:white; z-index:10000; background:${type === 'success' ? '#10b981' : '#ef4444'};`;
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 3000);
+}
+
+function updatePagination() {
+    const totalPages = Math.ceil(totalAvis / itemsPerPage);
+    const pageInfo = document.getElementById('pageInfo');
+    const prevBtn = document.getElementById('prevPage');
+    const nextBtn = document.getElementById('nextPage');
+    if (pageInfo) pageInfo.textContent = `Page ${currentPage} sur ${totalPages}`;
+    if (prevBtn) prevBtn.disabled = currentPage === 1;
+    if (nextBtn) nextBtn.disabled = currentPage === totalPages;
+}
+
+async function loadAllAvis() {
+    const list = document.getElementById('avisList');
+    if (!list) return;
+    list.innerHTML = '<div style="color: var(--text-muted); text-align:center;">Chargement des avis...</div>';
+    try {
+        const res = await fetch('../Frontoffice/list_avis.php?limit=1000');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.avis)) {
+            allAvis = data.avis;
+            totalAvis = allAvis.length;
+            if (totalAvis === 0) {
+                list.innerHTML = '<div style="color: var(--text-muted); text-align:center;">Aucun avis pour le moment.</div>';
+                return;
+            }
+            document.getElementById('avisPagination').style.display = totalAvis > itemsPerPage ? 'block' : 'none';
+            loadAvisPage(1);
+        } else {
+            list.innerHTML = '<div style="color:#ef4444; text-align:center;">Erreur chargement avis.</div>';
+        }
+    } catch(e) {
+        console.error(e);
+        list.innerHTML = '<div style="color:#ef4444; text-align:center;">Erreur de connexion.</div>';
+    }
+}
+
+function loadAvisPage(page) {
+    currentPage = page;
+    const list = document.getElementById('avisList');
+    const start = (page - 1) * itemsPerPage;
+    const avisToShow = allAvis.slice(start, start + itemsPerPage);
+    list.innerHTML = '';
+    
+    avisToShow.forEach(a => {
+        const note = Number(a.note || 0);
+        const stars = '⭐'.repeat(note) + '☆'.repeat(5 - note);
+        
+        // Vérification des droits
+        const isOwner = (a.id_utilisateur == sessionUserId);
+        const isAdmin = (sessionUserRole === 'admin');
+        const canModify = (isOwner || isAdmin);
+        
+        list.innerHTML += `
+            <div class="col-4" style="min-width:280px;">
+                <div class="card" style="border-radius:18px; padding:16px;">
+                    <div style="font-size:1rem; font-weight:800; color:#0ea5e9;">${stars} (${note}/5)</div>
+                    <div style="margin-top:8px; font-weight:700;">👤 ${escapeHtml(a.auteur || 'Utilisateur')}</div>
+                    <div style="color:#64748b; font-size:0.8rem;">📅 ${formatDateFr(a.date_avis)}</div>
+                    <p style="margin-top:8px;">"${escapeHtml(a.contenu || '')}"</p>
+                    ${canModify ? `
+                        <div style="display:flex; gap:8px; margin-top:16px; justify-content:flex-end;">
+                            <button onclick="openEditModal(${a.id_avis})" class="btn btn-primary btn-sm">Modifier</button>
+                            <button onclick="deleteAvis(${a.id_avis})" class="btn btn-danger btn-sm">Supprimer</button>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    });
+    updatePagination();
+}
+
+async function openEditModal(id) {
+    if (!isLoggedIn) {
+        window.location.href = "loginuser.html";
+        return;
+    }
+    try {
+        const res = await fetch(`../Frontoffice/get_avis.php?id=${id}`);
+        const data = await res.json();
+        if (data.success) {
+            const avis = data.avis;
+            // Vérifier que l'utilisateur est propriétaire
+            if (avis.id_utilisateur != sessionUserId) {
+                showNotification('Vous ne pouvez modifier que vos propres avis', 'error');
+                return;
+            }
+            document.getElementById('modalAvisId').value = avis.id_avis;
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Modifier mon avis';
+            document.getElementById('modalSubmitButton').innerHTML = '<i class="fas fa-save"></i> Enregistrer';
+            document.getElementById('modalNoteInput').value = avis.note;
+            document.getElementById('modalContenuInput').value = avis.contenu;
+            document.getElementById('avisModal').style.display = 'flex';
+            const note = parseInt(avis.note);
+            document.querySelectorAll('.modal-star').forEach((s, i) => {
+                if (i < note) s.classList.add('active');
+                else s.classList.remove('active');
+            });
+        }
+    } catch(err) {
+        showNotification('Erreur chargement', 'error');
+    }
+}
+
+async function deleteAvis(id) {
+    if (!confirm('Supprimer cet avis ?')) return;
+    
+    // Vérifier les droits avant d'envoyer
+    const avis = allAvis.find(a => a.id_avis == id);
+    if (avis && avis.id_utilisateur != sessionUserId && sessionUserRole !== 'admin') {
+        showNotification('Vous ne pouvez supprimer que vos propres avis', 'error');
+        return;
+    }
+    
+    const fd = new FormData();
+    fd.append('id_avis', id);
+    try {
+        const res = await fetch('../Frontoffice/delete_avis.php', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.success) {
+            showNotification('Avis supprimé', 'success');
+            loadAllAvis();
+        } else {
+            showNotification(data.error || 'Erreur suppression', 'error');
+        }
+    } catch(err) {
+        showNotification('Erreur réseau', 'error');
+    }
+}
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', function() {
+    loadAllAvis();
+    
+    // Stars modal
+    const starsContainer = document.getElementById('modalStarsContainer');
+    if (starsContainer) {
+        starsContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal-star')) {
+                const val = parseInt(e.target.dataset.note);
+                document.getElementById('modalNoteInput').value = val;
+                document.querySelectorAll('.modal-star').forEach((s, i) => {
+                    if (i < val) s.classList.add('active');
+                    else s.classList.remove('active');
+                });
+            }
+        });
+    }
+    
+    // Modal form submit
+    const avisForm = document.getElementById('avisModalForm');
+    if (avisForm) {
+        avisForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const isEdit = fd.get('id_avis');
+            const endpoint = isEdit ? '../Frontoffice/update_avis.php' : '../Frontoffice/submit_avis.php';
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
+            
+            try {
+                const res = await fetch(endpoint, { method: 'POST', body: fd });
+                const data = await res.json();
+                if (data.success) {
+                    closeAvisModal();
+                    loadAllAvis();
+                    showNotification(isEdit ? 'Avis modifié' : 'Avis ajouté', 'success');
+                } else {
+                    showNotification(data.error || 'Erreur', 'error');
+                }
+            } catch(err) {
+                showNotification('Erreur réseau', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = isEdit ? '<i class="fas fa-save"></i> Enregistrer' : '<i class="fas fa-paper-plane"></i> Publier';
+            }
+        });
+    }
+    
+    // Image preview
+    const modalImageInput = document.getElementById('modalImageInput');
+    if (modalImageInput) {
+        modalImageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('modalImagePreview');
+            const fileName = document.getElementById('modalFileName');
+            if (file) {
+                fileName.textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = (ev) => { preview.innerHTML = `<img src="${ev.target.result}" style="max-width:120px; border-radius:8px; margin-top:10px;">`; };
+                reader.readAsDataURL(file);
+            } else {
+                fileName.textContent = 'Aucun fichier sélectionné';
+                preview.innerHTML = '';
+            }
+        });
+    }
+    
+    // Pagination buttons
+    const prevBtn = document.getElementById('prevPage');
+    const nextBtn = document.getElementById('nextPage');
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function() { if (currentPage > 1) loadAvisPage(currentPage - 1); });
+    }
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function() { const total = Math.ceil(totalAvis / itemsPerPage); if (currentPage < total) loadAvisPage(currentPage + 1); });
+    }
+});
+
 </script>
 
 </body>

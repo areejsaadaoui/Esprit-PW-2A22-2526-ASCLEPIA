@@ -645,63 +645,95 @@ $adminEmail = $_SESSION['user_email'] ?? '';
 
 <div class="admin-wrapper">
     <aside class="sidebar">
-        <div class="sidebar-brand">
-            <div class="sidebar-logo">⚕️</div>
-            <div class="sidebar-title">ASC<span>LEPIA</span></div>
+    <a href="dashboard.php" class="sidebar-brand">
+        <div class="sidebar-logo">🏥</div>
+        <div class="sidebar-title">ASCL<span>EPIA</span></div>
+    </a>
+
+    <div class="sidebar-user">
+        <div class="user-avatar" id="adminAvatar">
+            <?php echo strtoupper(substr($adminNom ?? 'A', 0, 2)); ?>
         </div>
-        
-        <div class="sidebar-user">
-            <div class="user-avatar" id="adminAvatar"><?php echo strtoupper(substr($adminNom, 0, 2)); ?></div>
-            <div class="user-info">
-                <div class="name" id="adminName"><?php echo htmlspecialchars($adminNom); ?></div>
-                <div class="role">Super Admin</div>
+        <div class="user-info">
+            <div class="name" id="adminName">
+                <?php echo htmlspecialchars($adminNom ?? 'Administrateur'); ?>
             </div>
+            <div class="role">Super Admin</div>
         </div>
-        
-        <nav class="sidebar-nav">
-            <div class="nav-section-label">Menu Principal</div>
-            
-            <div class="nav-item">
-                <a href="dashboard.php" class="active">
-                    <i class="fas fa-tachometer-alt nav-icon"></i>
-                    <span>Tableau de bord</span>
-                </a>
-            </div>
-            
-            <div class="nav-item has-sub">
-                <a onclick="toggleSubMenu(this)">
-                    <i class="fas fa-comments nav-icon"></i>
-                    <span>Forum</span>
-                    <i class="fas fa-chevron-right nav-arrow"></i>
-                </a>
-                <div class="sub-menu">
-                    <a href="../Frontoffice/postList.php">Tous les posts</a>
-                    <a href="addpost.php">Ajouter un post</a>
-                    <a href="dashboard.php">Gestion des posts</a>
-                </div>
-            </div>
-            
-            <div class="nav-section-label">Configuration</div>
-            
-            <div class="nav-item">
-                <a href="../front/indexp.php">
-                    <i class="fas fa-globe nav-icon"></i>
-                    <span>Voir le site</span>
-                </a>
-            </div>
-            
-            <div class="nav-item">
-                <a href="logout.php">
-                    <i class="fas fa-sign-out-alt nav-icon"></i>
-                    <span>Déconnexion</span>
-                </a>
-            </div>
-        </nav>
-        
-        <div class="sidebar-footer">
-            <div class="sidebar-version">Version 1.0</div>
+    </div>
+
+    <nav class="sidebar-nav">
+
+        <div class="nav-section-label">Menu Principal</div>
+
+        <div class="nav-item">
+            <a href="dashboard.php" <?php echo basename($_SERVER['PHP_SELF']) === 'dashboard.php' ? 'class="active"' : ''; ?>>
+                <i class="fas fa-tachometer-alt nav-icon"></i>
+                <span>Tableau de bord</span>
+            </a>
         </div>
-    </aside>
+
+        <div class="nav-section-label">Gestion</div>
+
+        <div class="nav-item">
+            <a href="../backoffice/assurancelist.php" <?php echo basename($_SERVER['PHP_SELF']) === 'assurancelist.php' ? 'class="active"' : ''; ?>>
+                <i class="fa-solid fa-shield-halved nav-icon"></i>
+                <span>Assurances</span>
+            </a>
+        </div>
+
+        <div class="nav-item">
+            <a href="../backoffice/contrat/contratList.php" <?php echo basename($_SERVER['PHP_SELF']) === 'contratList.php' ? 'class="active"' : ''; ?>>
+                <i class="fa-solid fa-file-contract nav-icon"></i>
+                <span>Contrats</span>
+            </a>
+        </div>
+         <div class="nav-item">
+            <a href="../backoffice/list_consultation.php" <?php echo basename($_SERVER['PHP_SELF']) === 'list_consultation.php' ? 'class="active"' : ''; ?>>
+                <i class="fa-solid fa-file-contract nav-icon"></i>
+                <span>consultations</span>
+            </a>
+             <a href="../backoffice/list_ordonnance.php" <?php echo basename($_SERVER['PHP_SELF']) === 'list_ordonnance.php' ? 'class="active"' : ''; ?>>
+                <i class="fa-solid fa-file-contract nav-icon"></i>
+                <span>ordonnances</span>
+            </a>
+
+        </div>
+
+         <div class="nav-item has-sub">
+    <a onclick="toggleSubMenu(this)">
+        <i class="fas fa-comments nav-icon"></i>
+        <span>Forum</span>
+        <i class="fas fa-chevron-right nav-arrow"></i>
+    </a>
+    <div class="sub-menu">
+        <a href="../Backoffice/dashboardf.php">📊 Dashboard Forum</a>
+        <a href="../Frontoffice/postlist.php">📝 Tous les posts</a>
+    </div>
+</div>
+
+        <div class="nav-section-label">Configuration</div>
+
+        <div class="nav-item">
+            <a href="../front/indexp.php">
+                <i class="fas fa-globe nav-icon"></i>
+                <span>Voir le site</span>
+            </a>
+        </div>
+
+        <div class="nav-item">
+            <a href="loginadmin.html">
+                <i class="fas fa-sign-out-alt nav-icon"></i>
+                <span>Déconnexion</span>
+            </a>
+        </div>
+
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="sidebar-version">Version 1.0</div>
+    </div>
+</aside>
     
     <main class="main-content">
         <div class="topbar">
