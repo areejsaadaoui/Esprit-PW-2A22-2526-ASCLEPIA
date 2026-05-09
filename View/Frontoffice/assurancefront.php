@@ -94,7 +94,7 @@ $isRtl = $i18n['isRtl'];
 
     <!-- NAVBAR -->
     <nav class="navbar" id="navbar">
-        <a href="#" class="navbar-brand">
+        <a href="../front/indexp.php" class="navbar-brand">
             <div class="navbar-logo">🏥</div>
             <div class="navbar-name">ASCL<span>EPIA</span></div>
         </a>

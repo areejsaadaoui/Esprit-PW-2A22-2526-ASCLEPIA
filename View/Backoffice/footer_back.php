@@ -39,6 +39,7 @@
 </footer>
 
 </div> <!-- End of main-content -->
+</div> <!-- End admin-wrapper -->
 
 <script src="script.js"></script>
 <script>

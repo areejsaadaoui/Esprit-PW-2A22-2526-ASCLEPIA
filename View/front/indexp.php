@@ -33,6 +33,7 @@ if ($isLoggedIn && $userId) {
 require_once '../../Controller/ContratController.php';
 require_once '../../Controller/PharmacieC.php';
 require_once '../../Controller/MedicamentC.php';
+require_once '../../Controller/UserController.php';
 
 $controller = new ContratController();
 $topAssurances = $controller->getTopAssurances();
@@ -45,6 +46,10 @@ $listeMedicaments = $mc->afficherMedicaments()->fetchAll();
 // Limiter l'affichage à 3 éléments pour l'aperçu
 $pharmaciesApercu = array_slice($listePharmacies, 0, 3);
 $medicamentsApercu = array_slice($listeMedicaments, 0, 3);
+
+// Récupérer tous les médecins pour la section dédiée
+$userC = new UserController();
+$listeMedecins = $userC->getAllMedecins();
 ?>
 
 <!DOCTYPE html>
@@ -65,94 +70,86 @@ $medicamentsApercu = array_slice($listeMedicaments, 0, 3);
   <link rel="stylesheet" href="../assets/css/avatar.css">
   <style>
 
-    /* CSS pour les Notifications */
-    .notification-container {
+
+
+/* Avis dynamiques : mêmes cartes vitrées que .avis-card (voir frontoffice.css) */
+    .avis-section #avisList {
       position: relative;
+      z-index: 1;
+      gap: 24px !important;
     }
-    .notif-dropdown {
-      position: absolute;
-      top: 100%;
-      right: 0;
-      width: 280px;
-      background: var(--bg-card, white);
-      border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-      z-index: 1100;
-      margin-top: 15px;
-      overflow: hidden;
-      display: none;
-      border: 1px solid var(--border);
+    .avis-section #avisList > .col-4 {
+      display: flex;
     }
-    [data-theme="dark"] .notif-dropdown {
-      background: #1e293b;
-      border-color: rgba(255,255,255,0.1);
-    }
-    .notif-header {
-      padding: 12px 16px;
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
-      font-weight: 700;
-      font-size: 0.9rem;
-      color: var(--text);
-    }
-    .notif-item {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
+    .avis-section #avisList .avis-card {
+      width: 100%;
+      flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      transition: background 0.2s;
-      text-decoration: none;
-      color: inherit;
+      min-height: 100%;
     }
-    .notif-item:hover {
-      background: rgba(0,0,0,0.02);
+    .avis-section .avis-dynamic-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
-    [data-theme="dark"] .notif-item:hover {
-      background: rgba(255,255,255,0.05);
+    .avis-section .avis-dynamic-actions .btn {
+      border: 1px solid rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      font-size: 0.8rem;
     }
-    .notif-title {
+    .avis-section .avis-dynamic-actions .btn:hover {
+      background: rgba(255,255,255,0.18);
+      border-color: rgba(14,165,233,0.5);
+    }
+    .avis-section .avis-dynamic-actions .btn-danger {
+      border-color: rgba(239,68,68,0.55);
+      background: rgba(239,68,68,0.15);
+      color: #fecaca;
+    }
+    .avis-section .pagination-container {
+      margin-top: 40px;
+      position: relative;
+      z-index: 1;
+    }
+    .avis-section #avisPagination .pagination {
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(12px);
+      padding: 16px 24px;
+      border-radius: 40px;
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.2);
+    }
+    .avis-section #avisPagination .btn-outline {
+      border-color: rgba(255,255,255,0.45);
+      color: #fff;
+      background: transparent;
+    }
+    .avis-section #avisPagination .btn-outline:hover:not(:disabled) {
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(14,165,233,0.6);
+      color: #fff;
+    }
+    .avis-section #avisPagination .btn-outline:disabled {
+      opacity: 0.35;
+    }
+    .avis-section #pageInfo.page-info {
+      color: rgba(255,255,255,0.85);
       font-weight: 600;
-      font-size: 0.85rem;
-      color: var(--text);
+      font-size: 0.9rem;
     }
-    .notif-desc {
-      font-size: 0.75rem;
-      color: var(--text-muted);
+    .avis-section .avis-list-status {
+      color: rgba(255,255,255,0.65);
+      text-align: center;
+      width: 100%;
+      padding: 32px 16px;
     }
-
-    #avisList .avis-card {
-  background: white;
-  border-radius: 18px;
-  padding: 24px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid rgba(226, 232, 240, 0.8);
-}
-
-#avisList .avis-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 35px -12px rgba(15, 23, 42, 0.16);
-}
-
-/* Pagination styles */
-.pagination-container {
-  margin-top: 40px;
-}
-
-.pagination {
-  display: inline-flex;
-  align-items: center;
-  gap: 16px;
-  background: white;
-  padding: 16px 24px;
-  border-radius: 40px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-}
 
 /* Modal stars */
 .modal-star {
@@ -165,6 +162,85 @@ $medicamentsApercu = array_slice($listeMedicaments, 0, 3);
 .modal-star.active, .modal-star:hover {
   color: #fbbf24;
   transform: translateY(-1px);
+}
+
+/* ---- Médecins Section ---- */
+.medecin-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 32px 24px 24px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  height: 100%;
+  transition: var(--transition);
+}
+.medecin-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-hover);
+}
+.medecin-avatar-ring {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: var(--gradient-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 800;
+  color: white;
+  letter-spacing: 1px;
+  box-shadow: 0 6px 20px rgba(14,165,233,0.30);
+  flex-shrink: 0;
+}
+.medecin-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--dark);
+  margin: 0;
+}
+.medecin-specialite {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--primary);
+  background: rgba(14,165,233,0.10);
+  padding: 4px 14px;
+  border-radius: var(--radius-full);
+  display: inline-block;
+}
+.medecin-info-row {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+}
+
+/* Médecins pagination (light section) */
+.medecins-section .pagination-container {
+  margin-top: 40px;
+  text-align: center;
+}
+.medecins-section .pagination {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--bg-card);
+  padding: 14px 28px;
+  border-radius: 40px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.medecins-section .page-info {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-muted);
 }
 
   </style>
@@ -184,7 +260,7 @@ var sessionIsLoggedIn = <?= json_encode($isLoggedIn) ?>;
      ================================================ -->
 <nav class="navbar" id="navbar">
   <a href="indexp.php" class="navbar-brand">
-    <div class="navbar-logo"></div>
+     <div class="navbar-logo">🏥</div>
     <div class="navbar-name">ASC<span>LEPIA</span></div>
   </a>
 
@@ -206,44 +282,6 @@ var sessionIsLoggedIn = <?= json_encode($isLoggedIn) ?>;
             <i class="fa-solid fa-moon"></i>
         </button>
 
-        <!-- Notification Bell -->
-        <div class="notification-container">
-            <?php 
-              // Alerte stock critique (<= 5)
-              $alertesStock = array_filter($listeMedicaments, function($m) {
-                  return $m['stock'] > 0 && $m['stock'] <= 5;
-              });
-              $countAlertes = count($alertesStock);
-            ?>
-            <button id="notifToggle" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--white); position: relative;" title="Alertes Stocks">
-                <i class="fa-solid fa-bell"></i>
-                <?php if($countAlertes > 0): ?>
-                    <span style="position: absolute; top: -5px; right: -5px; background: var(--primary); color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; font-weight: 700;">
-                        <?= $countAlertes ?>
-                    </span>
-                <?php endif; ?>
-            </button>
-            
-            <div id="notifDropdown" class="notif-dropdown">
-                <div class="notif-header" style="background: var(--bg-alt); color: var(--text);">Alertes Stocks</div>
-                <div style="max-height: 300px; overflow-y: auto;">
-                    <?php if($countAlertes > 0): ?>
-                        <?php foreach($alertesStock as $alerte): ?>
-                            <a href="#produits" class="notif-item">
-                                <div class="notif-title"><?= htmlspecialchars($alerte['nom']) ?></div>
-                                <div class="notif-desc" style="color: #f59e0b;">
-                                    <i class="fa-solid fa-triangle-exclamation"></i> Stock faible: <?= $alerte['stock'] ?> restants
-                                </div>
-                            </a>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
-                            Aucune alerte.
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
     </div>
 
     <?php if ($isLoggedIn): ?>
@@ -736,147 +774,105 @@ var sessionIsLoggedIn = <?= json_encode($isLoggedIn) ?>;
     <div class="section-header">
       <div class="section-tag">⭐ Témoignages</div>
       <h2 class="section-title">Ce que disent nos patients</h2>
-      <p class="section-desc" style="color: rgba(255,255,255,0.6);">Des milliers de patients font confiance à ASCLEPIA pour leur santé.</p>
+      <p class="section-desc" style="color: rgba(255,255,255,0.6);">Découvrez les avis réels de notre communauté — tous les utilisateurs peuvent nous faire part de leur expérience.</p>
     </div>
 
-    <div class="row">
-      <div class="col-4">
-        <div class="avis-card">
-          <div class="avis-quote">"</div>
-          <p class="avis-text">
-            ASCLEPIA a complètement changé ma façon de gérer ma santé. Je peux voir mes ordonnances, trouver des pharmacies et suivre mes remboursements depuis une seule application.
-          </p>
-          <div class="stars">★★★★★</div>
-          <div class="avis-author mt-2">
-            <div class="avis-avatar">LB</div>
-            <div class="avis-author-info">
-              <div class="name">Leila Bchir</div>
-              <div class="role">Patiente · Tunis</div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="row justify-center" id="avisList"></div>
 
-      <div class="col-4">
-        <div class="avis-card">
-          <div class="avis-quote">"</div>
-          <p class="avis-text">
-            En tant que médecin, ASCLEPIA simplifie énormément mon travail. Je peux émettre des ordonnances numériques et suivre mes patients efficacement.
-          </p>
-          <div class="stars">★★★★★</div>
-          <div class="avis-author mt-2">
-            <div class="avis-avatar" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);">AM</div>
-            <div class="avis-author-info">
-              <div class="name">Dr. Ahmed Mrad</div>
-              <div class="role">Cardiologue · Sfax</div>
-            </div>
-          </div>
-        </div>
+    <div id="avisPagination" class="pagination-container" style="text-align: center; margin-top: 40px; display: none;">
+      <div class="pagination">
+        <button type="button" id="prevPage" class="btn btn-outline" disabled>&laquo; Précédent</button>
+        <span id="pageInfo" class="page-info"></span>
+        <button type="button" id="nextPage" class="btn btn-outline">Suivant &raquo;</button>
       </div>
+    </div>
 
-      <div class="col-4">
-        <div class="avis-card">
-          <div class="avis-quote">"</div>
-          <p class="avis-text">
-            Le forum est très utile ! J'ai trouvé des réponses à mes questions rapidement. La communauté est bienveillante et les informations sont fiables.
-          </p>
-          <div class="stars">★★★★☆</div>
-          <div class="avis-author mt-2">
-            <div class="avis-avatar" style="background: linear-gradient(135deg,#10b981,#059669);">FZ</div>
-            <div class="avis-author-info">
-              <div class="name">Fatma Zouari</div>
-              <div class="role">Patiente · Sousse</div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div style="text-align: center; margin-top: 40px;">
+      <?php if ($isLoggedIn): ?>
+        <button type="button" onclick="openAvisModal()" class="btn btn-primary btn-lg">
+          <i class="fas fa-star"></i> Donner mon avis
+        </button>
+      <?php else: ?>
+        <a href="loginuser.html" class="btn btn-primary btn-lg">
+          <i class="fas fa-star"></i> Connectez-vous pour donner votre avis
+        </a>
+      <?php endif; ?>
     </div>
   </div>
 </section>
 
 <!-- ================================================
-     MEDECINS SECTION
+     MÉDECINS SECTION
      ================================================ -->
-<section class="section-padding" id="medecins" style="background: var(--white);">
+<section class="section-padding medecins-section" id="medecins" style="background: var(--white);">
   <div class="container">
     <div class="section-header">
       <div class="section-tag">
-        <i class="fa-solid fa-star"></i>
-        Témoignages
+        <i class="fa-solid fa-user-doctor"></i>
+        Notre Équipe
       </div>
-      <h2 class="section-title">Ce que nos utilisateurs disent</h2>
-      <p class="section-desc">Découvrez tous les avis de notre communauté</p>
+      <h2 class="section-title">Nos Médecins</h2>
+      <p class="section-desc">Des professionnels de santé qualifiés à votre service. Prenez rendez-vous en quelques clics.</p>
     </div>
 
-    <!-- Tous les avis avec pagination -->
-    <div class="row" id="avisList" style="gap: 24px;"></div>
+    <div class="row" id="medecinsList">
+      <?php if (!empty($listeMedecins)): ?>
+        <?php foreach ($listeMedecins as $med): 
+          $initials = strtoupper(mb_substr($med['nom'] ?? 'DR', 0, 2));
+        ?>
+          <div class="col-4 medecin-item" style="display: none;">
+            <div class="medecin-card">
+              <div class="medecin-avatar-ring"><?= htmlspecialchars($initials) ?></div>
+              <h3 class="medecin-name">Dr. <?= htmlspecialchars($med['nom']) ?></h3>
+              <?php if (!empty($med['specialite'])): ?>
+                <span class="medecin-specialite">
+                  <i class="fa-solid fa-stethoscope"></i>
+                  <?= htmlspecialchars($med['specialite']) ?>
+                </span>
+              <?php endif; ?>
+              <?php if (!empty($med['adresse'])): ?>
+                <div class="medecin-info-row">
+                  <i class="fa-solid fa-location-dot" style="color: var(--primary);"></i>
+                  <?= htmlspecialchars($med['adresse']) ?>
+                </div>
+              <?php endif; ?>
+              <?php if (!empty($med['numero'])): ?>
+                <div class="medecin-info-row">
+                  <i class="fa-solid fa-phone" style="color: var(--primary);"></i>
+                  <?= htmlspecialchars($med['numero']) ?>
+                </div>
+              <?php endif; ?>
+              <a href="consultation.php?id_medecin=<?= $med['id_user'] ?>" 
+                 class="btn btn-primary btn-sm" 
+                 style="width: 100%; justify-content: center; margin-top: auto;">
+                <i class="fa-solid fa-calendar-check"></i>
+                Prendre rendez-vous
+              </a>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      <?php else: ?>
+        <p style="text-align: center; width: 100%; color: var(--text-muted);">Aucun médecin disponible pour le moment.</p>
+      <?php endif; ?>
+    </div>
 
-    <!-- Pagination -->
-    <div id="avisPagination" class="pagination-container" style="text-align: center; margin-top: 40px; display: none;">
+    <div id="medecinsPagination" class="pagination-container" style="display: none;">
       <div class="pagination">
-        <button id="prevPage" class="btn btn-outline" disabled>&laquo; Précédent</button>
-        <span id="pageInfo" class="page-info"></span>
-        <button id="nextPage" class="btn btn-outline">Suivant &raquo;</button>
+        <button type="button" id="medPrevPage" class="btn btn-outline" disabled>&laquo; Précédent</button>
+        <span id="medPageInfo" class="page-info"></span>
+        <button type="button" id="medNextPage" class="btn btn-outline">Suivant &raquo;</button>
       </div>
     </div>
-
-    <!-- Bouton donner avis -->
-    <!-- Bouton donner avis - Modifier selon session -->
-<div style="text-align: center; margin-top: 40px;">
-    <?php if ($isLoggedIn): ?>
-        <button onclick="openAvisModal()" class="btn btn-primary btn-lg">
-            <i class="fas fa-star"></i> Donner mon avis
-        </button>
-    <?php else: ?>
-        <a href="loginuser.html" class="btn btn-primary btn-lg">
-            <i class="fas fa-star"></i> Connectez-vous pour donner votre avis
-        </a>
-    <?php endif; ?>
-</div>
   </div>
 </section>
 
-<!-- Modal pour ajouter un avis (DOIT ÊTRE EN DEHORS DE LA SECTION) -->
+<!-- Modal pour ajouter un avis -->
 <div id="avisModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
   <div class="modal-content" style="background: white; border-radius: 32px; padding: 40px; max-width: 550px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(15,23,42,0.22); border: 1px solid rgba(148,163,184,0.2);">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
       <h2 id="modalTitle" style="font-size: 1.8rem; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 12px;"><i class="fas fa-star"></i> Donner mon avis</h2>
-      <button onclick="closeAvisModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
-<!-- ================================================
-     CTA SECTION
-     ================================================ -->
-<section class="cta-section">
-  <div class="container">
-    <div class="cta-content">
-      <div class="section-tag" style="justify-content: center; margin-bottom: 20px;">
-        <i class="fa-solid fa-rocket"></i>
-        Rejoignez-nous
-      </div>
-      <h2>Prêt à prendre soin de votre santé ?</h2>
-      <p>Créez votre compte gratuitement et accédez à tous les services ASCLEPIA dès aujourd'hui.</p>
-      <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
-        <?php if (!$isLoggedIn): ?>
-          <a href="loginuser.html" class="btn btn-primary btn-lg">
-            <i class="fa-solid fa-user-plus"></i>
-            Créer un compte patient
-          </a>
-          <a href="login.html" class="btn btn-outline-white btn-lg">
-            <i class="fa-solid fa-sign-in-alt"></i>
-            Se connecter
-          </a>
-        <?php else: ?>
-          <a href="profile.php" class="btn btn-primary btn-lg">
-            <i class="fa-solid fa-calendar-check"></i>
-            Mon profil
-          </a>
-          <a href="../frontoffice/ordonnance_patient.php" class="btn btn-outline-white btn-lg">
-            <i class="fa-solid fa-file-prescription"></i>
-            Mes ordonnances
-          </a>
-        <?php endif; ?>
-      </div>
+      <button type="button" onclick="closeAvisModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
     </div>
-    <p style="color: #475569; margin-bottom: 30px; font-size: 0.95rem;">Partagez votre expérience avec la communauté</p>
 
     <div id="avisModalMsg" style="display: none;"></div>
 
@@ -921,6 +917,45 @@ var sessionIsLoggedIn = <?= json_encode($isLoggedIn) ?>;
     </form>
   </div>
 </div>
+
+
+<!-- ================================================
+     CTA SECTION
+     ================================================ -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-content">
+      <div class="section-tag" style="justify-content: center; margin-bottom: 20px;">
+        <i class="fa-solid fa-rocket"></i>
+        Rejoignez-nous
+      </div>
+      <h2>Prêt à prendre soin de votre santé ?</h2>
+      <p>Créez votre compte gratuitement et accédez à tous les services ASCLEPIA dès aujourd'hui.</p>
+      <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+        <?php if (!$isLoggedIn): ?>
+          <a href="loginuser.html" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-user-plus"></i>
+            Créer un compte patient
+          </a>
+          <a href="login.html" class="btn btn-outline-white btn-lg">
+            <i class="fa-solid fa-sign-in-alt"></i>
+            Se connecter
+          </a>
+        <?php else: ?>
+          <a href="profile.php" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-calendar-check"></i>
+            Mon profil
+          </a>
+          <a href="../frontoffice/ordonnance_patient.php" class="btn btn-outline-white btn-lg">
+            <i class="fa-solid fa-file-prescription"></i>
+            Mes ordonnances
+          </a>
+        <?php endif; ?>
+      </div>
+    </div>
+    <p style="color: #475569; margin-bottom: 30px; font-size: 0.95rem; text-align: center;">Partagez votre expérience avec la communauté</p>
+  </div>
+</section>
 
 
 <!-- ================================================
@@ -1067,18 +1102,7 @@ var sessionIsLoggedIn = <?= json_encode($isLoggedIn) ?>;
       });
     }
 
-    // ---- Notifications ----
-    const notifToggle = document.getElementById('notifToggle');
-    const notifDropdown = document.getElementById('notifDropdown');
-    if (notifToggle && notifDropdown) {
-      notifToggle.addEventListener('click', (e) => {
-        e.stopPropagation();
-        notifDropdown.style.display = notifDropdown.style.display === 'block' ? 'none' : 'block';
-      });
-      document.addEventListener('click', () => {
-        notifDropdown.style.display = 'none';
-      });
-    }
+
 
     // ---- Carte Interactive (Leaflet) ----
     if (document.getElementById('pharmacyMap')) {
@@ -1133,34 +1157,39 @@ var sessionIsLoggedIn = <?= json_encode($isLoggedIn) ?>;
       });
     }
 
-    // ---- Chargement Médecins ----
-    const medGrid = document.getElementById('medecinsGrid');
-    if (medGrid) {
-      fetch('index.php')
-        .then(res => res.json())
-        .then(data => {
-          if (data.success && data.medecins && data.medecins.length > 0) {
-            medGrid.innerHTML = data.medecins.map(m => `
-              <div class="col-4">
-                <div class="card" style="text-align:center; padding:28px;">
-                  <div style="width:80px;height:80px;background:var(--gradient-primary);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.5rem;font-weight:700;color:white;">
-                    ${(m.nom ? m.nom.substring(0,2).toUpperCase() : 'DR')}
-                  </div>
-                  <h3 style="margin-bottom:8px;">Dr. ${m.nom || 'Médecin'}</h3>
-                  <p style="color:var(--text-muted);"><i class="fa-solid fa-location-dot"></i> ${m.adresse || ''}</p>
-                  <a href="consultation.php" class="btn btn-outline btn-sm mt-3">Prendre rendez-vous</a>
-                </div>
-              </div>
-            `).join('');
-          } else {
-            medGrid.innerHTML = '<p style="text-align:center;width:100%;">Aucun médecin disponible.</p>';
-          }
-        })
-        .catch(err => {
-          console.error("Erreur médecins:", err);
-          medGrid.innerHTML = '<p style="text-align:center;color:var(--danger);width:100%;">Erreur de chargement.</p>';
+    // ---- Médecins Pagination ----
+    (function() {
+      const MED_PER_PAGE = 3;
+      const allItems = Array.from(document.querySelectorAll('.medecin-item'));
+      const total = allItems.length;
+      if (total === 0) return;
+
+      let currentMedPage = 1;
+      const totalMedPages = Math.ceil(total / MED_PER_PAGE);
+
+      const pagination = document.getElementById('medecinsPagination');
+      const prevBtn   = document.getElementById('medPrevPage');
+      const nextBtn   = document.getElementById('medNextPage');
+      const pageInfo  = document.getElementById('medPageInfo');
+
+      if (total > MED_PER_PAGE && pagination) pagination.style.display = 'block';
+
+      function showMedPage(page) {
+        currentMedPage = page;
+        const start = (page - 1) * MED_PER_PAGE;
+        allItems.forEach((el, i) => {
+          el.style.display = (i >= start && i < start + MED_PER_PAGE) ? '' : 'none';
         });
-    }
+        if (pageInfo) pageInfo.textContent = `Page ${page} sur ${totalMedPages}`;
+        if (prevBtn)  prevBtn.disabled  = page === 1;
+        if (nextBtn)  nextBtn.disabled  = page === totalMedPages;
+      }
+
+      showMedPage(1);
+
+      if (prevBtn) prevBtn.addEventListener('click', () => { if (currentMedPage > 1) showMedPage(currentMedPage - 1); });
+      if (nextBtn) nextBtn.addEventListener('click', () => { if (currentMedPage < totalMedPages) showMedPage(currentMedPage + 1); });
+    })();
 
     // ---- Animations ----
     const progressBars = document.querySelectorAll('.progress-bar');
@@ -1205,23 +1234,6 @@ function checkForumAccess() {
     if (confirm("Vous devez être inscrit et connecté pour accéder au forum. Souhaitez-vous vous inscrire ou vous connecter ?")) {
         window.location.href = "loginuser.html";
     }
-}
-function openAvisModal() {
-    document.getElementById('modalAvisId').value = '';
-    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-star"></i> Donner mon avis';
-    document.getElementById('modalSubmitButton').innerHTML = '<i class="fas fa-paper-plane"></i> Publier mon avis';
-    document.getElementById('modalNoteInput').value = '0';
-    document.getElementById('modalContenuInput').value = '';
-    document.getElementById('avisModal').style.display = 'flex';
-    
-    // Reset stars
-    const stars = document.querySelectorAll('.modal-star');
-    stars.forEach(s => s.classList.remove('active'));
-}
-
-function closeAvisModal() {
-    document.getElementById('avisModal').style.display = 'none';
-
 }
 
 </script>
@@ -1275,6 +1287,27 @@ function formatDateFr(isoOrMysql) {
     } catch(e) { return isoOrMysql; }
 }
 
+/** Décoration identique aux cartes statiques (.stars, avatar dégradés) */
+const AVIS_AVATAR_GRADS = [
+    '',
+    ' style="background: linear-gradient(135deg,#6366f1,#8b5cf6);"',
+    ' style="background: linear-gradient(135deg,#10b981,#059669);"',
+    ' style="background: linear-gradient(135deg,#f59e0b,#ea580c);"',
+    ' style="background: linear-gradient(135deg,#ec4899,#db2777);"'
+];
+
+function avisStarsLine(note) {
+    const n = Math.max(0, Math.min(5, Math.round(Number(note) || 0)));
+    return '\u2605'.repeat(n) + '\u2606'.repeat(5 - n);
+}
+
+function avisAuthorInitials(name) {
+    const s = String(name || 'U').trim();
+    const parts = s.split(/\s+/).filter(Boolean).slice(0, 2);
+    const ini = parts.map(p => p.charAt(0)).join('').toUpperCase().slice(0, 2);
+    return ini || '?';
+}
+
 function showNotification(msg, type) {
     const div = document.createElement('div');
     div.textContent = msg;
@@ -1296,7 +1329,7 @@ function updatePagination() {
 async function loadAllAvis() {
     const list = document.getElementById('avisList');
     if (!list) return;
-    list.innerHTML = '<div style="color: var(--text-muted); text-align:center;">Chargement des avis...</div>';
+    list.innerHTML = '<div class="col-12"><p class="avis-list-status">Chargement des avis...</p></div>';
     try {
         const res = await fetch('../Frontoffice/list_avis.php?limit=1000');
         const data = await res.json();
@@ -1304,17 +1337,19 @@ async function loadAllAvis() {
             allAvis = data.avis;
             totalAvis = allAvis.length;
             if (totalAvis === 0) {
-                list.innerHTML = '<div style="color: var(--text-muted); text-align:center;">Aucun avis pour le moment.</div>';
+                list.innerHTML = '<div class="col-12"><p class="avis-list-status">Aucun avis pour le moment — soyez le premier à partager votre expérience.</p></div>';
+                const pag = document.getElementById('avisPagination');
+                if (pag) pag.style.display = 'none';
                 return;
             }
             document.getElementById('avisPagination').style.display = totalAvis > itemsPerPage ? 'block' : 'none';
             loadAvisPage(1);
         } else {
-            list.innerHTML = '<div style="color:#ef4444; text-align:center;">Erreur chargement avis.</div>';
+            list.innerHTML = '<div class="col-12"><p class="avis-list-status">Erreur chargement avis.</p></div>';
         }
     } catch(e) {
         console.error(e);
-        list.innerHTML = '<div style="color:#ef4444; text-align:center;">Erreur de connexion.</div>';
+        list.innerHTML = '<div class="col-12"><p class="avis-list-status">Erreur de connexion.</p></div>';
     }
 }
 
@@ -1325,28 +1360,37 @@ function loadAvisPage(page) {
     const avisToShow = allAvis.slice(start, start + itemsPerPage);
     list.innerHTML = '';
     
-    avisToShow.forEach(a => {
+    avisToShow.forEach((a, idx) => {
         const note = Number(a.note || 0);
-        const stars = '⭐'.repeat(note) + '☆'.repeat(5 - note);
-        
-        // Vérification des droits
+        const starsLine = avisStarsLine(note);
+        const gIdx = (start + idx) % AVIS_AVATAR_GRADS.length;
+        const gradAttr = AVIS_AVATAR_GRADS[gIdx];
+        const auteurLabel = escapeHtml(a.auteur || 'Utilisateur');
+        const initials = escapeHtml(avisAuthorInitials(a.auteur));
+
         const isOwner = (a.id_utilisateur == sessionUserId);
         const isAdmin = (sessionUserRole === 'admin');
         const canModify = (isOwner || isAdmin);
         
         list.innerHTML += `
             <div class="col-4" style="min-width:280px;">
-                <div class="card" style="border-radius:18px; padding:16px;">
-                    <div style="font-size:1rem; font-weight:800; color:#0ea5e9;">${stars} (${note}/5)</div>
-                    <div style="margin-top:8px; font-weight:700;">👤 ${escapeHtml(a.auteur || 'Utilisateur')}</div>
-                    <div style="color:#64748b; font-size:0.8rem;">📅 ${formatDateFr(a.date_avis)}</div>
-                    <p style="margin-top:8px;">"${escapeHtml(a.contenu || '')}"</p>
-                    ${canModify ? `
-                        <div style="display:flex; gap:8px; margin-top:16px; justify-content:flex-end;">
-                            <button onclick="openEditModal(${a.id_avis})" class="btn btn-primary btn-sm">Modifier</button>
-                            <button onclick="deleteAvis(${a.id_avis})" class="btn btn-danger btn-sm">Supprimer</button>
-                        </div>
-                    ` : ''}
+                <div class="avis-card">
+                  <div class="avis-quote">"</div>
+                  <p class="avis-text">${escapeHtml(a.contenu || '')}</p>
+                  <div class="stars">${starsLine}</div>
+                  <div class="avis-author mt-2">
+                    <div class="avis-avatar"${gradAttr}>${initials}</div>
+                    <div class="avis-author-info">
+                      <div class="name">${auteurLabel}</div>
+                      <div class="role">${escapeHtml(formatDateFr(a.date_avis))}</div>
+                    </div>
+                  </div>
+                  ${canModify ? `
+                    <div class="avis-dynamic-actions">
+                      ${(isOwner || isAdmin) ? `<button type="button" onclick="openEditModal(${a.id_avis})" class="btn btn-sm">Modifier</button>` : ''}
+                      <button type="button" onclick="deleteAvis(${a.id_avis})" class="btn btn-sm btn-danger">Supprimer</button>
+                    </div>
+                  ` : ''}
                 </div>
             </div>
         `;
@@ -1364,8 +1408,8 @@ async function openEditModal(id) {
         const data = await res.json();
         if (data.success) {
             const avis = data.avis;
-            // Vérifier que l'utilisateur est propriétaire
-            if (avis.id_utilisateur != sessionUserId) {
+            const isOwn = avis.id_utilisateur == sessionUserId;
+            if (!isOwn && sessionUserRole !== 'admin') {
                 showNotification('Vous ne pouvez modifier que vos propres avis', 'error');
                 return;
             }
@@ -1457,7 +1501,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 showNotification('Erreur réseau', 'error');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = isEdit ? '<i class="fas fa-save"></i> Enregistrer' : '<i class="fas fa-paper-plane"></i> Publier';
+                btn.innerHTML = isEdit ? '<i class="fas fa-save"></i> Enregistrer' : '<i class="fas fa-paper-plane"></i> Publier mon avis';
             }
         });
     }

@@ -1159,6 +1159,19 @@ body.dark-mode .pie-center-text .pie-label {
 
         </div>
 
+        <div class="nav-item">
+            <a href="../backoffice/listepharmacie.php" <?php echo basename($_SERVER['PHP_SELF']) === 'listepharmacie.php' ? 'class="active"' : ''; ?>>
+                <i class="fa-solid fa-prescription-bottle-medical nav-icon"></i>
+                <span>Pharmacies</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="../backoffice/listemedicament.php" <?php echo basename($_SERVER['PHP_SELF']) === 'listemedicament.php' ? 'class="active"' : ''; ?>>
+                <i class="fa-solid fa-pills nav-icon"></i>
+                <span>Médicaments</span>
+            </a>
+        </div>
+
          <div class="nav-item has-sub">
     <a onclick="toggleSubMenu(this)">
         <i class="fas fa-comments nav-icon"></i>

@@ -734,6 +734,25 @@ $adminEmail = $_SESSION['user_email'] ?? '';
         </div>
     </div>
 
+    <!-- Pharmacies & Médicaments -->
+    <div class="nav-item has-sub <?= isSubActive('listepharmacie.php', 'listemedicament.php') ?>">
+        <a onclick="toggleSubMenu(this)" <?= isActive('listepharmacie.php', 'listemedicament.php') ? 'class="active"' : '' ?>>
+            <i class="fa-solid fa-prescription-bottle-medical nav-icon"></i>
+            <span>Pharmacies &amp; Médicaments</span>
+            <i class="fas fa-chevron-right nav-arrow"></i>
+        </a>
+        <div class="sub-menu">
+            <a href="../backoffice/listepharmacie.php"
+               <?= isActive('listepharmacie.php') ? 'class="active"' : '' ?>>
+               Les pharmacies
+            </a>
+            <a href="../backoffice/listemedicament.php"
+               <?= isActive('listemedicament.php') ? 'class="active"' : '' ?>>
+               Les médicaments
+            </a>
+        </div>
+    </div>
+
     <!-- Forum -->
      <div class="nav-item has-sub">
     <a onclick="toggleSubMenu(this)">
@@ -749,7 +768,6 @@ $adminEmail = $_SESSION['user_email'] ?? '';
 
     <div class="nav-section-label">Configuration</div>
 
-+
     <div class="nav-item">
         <a href="../front/indexp.php" <?= isActive('indexp.php') ? 'class="active"' : '' ?>>
             <i class="fas fa-globe nav-icon"></i>

@@ -2,11 +2,20 @@
 require_once '../../Controller/LanguageController.php';
 require_once '../../config.php';
 
-// Logique de Notification Dynamique : Rupture de stock
 $db_notif = config::getConnexion();
-$stmt_notif = $db_notif->query("SELECT nom, stock, id_medicament FROM medicament WHERE stock <= 5 ORDER BY stock ASC");
+$stmt_notif = $db_notif->query("SELECT nom_medicament AS nom, stock, id_medicament FROM medicament WHERE stock <= 5 ORDER BY stock ASC");
 $alertes_stock = $stmt_notif->fetchAll();
 $nb_alertes = count($alertes_stock);
+
+$hcur = basename($_SERVER['PHP_SELF']);
+$hpath = str_replace('\\', '/', $_SERVER['PHP_SELF']);
+$h_admin_tb = ($hcur === 'dashboard.php' && stripos($hpath, 'backoffice') === false && stripos($hpath, '/back/') !== false);
+$h_consult_dash = ($hcur === 'dashboard.php' && stripos($hpath, 'backoffice') !== false);
+$h_sub_consult = in_array($hcur, ['list_consultation.php', 'list_ordonnance.php'], true) || $h_consult_dash;
+$h_sub_assur = in_array($hcur, ['assurancelist.php', 'contratList.php'], true);
+$h_sub_pharma = in_array($hcur, ['listepharmacie.php', 'listemedicament.php'], true);
+$h_sub_forum = in_array($hcur, ['dashboardf.php', 'postlist.php', 'postList.php', 'addpost.php'], true);
+$h_nom = $_SESSION['user_nom'] ?? 'Administrateur';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -15,101 +24,11 @@ $nb_alertes = count($alertes_stock);
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="ASCLEPIA - Gestion des pharmacies.">
   <title>ASCLEPIA — Gestion Pharmacies</title>
-
-  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-  <!-- Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <!-- Styles -->
   <link rel="stylesheet" href="../assets/css/style.css?v=<?= time() ?>">
   <link rel="stylesheet" href="../assets/css/backoffice.css?v=<?= time() ?>">
   <style>
-    /* Custom styles for BackOffice CRUD */
-    body {
-      display: flex;
-      margin: 0;
-      min-height: 100vh;
-      background-color: var(--bg);
-    }
-    .sidebar {
-      width: 260px;
-      background: var(--dark);
-      color: var(--white);
-      position: fixed;
-      height: 100vh;
-      left: 0;
-      top: 0;
-      padding: 20px 0;
-      display: flex;
-      flex-direction: column;
-      z-index: 1000;
-      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-    }
-    .sidebar .navbar-brand {
-      padding: 0 20px 20px;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      text-decoration: none;
-    }
-    .sidebar .navbar-logo {
-      font-size: 1.8rem;
-    }
-    .sidebar .navbar-name {
-      font-size: 1.3rem;
-      font-weight: 800;
-      color: var(--white);
-      letter-spacing: 1px;
-    }
-    .sidebar .navbar-name span {
-      color: var(--primary);
-    }
-    .sidebar .nav-links {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      padding: 0 15px;
-    }
-    .sidebar .nav-link {
-      color: var(--gray-light);
-      padding: 12px 15px;
-      border-radius: var(--radius-sm);
-      text-decoration: none;
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-weight: 500;
-      font-size: 0.95rem;
-    }
-    .sidebar .nav-link i {
-      width: 20px;
-      text-align: center;
-      font-size: 1.1rem;
-    }
-    .sidebar .nav-link:hover, .sidebar .nav-link.active {
-      color: var(--white);
-      background: rgba(255,255,255,0.1);
-    }
-    .sidebar .nav-link.active {
-      background: var(--primary);
-      color: white;
-    }
-    .sidebar .nav-actions {
-      margin-top: auto;
-      padding: 20px;
-      border-top: 1px solid rgba(255,255,255,0.05);
-    }
-    .main-content {
-      flex: 1;
-      margin-left: 260px;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      width: calc(100% - 260px);
-    }
     .admin-container {
       padding: 40px 30px;
       flex: 1;
@@ -121,9 +40,7 @@ $nb_alertes = count($alertes_stock);
       box-shadow: var(--shadow-sm);
       margin-top: 20px;
     }
-    .table-responsive {
-      overflow-x: auto;
-    }
+    .table-responsive { overflow-x: auto; }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -139,16 +56,9 @@ $nb_alertes = count($alertes_stock);
       color: var(--text-main);
       background: var(--bg);
     }
-    tr:hover {
-      background: rgba(0,0,0,0.02);
-    }
-    .action-btns {
-      display: flex;
-      gap: 10px;
-    }
-    .form-group {
-      margin-bottom: 20px;
-    }
+    tr:hover { background: rgba(0,0,0,0.02); }
+    .action-btns { display: flex; gap: 10px; }
+    .form-group { margin-bottom: 20px; }
     .form-group label {
       display: block;
       margin-bottom: 8px;
@@ -173,129 +83,181 @@ $nb_alertes = count($alertes_stock);
       margin-top: 5px;
       display: none;
     }
-    .is-invalid {
-      border-color: #ef4444 !important;
-    }
-    .is-invalid:focus {
-      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
-    }
+    .is-invalid { border-color: #ef4444 !important; }
+    .is-invalid:focus { box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important; }
   </style>
 </head>
-
 <body>
 
-<!-- Sidebar -->
+<div class="admin-wrapper">
+
 <aside class="sidebar">
-  <a href="../frontoffice/index.php" class="navbar-brand" style="display: flex; justify-content: center; margin: 15px; padding: 10px; text-decoration: none;">
-    <img src="../assets/image/logo.png?v=<?php echo time(); ?>" alt="ASCLEPIA Logo" style="height: 55px; object-fit: contain; max-width: 100%;">
-  </a>
-
-  <div class="nav-links" id="navLinks">
-    <a href="dashboard.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : ''; ?>">
-      <i class="fa-solid fa-chart-line"></i> <?= tr('bo_dashboard') ?>
+    <a href="../back/dashboard.php" class="sidebar-brand">
+        <div class="sidebar-logo">🏥</div>
+        <div class="sidebar-title">ASCL<span>EPIA</span></div>
     </a>
-    <a href="listepharmacie.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'listepharmacie.php' ? 'active' : ''; ?>">
-      <i class="fa-solid fa-house-medical"></i> <?= tr('bo_pharmacies') ?>
-    </a>
-    <a href="listemedicament.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'listemedicament.php' ? 'active' : ''; ?>">
-      <i class="fa-solid fa-pills"></i> <?= tr('bo_medicaments') ?>
-    </a>
-    <a href="statistiques.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'statistiques.php' ? 'active' : ''; ?>">
-      <i class="fa-solid fa-chart-pie"></i> <?= tr('bo_stats') ?>
-    </a>
-    <a href="../frontoffice/index.php" class="nav-link">
-      <i class="fa-solid fa-globe"></i> <?= tr('bo_public_site') ?>
-    </a>
-  </div>
-
-  <div class="nav-actions" style="display: flex; flex-direction: column; gap: 15px; margin-top: auto; padding: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
-    
-    <div style="display: flex; justify-content: space-between; align-items: center; position: relative;">
-        <!-- Theme Toggle -->
-        <button id="themeToggle" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--white);" title="Activer le mode sombre">
-            <i class="fa-solid fa-moon"></i>
-        </button>
-
-        <!-- Notification Bell -->
-        <div class="notification-container" style="position: relative;">
-            <button id="notifToggle" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--white); position: relative;" title="Notifications de Stock">
-                <i class="fa-solid fa-bell"></i>
-                <?php if($nb_alertes > 0): ?>
-                    <span class="badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; font-size: 0.65rem; padding: 2px 5px; font-weight: bold;">
-                        <?= $nb_alertes ?>
-                    </span>
-                <?php endif; ?>
-            </button>
-            
-            <!-- Notification Dropdown -->
-            <div id="notifDropdown" class="notif-dropdown" style="display: none; position: absolute; bottom: 100%; left: 0; margin-bottom: 15px; width: 280px; background: var(--bg-card, white); border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 1001; color: var(--text-main);">
-                <div style="padding: 12px 15px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 0.95rem; color: var(--text-main);">
-                    Alertes de Stock (<?= $nb_alertes ?>)
-                </div>
-                <div style="max-height: 250px; overflow-y: auto;">
-                    <?php if($nb_alertes > 0): ?>
-                        <?php foreach($alertes_stock as $alerte): ?>
-                            <a href="editmedicament.php?id_medicament=<?= $alerte['id_medicament'] ?>" style="display: flex; flex-direction: column; padding: 12px 15px; border-bottom: 1px solid var(--border); text-decoration: none; color: inherit; transition: background 0.2s;">
-                                <span style="font-weight: 600; font-size: 0.9rem;"><?= htmlspecialchars($alerte['nom']) ?></span>
-                                <?php if($alerte['stock'] == 0): ?>
-                                    <span style="color: #ef4444; font-size: 0.8rem; font-weight: 500;"><i class="fa-solid fa-circle-exclamation"></i> Rupture de stock (0)</span>
-                                <?php else: ?>
-                                    <span style="color: #f59e0b; font-size: 0.8rem; font-weight: 500;"><i class="fa-solid fa-triangle-exclamation"></i> Stock critique (<?= $alerte['stock'] ?> restants)</span>
-                                <?php endif; ?>
-                            </a>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div style="padding: 20px 15px; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
-                            <i class="fa-solid fa-check-circle" style="color: #10b981; font-size: 1.5rem; margin-bottom: 8px; display: block;"></i>
-                            Tous les stocks sont normaux.
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-
-        <!-- Language Toggle -->
-        <div class="lang-toggle" style="display:flex; gap: 5px; align-items:center; font-size: 0.9rem;">
-            <a href="?lang=fr" style="color: <?= $_SESSION['lang'] === 'fr' ? 'var(--primary)' : 'rgba(255,255,255,0.5)' ?>; font-weight: 700; text-decoration: none;">FR</a>
-            <span style="color: rgba(255,255,255,0.5);">|</span>
-            <a href="?lang=en" style="color: <?= $_SESSION['lang'] === 'en' ? 'var(--primary)' : 'rgba(255,255,255,0.5)' ?>; font-weight: 700; text-decoration: none;">EN</a>
+    <div class="sidebar-user">
+        <div class="user-avatar"><?= strtoupper(substr($h_nom, 0, 2)) ?></div>
+        <div class="user-info">
+            <div class="name"><?= htmlspecialchars($h_nom) ?></div>
+            <div class="role">Super Admin</div>
         </div>
     </div>
 
-    <!-- Toggle Script for Dropdown -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const notifBtn = document.getElementById('notifToggle');
-            const notifDropdown = document.getElementById('notifDropdown');
-            const notifSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
-            
-            if (notifBtn && notifDropdown) {
-                notifBtn.addEventListener('click', function(e) {
-                    e.stopPropagation();
+    <nav class="sidebar-nav">
+        <div class="nav-section-label">Menu Principal</div>
+        <div class="nav-item">
+            <a href="../back/dashboard.php" <?= $h_admin_tb ? 'class="active"' : '' ?>>
+                <i class="fas fa-tachometer-alt nav-icon"></i>
+                <span>Tableau de bord</span>
+            </a>
+        </div>
 
-                    // Jouer le son si le menu s'ouvre
-                    if (notifDropdown.style.display !== 'block') {
-                        notifSound.play().catch(e => console.log("Audio play blocked"));
-                    }
+        <div class="nav-section-label">Gestion</div>
 
-                    notifDropdown.style.display = notifDropdown.style.display === 'none' ? 'block' : 'none';
-                });
-                
-                document.addEventListener('click', function(e) {
-                    if (!notifDropdown.contains(e.target) && e.target !== notifBtn) {
-                        notifDropdown.style.display = 'none';
-                    }
-                });
-            }
-        });
-    </script>
+        <div class="nav-item has-sub <?= $h_sub_assur ? 'open' : '' ?>">
+            <a onclick="toggleSubMenu(this)" <?= $h_sub_assur ? 'class="active"' : '' ?>>
+                <i class="fa-solid fa-shield-halved nav-icon"></i>
+                <span>Assurances &amp; Contrats</span>
+                <i class="fas fa-chevron-right nav-arrow"></i>
+            </a>
+            <div class="sub-menu <?= $h_sub_assur ? 'open' : '' ?>">
+                <a href="assurancelist.php" <?= $hcur === 'assurancelist.php' ? 'class="active"' : '' ?>>Les assurances</a>
+                <a href="contrat/contratList.php" <?= $hcur === 'contratList.php' ? 'class="active"' : '' ?>>Les contrats</a>
+            </div>
+        </div>
 
-    <a href="addpharmacie.php" class="btn btn-primary btn-sm" style="width: 100%; justify-content: center;">
-      <i class="fa-solid fa-plus"></i> <?= tr('bo_add_pharmacy') ?>
-    </a>
-  </div>
+        <div class="nav-item has-sub <?= $h_sub_consult ? 'open' : '' ?>">
+            <a onclick="toggleSubMenu(this)" <?= (in_array($hcur, ['list_consultation.php', 'list_ordonnance.php'], true) || $h_consult_dash) ? 'class="active"' : '' ?>>
+                <i class="fa-solid fa-file-contract nav-icon"></i>
+                <span>Ordonnances &amp; Consultations</span>
+                <i class="fas fa-chevron-right nav-arrow"></i>
+            </a>
+            <div class="sub-menu <?= $h_sub_consult ? 'open' : '' ?>">
+                <a href="dashboard.php" <?= $h_consult_dash ? 'class="active"' : '' ?>>Toutes les consultations</a>
+                <a href="list_consultation.php" <?= $hcur === 'list_consultation.php' ? 'class="active"' : '' ?>>Les consultations</a>
+                <a href="list_ordonnance.php" <?= $hcur === 'list_ordonnance.php' ? 'class="active"' : '' ?>>Les ordonnances</a>
+            </div>
+        </div>
+
+        <div class="nav-item has-sub <?= $h_sub_pharma ? 'open' : '' ?>">
+            <a onclick="toggleSubMenu(this)" <?= $h_sub_pharma ? 'class="active"' : '' ?>>
+                <i class="fa-solid fa-prescription-bottle-medical nav-icon"></i>
+                <span>Pharmacies &amp; Médicaments</span>
+                <i class="fas fa-chevron-right nav-arrow"></i>
+            </a>
+            <div class="sub-menu <?= $h_sub_pharma ? 'open' : '' ?>">
+                <a href="listepharmacie.php" <?= $hcur === 'listepharmacie.php' ? 'class="active"' : '' ?>>Les pharmacies</a>
+                <a href="listemedicament.php" <?= $hcur === 'listemedicament.php' ? 'class="active"' : '' ?>>Les médicaments</a>
+            </div>
+        </div>
+
+        <div class="nav-item">
+            <a href="statistiques.php" <?= $hcur === 'statistiques.php' ? 'class="active"' : '' ?>>
+                <i class="fa-solid fa-chart-pie nav-icon"></i>
+                <span><?= tr('bo_stats') ?></span>
+            </a>
+        </div>
+
+        <div class="nav-item has-sub <?= $h_sub_forum ? 'open' : '' ?>">
+            <a onclick="toggleSubMenu(this)" <?= $h_sub_forum ? 'class="active"' : '' ?>>
+                <i class="fas fa-comments nav-icon"></i>
+                <span>Forum</span>
+                <i class="fas fa-chevron-right nav-arrow"></i>
+            </a>
+            <div class="sub-menu <?= $h_sub_forum ? 'open' : '' ?>">
+                <a href="dashboardf.php" <?= $hcur === 'dashboardf.php' ? 'class="active"' : '' ?>>📊 Dashboard Forum</a>
+                <a href="../Frontoffice/postlist.php" <?= ($hcur === 'postlist.php' || $hcur === 'postList.php') ? 'class="active"' : '' ?>>📝 Tous les posts</a>
+                <a href="addpost.php" <?= $hcur === 'addpost.php' ? 'class="active"' : '' ?>>Ajouter un post</a>
+                <a href="dashboard.php" <?= $h_consult_dash ? 'class="active"' : '' ?>>Gestion des posts</a>
+            </div>
+        </div>
+
+        <div class="nav-section-label">Configuration</div>
+        <div class="nav-item">
+            <a href="../front/indexp.php" <?= $hcur === 'indexp.php' ? 'class="active"' : '' ?>>
+                <i class="fas fa-globe nav-icon"></i>
+                <span>Voir le site</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="../back/loginadmin.html">
+                <i class="fas fa-sign-out-alt nav-icon"></i>
+                <span>Déconnexion</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="sidebar-toolbar" style="padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.06); margin-top: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <button type="button" id="themeToggle" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: rgba(255,255,255,0.7);" title="Mode sombre">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+            <div class="notification-container" style="position: relative;">
+                <button type="button" id="notifToggle" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: rgba(255,255,255,0.7); position: relative;" title="Notifications de stock">
+                    <i class="fa-solid fa-bell"></i>
+                    <?php if ($nb_alertes > 0): ?>
+                        <span style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; font-size: 0.65rem; padding: 2px 5px; font-weight: bold;"><?= $nb_alertes ?></span>
+                    <?php endif; ?>
+                </button>
+                <div id="notifDropdown" style="display: none; position: absolute; bottom: 100%; left: 0; margin-bottom: 10px; width: 280px; background: var(--bg-card, white); border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 1001; color: var(--text-main);">
+                    <div style="padding: 12px 15px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 0.95rem;">Alertes de stock (<?= $nb_alertes ?>)</div>
+                    <div style="max-height: 220px; overflow-y: auto;">
+                        <?php if ($nb_alertes > 0): ?>
+                            <?php foreach ($alertes_stock as $alerte): ?>
+                                <a href="editmedicament.php?id_medicament=<?= (int)$alerte['id_medicament'] ?>" style="display: flex; flex-direction: column; padding: 12px 15px; border-bottom: 1px solid var(--border); text-decoration: none; color: inherit;">
+                                    <span style="font-weight: 600; font-size: 0.9rem;"><?= htmlspecialchars($alerte['nom']) ?></span>
+                                    <?php if ((int)$alerte['stock'] === 0): ?>
+                                        <span style="color: #ef4444; font-size: 0.8rem;"><i class="fa-solid fa-circle-exclamation"></i> Rupture (0)</span>
+                                    <?php else: ?>
+                                        <span style="color: #f59e0b; font-size: 0.8rem;"><i class="fa-solid fa-triangle-exclamation"></i> Stock critique (<?= (int)$alerte['stock'] ?>)</span>
+                                    <?php endif; ?>
+                                </a>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div style="padding: 16px; text-align: center; color: var(--text-muted); font-size: 0.9rem;">Aucune alerte.</div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 5px; align-items: center; font-size: 0.9rem;">
+                <a href="?lang=fr" style="color: <?= ($_SESSION['lang'] ?? 'fr') === 'fr' ? 'var(--primary)' : 'rgba(255,255,255,0.45)' ?>; font-weight: 700; text-decoration: none;">FR</a>
+                <span style="color: rgba(255,255,255,0.35);">|</span>
+                <a href="?lang=en" style="color: <?= ($_SESSION['lang'] ?? 'fr') === 'en' ? 'var(--primary)' : 'rgba(255,255,255,0.45)' ?>; font-weight: 700; text-decoration: none;">EN</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-footer">
+        <div class="sidebar-version">Version 1.0</div>
+    </div>
 </aside>
 
-<!-- Main Content Wrapper -->
+<script>
+function toggleSubMenu(el) {
+    var p = el && el.closest('.has-sub');
+    if (p) {
+        p.classList.toggle('open');
+        var s = p.querySelector('.sub-menu');
+        if (s) s.classList.toggle('open');
+    }
+}
+document.addEventListener('DOMContentLoaded', function() {
+    var notifBtn = document.getElementById('notifToggle');
+    var notifDropdown = document.getElementById('notifDropdown');
+    if (notifBtn && notifDropdown) {
+        notifBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            notifDropdown.style.display = notifDropdown.style.display === 'block' ? 'none' : 'block';
+        });
+        document.addEventListener('click', function(e) {
+            if (!notifDropdown.contains(e.target) && e.target !== notifBtn) {
+                notifDropdown.style.display = 'none';
+            }
+        });
+    }
+});
+</script>
+
 <div class="main-content">
 <script src="../assets/js/theme.js?v=<?= time() ?>"></script>

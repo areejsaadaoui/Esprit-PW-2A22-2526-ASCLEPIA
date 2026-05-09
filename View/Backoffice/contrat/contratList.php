@@ -220,6 +220,25 @@ $paginated   = array_slice($contrats, $offset, $perPage);
         </div>
     </div>
 
+    <!-- Pharmacies & Médicaments -->
+    <div class="nav-item has-sub <?= isSubActive('listepharmacie.php', 'listemedicament.php') ?>">
+        <a onclick="toggleSubMenu(this)" <?= isActive('listepharmacie.php', 'listemedicament.php') ? 'class="active"' : '' ?>>
+            <i class="fa-solid fa-prescription-bottle-medical nav-icon"></i>
+            <span>Pharmacies &amp; Médicaments</span>
+            <i class="fas fa-chevron-right nav-arrow"></i>
+        </a>
+        <div class="sub-menu">
+            <a href="../../backoffice/listepharmacie.php"
+               <?= isActive('listepharmacie.php') ? 'class="active"' : '' ?>>
+               Les pharmacies
+            </a>
+            <a href="../../backoffice/listemedicament.php"
+               <?= isActive('listemedicament.php') ? 'class="active"' : '' ?>>
+               Les médicaments
+            </a>
+        </div>
+    </div>
+
     <!-- Forum -->
     <div class="nav-item has-sub <?= isSubActive('postList.php', 'addpost.php', 'dashboard.php') ?>">
         <a onclick="toggleSubMenu(this)" <?= isActive('postList.php', 'addpost.php') ? 'class="active"' : '' ?>>

@@ -9,7 +9,7 @@ if (strlen($contenu) < 5) {
 }
 
 // clé API Groq
-$apiKey = 'api_key_here';
+$apiKey = 'api_key_here'; // Remplacez par votre clé API Groq
 
 $payload = json_encode([
     'model' => 'llama-3.3-70b-versatile',

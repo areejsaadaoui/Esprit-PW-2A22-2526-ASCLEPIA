@@ -11,6 +11,17 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true ||
 // Récupérer les infos de l'admin connecté
 $adminNom   = $_SESSION['user_nom']   ?? 'Administrateur';
 $adminEmail = $_SESSION['user_email'] ?? '';
+$user_role  = $_SESSION['user_role']  ?? 'admin';
+
+$cur = basename($_SERVER['PHP_SELF']);
+if (!function_exists('docActive')) {
+    function docActive(...$p){ global $cur; return in_array($cur, $p) ? 'class="active"' : ''; }
+    function docSub(...$p)   { global $cur; return in_array($cur, $p) ? 'open' : ''; }
+}
+if (!function_exists('isActive')) {
+    function isActive(...$pages)   { global $cur; return in_array($cur, $pages); }
+    function isSubActive(...$pages){ global $cur; return in_array($cur, $pages) ? 'open' : ''; }
+}
 
 require_once '../../config.php';
 require_once '../../Controller/ConsultationController.php';
@@ -101,27 +112,78 @@ $consultationsPage = array_slice($consultations, $debut, $parPage);
                 <div class="name" id="adminName">
                     <?php echo htmlspecialchars($adminNom ?? 'Administrateur'); ?>
                 </div>
-                <div class="role">Super Admin</div>
+                <div class="role"><?= $user_role === 'admin' ? 'Super Admin' : 'Médecin' ?></div>
             </div>
         </div>
+
+        <?php if ($user_role === 'medecin'): ?>
         <nav class="sidebar-nav">
+            <div class="nav-section-label">Menu Principal</div>
+            <div class="nav-item">
+                <a href="../front/indexd.php" <?= docActive('indexd.php') ?>>
+                    <i class="fas fa-tachometer-alt nav-icon"></i>
+                    <span>Tableau de bord</span>
+                </a>
+            </div>
 
-    <?php
-        $current = basename($_SERVER['PHP_SELF']);
-        $current_path = $_SERVER['PHP_SELF'];
+            <div class="nav-section-label">Activité</div>
 
-        // Helper to check if current page matches any of the given filenames
-        function isActive(...$pages) {
-            global $current;
-            return in_array($current, $pages);
-        }
+            <div class="nav-item has-sub <?= docSub('list_consultation.php','add_consultation.php','edit_consultation.php','delete_consultation.php','calendrier.php') ?>">
+                <a onclick="toggleSubMenu(this)" <?= docActive('list_consultation.php','add_consultation.php','edit_consultation.php','delete_consultation.php') ?>>
+                    <i class="fa-solid fa-stethoscope nav-icon"></i>
+                    <span>Consultations</span>
+                    <i class="fas fa-chevron-right nav-arrow"></i>
+                </a>
+                <div class="sub-menu <?= docSub('list_consultation.php','add_consultation.php','edit_consultation.php','delete_consultation.php') ?>">
+                    <a href="list_consultation.php" <?= docActive('list_consultation.php') ?>>
+                        <i class="fa-solid fa-list"></i> Toutes les consultations
+                    </a>
+                    <a href="add_consultation.php" <?= docActive('add_consultation.php') ?>>
+                        <i class="fa-solid fa-plus"></i> Nouvelle consultation
+                    </a>
+                </div>
+            </div>
 
-        // Helper to check if sub-menu should be open (any child is active)
-        function isSubActive(...$pages) {
-            global $current;
-            return in_array($current, $pages) ? 'open' : '';
-        }
-    ?>
+            <div class="nav-item has-sub <?= docSub('list_ordonnance.php','add_ordonnance.php','edit_ordonnance.php','delete_ordonnance.php') ?>">
+                <a onclick="toggleSubMenu(this)" <?= docActive('list_ordonnance.php','add_ordonnance.php','edit_ordonnance.php','delete_ordonnance.php') ?>>
+                    <i class="fa-solid fa-file-prescription nav-icon"></i>
+                    <span>Ordonnances</span>
+                    <i class="fas fa-chevron-right nav-arrow"></i>
+                </a>
+                <div class="sub-menu <?= docSub('list_ordonnance.php','add_ordonnance.php','edit_ordonnance.php','delete_ordonnance.php') ?>">
+                    <a href="list_ordonnance.php" <?= docActive('list_ordonnance.php') ?>>
+                        <i class="fa-solid fa-list"></i> Toutes les ordonnances
+                    </a>
+                    <a href="add_ordonnance.php" <?= docActive('add_ordonnance.php') ?>>
+                        <i class="fa-solid fa-plus"></i> Nouvelle ordonnance
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-item">
+                <a href="calendrier.php" <?= docActive('calendrier.php') ?>>
+                    <i class="fa-solid fa-calendar-days nav-icon"></i>
+                    <span>Calendrier</span>
+                </a>
+            </div>
+
+            <div class="nav-section-label">Autre</div>
+            <div class="nav-item">
+                <a href="../front/indexp.php">
+                    <i class="fas fa-globe nav-icon"></i>
+                    <span>Espace patient</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="../front/login.php">
+                    <i class="fas fa-sign-out-alt nav-icon"></i>
+                    <span>Déconnexion</span>
+                </a>
+            </div>
+        </nav>
+
+        <?php else: ?>
+        <nav class="sidebar-nav">
 
     <div class="nav-section-label">Menu Principal</div>
 
@@ -154,45 +216,70 @@ $consultationsPage = array_slice($consultations, $debut, $parPage);
     </div>
 
     <!-- Ordonnances & Consultations -->
-    <div class="nav-item has-sub <?= isSubActive('dashboard.php', 'list_consultation.php', 'list_ordonnance.php') ?>">
+    <div class="nav-item has-sub <?= isSubActive('list_consultation.php', 'list_ordonnance.php') ?>">
         <a onclick="toggleSubMenu(this)" <?= isActive('list_consultation.php', 'list_ordonnance.php') ? 'class="active"' : '' ?>>
             <i class="fa-solid fa-file-contract nav-icon"></i>
             <span>Ordonnances &amp; Consultations</span>
             <i class="fas fa-chevron-right nav-arrow"></i>
         </a>
         <div class="sub-menu">
-            <a href="../backoffice/dashboard.php"
+            <a href="dashboard.php"
                <?= isActive('dashboard.php') ? 'class="active"' : '' ?>>
-               Toutes les consultations
+               Vue d’ensemble consultations
             </a>
-            <a href="../backoffice/list_consultation.php"
+            <a href="list_consultation.php"
                <?= isActive('list_consultation.php') ? 'class="active"' : '' ?>>
                Les consultations
             </a>
-            <a href="../backoffice/list_ordonnance.php"
+            <a href="list_ordonnance.php"
                <?= isActive('list_ordonnance.php') ? 'class="active"' : '' ?>>
                Les ordonnances
             </a>
         </div>
     </div>
 
+    <div class="nav-item has-sub <?= isSubActive('listepharmacie.php', 'listemedicament.php') ?>">
+        <a onclick="toggleSubMenu(this)" <?= isActive('listepharmacie.php', 'listemedicament.php') ? 'class="active"' : '' ?>>
+            <i class="fa-solid fa-prescription-bottle-medical nav-icon"></i>
+            <span>Pharmacies &amp; Médicaments</span>
+            <i class="fas fa-chevron-right nav-arrow"></i>
+        </a>
+        <div class="sub-menu">
+            <a href="listepharmacie.php"
+               <?= isActive('listepharmacie.php') ? 'class="active"' : '' ?>>
+               Les pharmacies
+            </a>
+            <a href="listemedicament.php"
+               <?= isActive('listemedicament.php') ? 'class="active"' : '' ?>>
+               Les médicaments
+            </a>
+        </div>
+    </div>
+
+    <div class="nav-item">
+        <a href="calendrier.php" <?= isActive('calendrier.php') ? 'class="active"' : '' ?>>
+            <i class="fa-solid fa-calendar-days nav-icon"></i>
+            <span>Calendrier</span>
+        </a>
+    </div>
+
     <!-- Forum -->
-    <div class="nav-item has-sub <?= isSubActive('postList.php', 'addpost.php', 'dashboard.php') ?>">
-        <a onclick="toggleSubMenu(this)" <?= isActive('postList.php', 'addpost.php') ? 'class="active"' : '' ?>>
+    <div class="nav-item has-sub <?= isSubActive('postlist.php', 'postList.php', 'addpost.php') ?>">
+        <a onclick="toggleSubMenu(this)" <?= isActive('postlist.php', 'postList.php', 'addpost.php') ? 'class="active"' : '' ?>>
             <i class="fas fa-comments nav-icon"></i>
             <span>Forum</span>
             <i class="fas fa-chevron-right nav-arrow"></i>
         </a>
         <div class="sub-menu">
-            <a href="../Frontoffice/postList.php"
-               <?= isActive('postList.php') ? 'class="active"' : '' ?>>
+            <a href="../Frontoffice/postlist.php"
+               <?= isActive('postlist.php', 'postList.php') ? 'class="active"' : '' ?>>
                Tous les posts
             </a>
-            <a href="../backoffice/addpost.php"
+            <a href="addpost.php"
                <?= isActive('addpost.php') ? 'class="active"' : '' ?>>
                Ajouter un post
             </a>
-            <a href="../backoffice/dashboard.php"
+            <a href="dashboard.php"
                <?= isActive('dashboard.php') ? 'class="active"' : '' ?>>
                Gestion des posts
             </a>
@@ -216,6 +303,7 @@ $consultationsPage = array_slice($consultations, $debut, $parPage);
     </div>
 
 </nav>
+        <?php endif; ?>
     </aside>
 
     <div class="main-content">

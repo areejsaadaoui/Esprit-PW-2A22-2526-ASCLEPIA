@@ -8,7 +8,7 @@ class medicamentC
 {
     function ajouterMedicament($medicament)
     {
-        $sql = "INSERT INTO medicament (nom, prix, stock, categorie, images, id_pharmacie) VALUES (:nom, :prix, :stock, :categorie, :images, :id_pharmacie)";
+        $sql = "INSERT INTO medicament (nom_medicament, prix_medicament, stock, categorie, image, id_pharmacie) VALUES (:nom, :prix, :stock, :categorie, :images, :id_pharmacie)";
         $db = config::getConnexion();
         try {
             $query = $db->prepare($sql);
@@ -36,8 +36,8 @@ class medicamentC
 
     function afficherMedicaments()
     {
-        $sql = "SELECT m.*, p.nom as nom_pharmacie 
-                FROM medicament m 
+        $sql = "SELECT m.id_medicament, m.nom_medicament AS nom, m.prix_medicament AS prix, m.stock, m.categorie, m.type, m.image AS images, m.id_pharmacie, p.nom AS nom_pharmacie
+                FROM medicament m
                 JOIN pharmacie p ON m.id_pharmacie = p.id_pharmacie";
         $db = config::getConnexion();
         try {
@@ -66,12 +66,12 @@ class medicamentC
         try {
             $db = config::getConnexion();
             $query = $db->prepare(
-                'UPDATE medicament SET 
-                    nom = :nom, 
-                    prix = :prix, 
+                'UPDATE medicament SET
+                    nom_medicament = :nom,
+                    prix_medicament = :prix,
                     stock = :stock,
                     categorie = :categorie,
-                    images = :images,
+                    image = :images,
                     id_pharmacie = :id_pharmacie
                 WHERE id_medicament = :id_medicament'
             );
@@ -103,7 +103,8 @@ class medicamentC
 
     function recupererMedicament($id_medicament)
     {
-        $sql = "SELECT * from medicament where id_medicament = :id_medicament";
+        $sql = "SELECT id_medicament, nom_medicament AS nom, prix_medicament AS prix, stock, categorie, type, image AS images, id_pharmacie
+                FROM medicament WHERE id_medicament = :id_medicament";
         $db = config::getConnexion();
         try {
             $query = $db->prepare($sql);

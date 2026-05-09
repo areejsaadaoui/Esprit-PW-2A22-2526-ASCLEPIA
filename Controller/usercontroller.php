@@ -193,19 +193,21 @@ class UserController {
 
     // Récupérer tous les médecins
     public function getAllMedecins() {
-        $sql = "SELECT u.*, m.id_medcin, m.specialite, m.numero 
-                FROM utilisateur u 
-                INNER JOIN medcin m ON u.id_user = m.id_user 
-                ORDER BY u.id_user DESC";
-        $db = config::getConnexion();
-        try {
-            $stmt = $db->prepare($sql);
-            $stmt->execute();
-            return $stmt->fetchAll();
-        } catch (Exception $e) {
-            return [];
-        }
+    $sql = "SELECT * 
+            FROM utilisateur 
+            WHERE role = 'medecin'
+            ORDER BY id_user DESC";
+
+    $db = config::getConnexion();
+
+    try {
+        $stmt = $db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    } catch (Exception $e) {
+        return [];
     }
+}
 
     // Récupérer un médecin par son ID
     public function getMedecinById($id_user) {

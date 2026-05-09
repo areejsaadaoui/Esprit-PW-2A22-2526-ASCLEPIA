@@ -1,4 +1,25 @@
 <?php
+session_start();
+
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true ||
+    !isset($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['admin', 'medecin'])) {
+    header('Location: loginadmin.html');
+    exit();
+}
+
+$user_role = $_SESSION['user_role'];
+$adminNom  = $_SESSION['user_nom'] ?? 'Utilisateur';
+
+$cur = basename($_SERVER['PHP_SELF']);
+if (!function_exists('docActive')) {
+    function docActive(...$p){ global $cur; return in_array($cur, $p) ? 'class="active"' : ''; }
+    function docSub(...$p)   { global $cur; return in_array($cur, $p) ? 'open' : ''; }
+}
+if (!function_exists('isActive')) {
+    function isActive(...$pages)   { global $cur; return in_array($cur, $pages); }
+    function isSubActive(...$pages){ global $cur; return in_array($cur, $pages) ? 'open' : ''; }
+}
+
 require_once '../../config.php';
 require_once '../../Controller/ConsultationController.php';
 
@@ -37,40 +58,105 @@ if (isset($_GET['confirm']) && $_GET['confirm'] === 'oui') {
             <div class="sidebar-title">ASCL<span>EPIA</span></div>
         </a>
         <div class="sidebar-user">
-            <div class="user-avatar">A</div>
+            <div class="user-avatar"><?= strtoupper(substr($adminNom, 0, 2)) ?></div>
             <div class="user-info">
-                <div class="name">Ala</div>
-                <div class="role">Médecin</div>
+                <div class="name"><?= htmlspecialchars($adminNom) ?></div>
+                <div class="role"><?= $user_role === 'admin' ? 'Super Admin' : 'Médecin' ?></div>
             </div>
         </div>
+
+        <?php if ($user_role === 'medecin'): ?>
         <nav class="sidebar-nav">
-            <div class="nav-section-label">Consultation</div>
+            <div class="nav-section-label">Menu Principal</div>
             <div class="nav-item">
-                <a href="list_consultation.php" class="active">
-                    <span class="nav-icon"><i class="fa-solid fa-calendar-check"></i></span>
-                    Consultations
+                <a href="../front/indexd.php" <?= docActive('indexd.php') ?>>
+                    <i class="fas fa-tachometer-alt nav-icon"></i>
+                    <span>Tableau de bord</span>
                 </a>
             </div>
-            <div class="nav-item">
-                <a href="add_consultation.php">
-                    <span class="nav-icon"><i class="fa-solid fa-plus"></i></span>
-                    Ajouter
+            <div class="nav-section-label">Activité</div>
+            <div class="nav-item has-sub <?= docSub('list_consultation.php','add_consultation.php','edit_consultation.php','delete_consultation.php','calendrier.php') ?>">
+                <a onclick="toggleSubMenu(this)" <?= docActive('list_consultation.php','add_consultation.php','edit_consultation.php','delete_consultation.php') ?>>
+                    <i class="fa-solid fa-stethoscope nav-icon"></i>
+                    <span>Consultations</span>
+                    <i class="fas fa-chevron-right nav-arrow"></i>
                 </a>
+                <div class="sub-menu <?= docSub('list_consultation.php','add_consultation.php','edit_consultation.php','delete_consultation.php') ?>">
+                    <a href="list_consultation.php" <?= docActive('list_consultation.php') ?>><i class="fa-solid fa-list"></i> Toutes les consultations</a>
+                    <a href="add_consultation.php" <?= docActive('add_consultation.php') ?>><i class="fa-solid fa-plus"></i> Nouvelle consultation</a>
+                </div>
             </div>
-            <div class="nav-section-label">Ordonnance</div>
-            <div class="nav-item">
-                <a href="list_ordonnance.php">
-                    <span class="nav-icon"><i class="fa-solid fa-file-prescription"></i></span>
-                    Ordonnances
+            <div class="nav-item has-sub <?= docSub('list_ordonnance.php','add_ordonnance.php','edit_ordonnance.php','delete_ordonnance.php') ?>">
+                <a onclick="toggleSubMenu(this)" <?= docActive('list_ordonnance.php','add_ordonnance.php','edit_ordonnance.php','delete_ordonnance.php') ?>>
+                    <i class="fa-solid fa-file-prescription nav-icon"></i>
+                    <span>Ordonnances</span>
+                    <i class="fas fa-chevron-right nav-arrow"></i>
                 </a>
+                <div class="sub-menu <?= docSub('list_ordonnance.php','add_ordonnance.php','edit_ordonnance.php','delete_ordonnance.php') ?>">
+                    <a href="list_ordonnance.php" <?= docActive('list_ordonnance.php') ?>><i class="fa-solid fa-list"></i> Toutes les ordonnances</a>
+                    <a href="add_ordonnance.php" <?= docActive('add_ordonnance.php') ?>><i class="fa-solid fa-plus"></i> Nouvelle ordonnance</a>
+                </div>
             </div>
             <div class="nav-item">
-                <a href="add_ordonnance.php">
-                    <span class="nav-icon"><i class="fa-solid fa-plus"></i></span>
-                    Ajouter
-                </a>
+                <a href="calendrier.php" <?= docActive('calendrier.php') ?>><i class="fa-solid fa-calendar-days nav-icon"></i><span>Calendrier</span></a>
+            </div>
+            <div class="nav-section-label">Autre</div>
+            <div class="nav-item">
+                <a href="../front/indexp.php"><i class="fas fa-globe nav-icon"></i><span>Espace patient</span></a>
+            </div>
+            <div class="nav-item">
+                <a href="../front/login.php"><i class="fas fa-sign-out-alt nav-icon"></i><span>Déconnexion</span></a>
             </div>
         </nav>
+        <?php else: ?>
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Menu Principal</div>
+            <div class="nav-item">
+                <a href="../back/dashboard.php" <?= isActive('dashboard.php') ? 'class="active"' : '' ?>><i class="fas fa-tachometer-alt nav-icon"></i><span>Tableau de bord</span></a>
+            </div>
+            <div class="nav-section-label">Gestion</div>
+            <div class="nav-item has-sub <?= isSubActive('assurancelist.php','contratList.php') ?>">
+                <a onclick="toggleSubMenu(this)" <?= isActive('assurancelist.php','contratList.php') ? 'class="active"' : '' ?>><i class="fa-solid fa-shield-halved nav-icon"></i><span>Assurances &amp; Contrats</span><i class="fas fa-chevron-right nav-arrow"></i></a>
+                <div class="sub-menu">
+                    <a href="../backoffice/assurancelist.php" <?= isActive('assurancelist.php') ? 'class="active"' : '' ?>>Les assurances</a>
+                    <a href="contrat/contratList.php" <?= isActive('contratList.php') ? 'class="active"' : '' ?>>Les contrats</a>
+                </div>
+            </div>
+            <div class="nav-item has-sub <?= isSubActive('list_consultation.php','list_ordonnance.php') ?>">
+                <a onclick="toggleSubMenu(this)" <?= isActive('list_consultation.php','list_ordonnance.php') ? 'class="active"' : '' ?>><i class="fa-solid fa-file-contract nav-icon"></i><span>Ordonnances &amp; Consultations</span><i class="fas fa-chevron-right nav-arrow"></i></a>
+                <div class="sub-menu">
+                    <a href="dashboard.php" <?= isActive('dashboard.php') ? 'class="active"' : '' ?>>Vue d’ensemble consultations</a>
+                    <a href="list_consultation.php" <?= isActive('list_consultation.php') ? 'class="active"' : '' ?>>Les consultations</a>
+                    <a href="list_ordonnance.php" <?= isActive('list_ordonnance.php') ? 'class="active"' : '' ?>>Les ordonnances</a>
+                </div>
+            </div>
+            <div class="nav-item has-sub <?= isSubActive('listepharmacie.php','listemedicament.php') ?>">
+                <a onclick="toggleSubMenu(this)" <?= isActive('listepharmacie.php','listemedicament.php') ? 'class="active"' : '' ?>><i class="fa-solid fa-prescription-bottle-medical nav-icon"></i><span>Pharmacies &amp; Médicaments</span><i class="fas fa-chevron-right nav-arrow"></i></a>
+                <div class="sub-menu">
+                    <a href="listepharmacie.php" <?= isActive('listepharmacie.php') ? 'class="active"' : '' ?>>Les pharmacies</a>
+                    <a href="listemedicament.php" <?= isActive('listemedicament.php') ? 'class="active"' : '' ?>>Les médicaments</a>
+                </div>
+            </div>
+            <div class="nav-item">
+                <a href="calendrier.php" <?= isActive('calendrier.php') ? 'class="active"' : '' ?>><i class="fa-solid fa-calendar-days nav-icon"></i><span>Calendrier</span></a>
+            </div>
+            <div class="nav-item has-sub <?= isSubActive('postlist.php','postList.php','addpost.php') ?>">
+                <a onclick="toggleSubMenu(this)" <?= isActive('postlist.php','postList.php','addpost.php') ? 'class="active"' : '' ?>><i class="fas fa-comments nav-icon"></i><span>Forum</span><i class="fas fa-chevron-right nav-arrow"></i></a>
+                <div class="sub-menu">
+                    <a href="../Frontoffice/postlist.php" <?= isActive('postlist.php','postList.php') ? 'class="active"' : '' ?>>Tous les posts</a>
+                    <a href="addpost.php" <?= isActive('addpost.php') ? 'class="active"' : '' ?>>Ajouter un post</a>
+                    <a href="dashboard.php" <?= isActive('dashboard.php') ? 'class="active"' : '' ?>>Gestion des posts</a>
+                </div>
+            </div>
+            <div class="nav-section-label">Configuration</div>
+            <div class="nav-item">
+                <a href="../front/indexp.php"><i class="fas fa-globe nav-icon"></i><span>Voir le site</span></a>
+            </div>
+            <div class="nav-item">
+                <a href="../back/loginadmin.html"><i class="fas fa-sign-out-alt nav-icon"></i><span>Déconnexion</span></a>
+            </div>
+        </nav>
+        <?php endif; ?>
     </aside>
 
     <div class="main-content">
@@ -139,6 +225,29 @@ if (isset($_GET['confirm']) && $_GET['confirm'] === 'oui') {
     document.querySelector('.sidebar-toggle').addEventListener('click', function() {
         document.querySelector('.sidebar').classList.toggle('open');
     });
+
+    function toggleSubMenu(el) {
+        var navItem = el.closest('.nav-item');
+        var isOpen  = navItem.classList.contains('open');
+        document.querySelectorAll('.nav-item.has-sub.open').forEach(function(item) {
+            item.classList.remove('open');
+            var sub = item.querySelector('.sub-menu');
+            if (sub) sub.classList.remove('open');
+        });
+        if (!isOpen) {
+            navItem.classList.add('open');
+            var sub = navItem.querySelector('.sub-menu');
+            if (sub) sub.classList.add('open');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.nav-item.has-sub.open').forEach(function (item) {
+            var sub = item.querySelector('.sub-menu');
+            if (sub) sub.classList.add('open');
+        });
+    });
+
     // MODE SOMBRE
 function toggleDark() {
     document.body.classList.toggle('dark-mode');

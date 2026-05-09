@@ -1605,7 +1605,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- ===== SCRIPT GIPHY ===== -->
 <script>
 // ===== GIPHY COMPLET =====
-const GIPHY_API_KEY = 'api_key';
+const GIPHY_API_KEY = 'YOUR_GIPHY_API_KEY_HERE'; // Remplacez par votre clé API GIPHY
 
 const giphyModal = document.getElementById('giphyModal');
 const giphySearchInput = document.getElementById('giphySearchInput');

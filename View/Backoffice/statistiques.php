@@ -6,12 +6,12 @@ $db = config::getConnexion();
 // 1. Statistiques globales
 $totalMeds = $db->query("SELECT COUNT(*) as total FROM medicament")->fetch()['total'];
 $totalPharms = $db->query("SELECT COUNT(*) as total FROM pharmacie")->fetch()['total'];
-$valeurTotale = $db->query("SELECT COALESCE(SUM(prix * stock), 0) as valeur FROM medicament")->fetch()['valeur'];
-$prixMoyen = $db->query("SELECT COALESCE(AVG(prix), 0) as moyenne FROM medicament")->fetch()['moyenne'];
+$valeurTotale = $db->query("SELECT COALESCE(SUM(prix_medicament * stock), 0) as valeur FROM medicament")->fetch()['valeur'];
+$prixMoyen = $db->query("SELECT COALESCE(AVG(prix_medicament), 0) as moyenne FROM medicament")->fetch()['moyenne'];
 
 // 2. Valeur du stock par pharmacie (pour le bar chart)
 $stockParPharmacie = $db->query("
-    SELECT p.nom, COALESCE(SUM(m.prix * m.stock), 0) as valeur_stock, COUNT(m.id_medicament) as nb_meds
+    SELECT p.nom, COALESCE(SUM(m.prix_medicament * m.stock), 0) as valeur_stock, COUNT(m.id_medicament) as nb_meds
     FROM pharmacie p
     LEFT JOIN medicament m ON p.id_pharmacie = m.id_pharmacie
     GROUP BY p.id_pharmacie, p.nom
@@ -20,7 +20,7 @@ $stockParPharmacie = $db->query("
 
 // 3. Répartition par catégorie (pour le donut chart)
 $parCategorie = $db->query("
-    SELECT categorie, COUNT(*) as nb, SUM(prix * stock) as valeur
+    SELECT categorie, COUNT(*) as nb, SUM(prix_medicament * stock) as valeur
     FROM medicament
     GROUP BY categorie
     ORDER BY nb DESC
@@ -28,16 +28,16 @@ $parCategorie = $db->query("
 
 // 4. Top 5 médicaments les plus chers
 $topCher = $db->query("
-    SELECT m.nom, m.prix, m.stock, p.nom as nom_pharmacie
+    SELECT m.nom_medicament AS nom, m.prix_medicament AS prix, m.stock, p.nom as nom_pharmacie
     FROM medicament m
     JOIN pharmacie p ON m.id_pharmacie = p.id_pharmacie
-    ORDER BY m.prix DESC
+    ORDER BY m.prix_medicament DESC
     LIMIT 5
 ")->fetchAll();
 
 // 5. Top 5 médicaments par valeur de stock (prix * stock)
 $topValeur = $db->query("
-    SELECT m.nom, m.prix, m.stock, (m.prix * m.stock) as valeur, p.nom as nom_pharmacie
+    SELECT m.nom_medicament AS nom, m.prix_medicament AS prix, m.stock, (m.prix_medicament * m.stock) as valeur, p.nom as nom_pharmacie
     FROM medicament m
     JOIN pharmacie p ON m.id_pharmacie = p.id_pharmacie
     ORDER BY valeur DESC
