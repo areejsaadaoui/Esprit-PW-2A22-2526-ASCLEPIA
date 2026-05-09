@@ -4,9 +4,12 @@ require_once '../../Controller/PharmacieC.php';
 require_once '../../Controller/MedicamentC.php';
 $pc = new pharmacieC();
 $mc = new medicamentC();
-$listePharmacies = $pc->listepharmacie();
-// On récupère tout dans un tableau pour éviter d'épuiser l'itérateur PDO
+$listePharmacies = $pc->listepharmacie()->fetchAll();
 $listeMedicaments = $mc->afficherMedicaments()->fetchAll();
+
+// Limiter l'affichage à 3 éléments pour le Front (Aperçu)
+$pharmaciesApercu = array_slice($listePharmacies, 0, 3);
+$medicamentsApercu = array_slice($listeMedicaments, 0, 3);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -428,8 +431,8 @@ $listeMedicaments = $mc->afficherMedicaments()->fetchAll();
 
     <div class="row" id="pharmaciesGrid">
 
-      <?php if (!empty($listePharmacies)): ?>
-        <?php foreach ($listePharmacies as $p): ?>
+      <?php if (!empty($pharmaciesApercu)): ?>
+        <?php foreach ($pharmaciesApercu as $p): ?>
           <div class="col-4 pharm-item" data-nom="<?= strtolower(htmlspecialchars($p['nom'])) ?>">
             <div class="card pharmacie-card" style="gap: 16px; flex-direction: column; padding: 24px;">
               <div class="d-flex align-center" style="gap: 16px;">
@@ -475,6 +478,12 @@ $listeMedicaments = $mc->afficherMedicaments()->fetchAll();
         <p style="text-align: center; width: 100%; color: var(--text-muted);"><?= tr('ph_empty') ?></p>
       <?php endif; ?>
 
+      <div class="col-12 text-center" style="margin-top: 32px; width: 100%;">
+        <a href="pharmacies.php" class="btn btn-primary btn-lg">
+          <i class="fa-solid fa-eye"></i> Voir toutes les pharmacies
+        </a>
+      </div>
+
       <!-- Message aucun résultat -->
       <div id="pharmNoResult" style="display:none; text-align:center; width:100%; padding: 40px 0; color: var(--text-muted);">
         <i class="fa-solid fa-magnifying-glass" style="font-size: 2.5rem; margin-bottom: 16px; opacity:.35;"></i>
@@ -500,8 +509,8 @@ $listeMedicaments = $mc->afficherMedicaments()->fetchAll();
     </div>
 
     <div class="row">
-      <?php if (!empty($listeMedicaments)): ?>
-        <?php foreach ($listeMedicaments as $m): ?>
+      <?php if (!empty($medicamentsApercu)): ?>
+        <?php foreach ($medicamentsApercu as $m): ?>
           <div class="col-4">
             <div class="card product-card">
               <div class="product-image-container">
@@ -546,6 +555,12 @@ $listeMedicaments = $mc->afficherMedicaments()->fetchAll();
       <?php else: ?>
         <p style="text-align: center; width: 100%; color: var(--text-muted);"><?= tr('md_empty') ?></p>
       <?php endif; ?>
+
+      <div class="col-12 text-center" style="margin-top: 32px; width: 100%;">
+        <a href="medicaments.php" class="btn btn-primary btn-lg">
+          <i class="fa-solid fa-plus-circle"></i> En savoir plus / Voir tout
+        </a>
+      </div>
     </div>
   </div>
 </section>
