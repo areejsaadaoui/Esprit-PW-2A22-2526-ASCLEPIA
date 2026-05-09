@@ -1,8 +1,8 @@
 <?php
-require_once '../../config/db.php';
-require_once '../../controllers/OrdonnanceController.php';
+require_once '../../config.php';
+require_once '../../Controller/OrdonnanceController.php';
 
-$controller = new OrdonnanceController($pdo);
+$controller = new OrdonnanceController(config::getConnexion());
 $success = '';
 $errors = [];
 

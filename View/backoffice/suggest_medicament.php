@@ -14,7 +14,7 @@ $results = [];
    1. SUGGESTION DB
 ===================== */
 try {
-    require_once __DIR__ . '/../../config/db.php';
+   require_once '../../config.php'; $pdo = config::getConnexion();
 
     $stmt = $pdo->prepare("SELECT nom FROM medicaments WHERE nom LIKE ? LIMIT 5");
     $stmt->execute(["%$q%"]);

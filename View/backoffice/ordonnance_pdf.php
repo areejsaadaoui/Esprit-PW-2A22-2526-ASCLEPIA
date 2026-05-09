@@ -1,9 +1,9 @@
 <?php
-require_once '../../config/db.php';
-require_once '../../controllers/OrdonnanceController.php';
+require_once '../../config.php';
+require_once '../../Controller/OrdonnanceController.php';
 require_once '../../libs/fpdf.php';
 
-$controller = new OrdonnanceController($pdo);
+$controller = new OrdonnanceController(config::getConnexion());
 
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 $ordonnance = $controller->getOrdonnanceById($id);

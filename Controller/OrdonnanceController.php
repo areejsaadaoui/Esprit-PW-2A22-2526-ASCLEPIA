@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../models/Ordonnance.php';
+require_once __DIR__ . '/../Model/Ordonnance.php';
 
 class OrdonnanceController {
     private PDO $pdo;
@@ -61,6 +61,19 @@ class OrdonnanceController {
     public function deleteOrdonnance(int $id): bool {
         return $this->model->delete($id);
     }
+    public function getOrdonnancesByPatient(int $idPatient): array {
+    $stmt = $this->pdo->prepare(
+        "SELECT o.*, c.date_consultation, c.diagnostique 
+         FROM ordonnance o 
+         JOIN consultation c ON o.id_consultation = c.id_consultation 
+         WHERE c.id_patient = ?
+         ORDER BY o.date_creation DESC"
+    );
+    $stmt->execute([$idPatient]);
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+}
+
 
 ?>

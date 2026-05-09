@@ -1,4 +1,17 @@
 <?php
+// assurancelist.php - Page admin sécurisée
+session_start();
+
+// Vérifier si l'admin est connecté
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || 
+    !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+    header('Location: loginadmin.html');
+    exit();
+}
+
+// Récupérer les infos de l'admin connecté
+$adminNom   = $_SESSION['user_nom']   ?? 'Administrateur';
+$adminEmail = $_SESSION['user_email'] ?? '';
 include '../../../Controller/ContratController.php';
 $contratC = new ContratController();
 $list     = $contratC->listContrats();
@@ -118,33 +131,85 @@ $paginated   = array_slice($contrats, $offset, $perPage);
 <div class="admin-wrapper">
 
     <aside class="sidebar">
-        <a href="#" class="sidebar-brand">
-            <div class="sidebar-logo">🏥</div>
-            <div class="sidebar-title">ASCL<span>EPIA</span></div>
-        </a>
-        <div class="sidebar-user">
-            <div class="user-avatar">A</div>
-            <div class="user-info">
-                <div class="name">Administrateur</div>
-                <div class="role">Super Admin</div>
+    <a href="dashboard.php" class="sidebar-brand">
+        <div class="sidebar-logo">🏥</div>
+        <div class="sidebar-title">ASCL<span>EPIA</span></div>
+    </a>
+
+    <div class="sidebar-user">
+    <div class="user-avatar" id="adminAvatar">
+        <?php echo strtoupper(substr($adminNom, 0, 2)); ?>
+    </div>
+    <div class="user-info">
+        <div class="name" id="adminName">
+            <?php echo htmlspecialchars($adminNom); ?>
+        </div>
+        <div class="role">Super Admin</div>
+    </div>
+</div>
+
+    <nav class="sidebar-nav">
+
+        <div class="nav-section-label">Menu Principal</div>
+
+        <div class="nav-item">
+            <a href="../../back/dashboard.php" <?php echo basename($_SERVER['PHP_SELF']) === 'dashboard.php' ? 'class="active"' : ''; ?>>
+                <i class="fas fa-tachometer-alt nav-icon"></i>
+                <span>Tableau de bord</span>
+            </a>
+        </div>
+
+        <div class="nav-section-label">Gestion</div>
+
+        <div class="nav-item">
+            <a href="../assurancelist.php" <?php echo basename($_SERVER['PHP_SELF']) === 'assurancelist.php' ? 'class="active"' : ''; ?>>
+                <i class="fa-solid fa-shield-halved nav-icon"></i>
+                <span>Assurances</span>
+            </a>
+        </div>
+
+        <div class="nav-item">
+            <a href="contrat/contratList.php" <?php echo basename($_SERVER['PHP_SELF']) === 'contratList.php' ? 'class="active"' : ''; ?>>
+                <i class="fa-solid fa-file-contract nav-icon"></i>
+                <span>Contrats</span>
+            </a>
+        </div>
+
+        <div class="nav-item has-sub">
+            <a onclick="toggleSubMenu(this)">
+                <i class="fas fa-comments nav-icon"></i>
+                <span>Forum</span>
+                <i class="fas fa-chevron-right nav-arrow"></i>
+            </a>
+            <div class="sub-menu">
+                <a href="../../Frontoffice/postList.php">Tous les posts</a>
+                <a href="addpost.php">Ajouter un post</a>
+                <a href="dashboard.php">Gestion des posts</a>
             </div>
         </div>
-        <nav class="sidebar-nav">
-            <div class="nav-section-label">Gestion</div>
-            <div class="nav-item">
-                <a href="../assurancelist.php">
-                    <span class="nav-icon"><i class="fa-solid fa-shield-halved"></i></span>
-                    Assurances
-                </a>
-            </div>
-            <div class="nav-item">
-                <a href="#" class="active">
-                    <span class="nav-icon"><i class="fa-solid fa-file-contract"></i></span>
-                    Contrats
-                </a>
-            </div>
-        </nav>
-    </aside>
+
+        <div class="nav-section-label">Configuration</div>
+
+        <div class="nav-item">
+            <a href="../../front/indexp.php">
+                <i class="fas fa-globe nav-icon"></i>
+                <span>Voir le site</span>
+            </a>
+        </div>
+
+        <div class="nav-item">
+            <a href="../../back/loginadmin.html">
+                <i class="fas fa-sign-out-alt nav-icon"></i>
+                <span>Déconnexion</span>
+            </a>
+        </div>
+
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="sidebar-version">Version 1.0</div>
+    </div>
+</aside>
 
     <div class="main-content">
         <div class="topbar">

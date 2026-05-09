@@ -1,8 +1,20 @@
 <?php
-require_once '../../config/db.php';
-require_once '../../controllers/OrdonnanceController.php';
+session_start();
 
-$controller = new OrdonnanceController($pdo);
+// Vérifier si l'admin est connecté
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || 
+    !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+    header('Location: loginadmin.html');
+    exit();
+}
+
+// Récupérer les infos de l'admin connecté
+$adminNom   = $_SESSION['user_nom']   ?? 'Administrateur';
+$adminEmail = $_SESSION['user_email'] ?? '';
+require_once '../../config.php';
+require_once '../../Controller/OrdonnanceController.php';
+
+$controller = new OrdonnanceController(config::getConnexion());
 $ordonnances = $controller->getAllOrdonnances();
 ?>
 <!DOCTYPE html>
@@ -25,10 +37,14 @@ $ordonnances = $controller->getAllOrdonnances();
             <div class="sidebar-title">ASCL<span>EPIA</span></div>
         </a>
         <div class="sidebar-user">
-            <div class="user-avatar">A</div>
+            <div class="user-avatar" id="adminAvatar">
+                <?php echo strtoupper(substr($adminNom ?? 'A', 0, 2)); ?>
+            </div>
             <div class="user-info">
-                <div class="name">Ala</div>
-                <div class="role">Médecin</div>
+                <div class="name" id="adminName">
+                    <?php echo htmlspecialchars($adminNom ?? 'Administrateur'); ?>
+                </div>
+                <div class="role">Super Admin</div>
             </div>
         </div>
         <nav class="sidebar-nav">

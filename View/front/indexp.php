@@ -318,7 +318,7 @@ var sessionIsLoggedIn = <?= json_encode($isLoggedIn) ?>;
           </div>
           <h3>Consultations & Ordonnances</h3>
           <p>Suivez vos consultations et accédez à vos ordonnances numériques. Diagnostics et notes médicales centralisés.</p>
-          <a href="consultation.php" class="btn btn-outline btn-sm mt-3">
+          <a href="../frontoffice/consultation_patient.php" class="btn btn-outline btn-sm mt-3">
             Voir <i class="fa-solid fa-arrow-right"></i>
           </a>
         </div>
@@ -638,6 +638,39 @@ var sessionIsLoggedIn = <?= json_encode($isLoggedIn) ?>;
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
       <h2 id="modalTitle" style="font-size: 1.8rem; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 12px;"><i class="fas fa-star"></i> Donner mon avis</h2>
       <button onclick="closeAvisModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+<!-- ================================================
+     CTA SECTION
+     ================================================ -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-content">
+      <div class="section-tag" style="justify-content: center; margin-bottom: 20px;">
+        <i class="fa-solid fa-rocket"></i>
+        Rejoignez-nous
+      </div>
+      <h2>Prêt à prendre soin de votre santé ?</h2>
+      <p>Créez votre compte gratuitement et accédez à tous les services ASCLEPIA dès aujourd'hui.</p>
+      <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+        <?php if (!$isLoggedIn): ?>
+          <a href="loginuser.html" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-user-plus"></i>
+            Créer un compte patient
+          </a>
+          <a href="login.html" class="btn btn-outline-white btn-lg">
+            <i class="fa-solid fa-sign-in-alt"></i>
+            Se connecter
+          </a>
+        <?php else: ?>
+          <a href="profile.php" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-calendar-check"></i>
+            Mon profil
+          </a>
+          <a href="../frontoffice/ordonnance_patient.php" class="btn btn-outline-white btn-lg">
+            <i class="fa-solid fa-file-prescription"></i>
+            Mes ordonnances
+          </a>
+        <?php endif; ?>
+      </div>
     </div>
     <p style="color: #475569; margin-bottom: 30px; font-size: 0.95rem;">Partagez votre expérience avec la communauté</p>
 

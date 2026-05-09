@@ -1,9 +1,29 @@
 <?php
-require_once '../../config/db.php';
-require_once '../../controllers/OrdonnanceController.php';
+session_start();
+require_once '../../config.php';
+require_once '../../Controller/OrdonnanceController.php';
+include '../../Controller/UserController.php';
 
-$controller = new OrdonnanceController($pdo);
-$ordonnances = $controller->getAllOrdonnances();
+// === SESSION ===
+$isLoggedIn = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
+$userId     = $_SESSION['user_id']    ?? null;
+$userNom    = $_SESSION['user_nom']   ?? '';
+$userEmail  = $_SESSION['user_email'] ?? '';
+$userRole   = $_SESSION['user_role']  ?? '';
+$isAdmin    = ($userRole === 'admin');
+
+// Récupérer l'avatar via le controller
+$userC      = new UserController();
+$userAvatar = ($isLoggedIn && $userId) ? $userC->getAvatarByUserId($userId) : 'default';
+
+// Rediriger si non connecté
+if (!$isLoggedIn || !$userId) {
+    header('Location: ../front/indexp.php');
+    exit;
+}
+
+$controller  = new OrdonnanceController(config::getConnexion());
+$ordonnances = $controller->getOrdonnancesByPatient($userId);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -14,8 +34,14 @@ $ordonnances = $controller->getAllOrdonnances();
     <link rel="stylesheet" href="../../assets/css/style.css">
     <link rel="stylesheet" href="../../assets/css/frontoffice.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/avatar.css">
+    <link rel="stylesheet" href="../../assets/css/assurance.css">
+    <style>
+        .nav-user-info { display:flex; align-items:center; gap:8px; color:white; font-size:0.9rem; }
+        .nav-user-info .user-avatar { width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.4); }
+    </style>
 </head>
-<body>
+<body id="body">
 
     <!-- NAVBAR -->
     <nav class="navbar" id="navbar">
@@ -24,14 +50,31 @@ $ordonnances = $controller->getAllOrdonnances();
             <div class="navbar-name">ASCL<span>EPIA</span></div>
         </a>
         <div class="nav-links" id="navLinks">
-            <a href="#" class="nav-link">Accueil</a>
+            <a href="../front/indexp.php" class="nav-link">Accueil</a>
             <a href="consultation_patient.php" class="nav-link">Mes Consultations</a>
             <a href="ordonnance_patient.php" class="nav-link active">Mes Ordonnances</a>
             <a href="#" class="nav-link">Contact</a>
         </div>
         <div class="nav-actions">
-            <a href="#" class="btn btn-outline-white btn-sm">Connexion</a>
-            <a href="#" class="btn btn-primary btn-sm">S'inscrire</a>
+
+            <?php if ($isLoggedIn): ?>
+                <div class="nav-user-info">
+                    <div class="avatar-css small avatar-<?= htmlspecialchars($userAvatar) ?>"></div>
+                    <span><?= htmlspecialchars($userNom) ?></span>
+                </div>
+                <?php if ($isAdmin): ?>
+                    <a href="../back/dashboard.php" class="btn btn-outline-white btn-sm">
+                        <i class="fa-solid fa-gauge"></i> Admin
+                    </a>
+                <?php endif; ?>
+                <a href="../back/logout.php" class="btn btn-outline-white btn-sm">
+                    <i class="fa-solid fa-right-from-bracket"></i> Déconnexion
+                </a>
+            <?php else: ?>
+                <a href="login.html" class="btn btn-outline-white btn-sm">Connexion</a>
+                <a href="loginuser.html" class="btn btn-primary btn-sm">S'inscrire</a>
+            <?php endif; ?>
+
         </div>
         <div class="hamburger" onclick="document.getElementById('navLinks').classList.toggle('open')">
             <span></span><span></span><span></span>
@@ -47,6 +90,11 @@ $ordonnances = $controller->getAllOrdonnances();
                 <p class="hero-subtitle" style="margin:0 auto;">
                     Consultez vos ordonnances et traitements prescrits.
                 </p>
+                <?php if ($isLoggedIn): ?>
+                    <p style="margin-top:12px; color:rgba(255,255,255,0.8); font-size:0.95rem;">
+                        👋 Bienvenue, <strong><?= htmlspecialchars($userNom) ?></strong>
+                    </p>
+                <?php endif; ?>
             </div>
         </div>
     </section>
@@ -121,6 +169,9 @@ $ordonnances = $controller->getAllOrdonnances();
         </div>
     </section>
 
+    <!-- BOUTON DARK MODE -->
+    <button class="dark-toggle" id="darkToggle" onclick="toggleDark()" title="Mode sombre">🌙</button>
+
     <!-- FOOTER -->
     <footer class="footer">
         <div class="container">
@@ -135,7 +186,27 @@ $ordonnances = $controller->getAllOrdonnances();
     window.addEventListener('scroll', function() {
         document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
     });
+
+    // ---- MODE SOMBRE ----
+    var darkMode = localStorage.getItem('darkMode') === 'true';
+
+    function appliquerDark() {
+        if (darkMode) {
+            document.getElementById('body').classList.add('dark-mode');
+            document.getElementById('darkToggle').textContent = '☀️';
+        } else {
+            document.getElementById('body').classList.remove('dark-mode');
+            document.getElementById('darkToggle').textContent = '🌙';
+        }
+    }
+
+    function toggleDark() {
+        darkMode = !darkMode;
+        localStorage.setItem('darkMode', darkMode);
+        appliquerDark();
+    }
+
+    appliquerDark();
 </script>
-<script src="../../assets/js/language-switcher.js"></script>
 </body>
 </html>

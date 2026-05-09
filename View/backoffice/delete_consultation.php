@@ -1,8 +1,8 @@
 <?php
-require_once '../../config/db.php';
-require_once '../../controllers/ConsultationController.php';
+require_once '../../config.php';
+require_once '../../Controller/ConsultationController.php';
 
-$controller = new ConsultationController($pdo);
+$controller = new ConsultationController(config::getConnexion());
 
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 $consultation = $controller->getConsultationById($id);

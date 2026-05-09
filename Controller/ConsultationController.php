@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../models/Consultation.php';
+require_once __DIR__ . '/../Model/Consultation.php';
 
 class ConsultationController {
     private PDO $pdo;
@@ -13,6 +13,16 @@ class ConsultationController {
         $stmt = $this->pdo->query(
             "SELECT * FROM consultation ORDER BY date_consultation DESC"
         );
+
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return array_map([self::class, 'rowToConsultation'], $rows);
+    }
+
+    public function getConsultationsByPatient(int $idPatient): array {
+        $stmt = $this->pdo->prepare(
+            "SELECT * FROM consultation WHERE id_patient = ? ORDER BY date_consultation DESC"
+        );
+        $stmt->execute([$idPatient]);
 
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         return array_map([self::class, 'rowToConsultation'], $rows);
@@ -46,8 +56,8 @@ class ConsultationController {
 
     public function createConsultation(Consultation $consultation): bool {
         $stmt = $this->pdo->prepare(
-            "INSERT INTO consultation (date_consultation, diagnostique, notes, statut)
-             VALUES (?, ?, ?, ?)"
+            "INSERT INTO consultation (date_consultation, diagnostique, notes, statut, id_patient)
+             VALUES (?, ?, ?, ?, ?)"
         );
 
         return $stmt->execute([
@@ -55,6 +65,7 @@ class ConsultationController {
             $consultation->getDiagnostique(),
             $consultation->getNotes(),
             $consultation->getStatut(),
+            $consultation->getIdPatient(),
         ]);
     }
 
@@ -64,7 +75,7 @@ class ConsultationController {
         }
 
         $stmt = $this->pdo->prepare(
-            "UPDATE consultation SET date_consultation = ?, diagnostique = ?, notes = ?, statut = ?
+            "UPDATE consultation SET date_consultation = ?, diagnostique = ?, notes = ?, statut = ?, id_patient = ?
              WHERE id_consultation = ?"
         );
 
@@ -73,6 +84,7 @@ class ConsultationController {
             $consultation->getDiagnostique(),
             $consultation->getNotes(),
             $consultation->getStatut(),
+            $consultation->getIdPatient(),
             $consultation->getIdConsultation(),
         ]);
     }
@@ -89,5 +101,4 @@ class ConsultationController {
         return Consultation::fromArray($row);
     }
 }
-
 ?>

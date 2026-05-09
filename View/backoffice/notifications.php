@@ -1,6 +1,6 @@
 <?php
-require_once '../../config/db.php';
-
+require_once '../../config.php';
+$pdo=config::getConnexion();
 header('Content-Type: application/json');
 
 try {
