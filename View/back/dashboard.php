@@ -735,30 +735,21 @@ $adminEmail = $_SESSION['user_email'] ?? '';
     </div>
 
     <!-- Forum -->
-    <div class="nav-item has-sub <?= isSubActive('postList.php', 'addpost.php', 'dashboard.php') ?>">
-        <a onclick="toggleSubMenu(this)" <?= isActive('postList.php', 'addpost.php') ? 'class="active"' : '' ?>>
-            <i class="fas fa-comments nav-icon"></i>
-            <span>Forum</span>
-            <i class="fas fa-chevron-right nav-arrow"></i>
-        </a>
-        <div class="sub-menu">
-            <a href="../Frontoffice/postList.php"
-               <?= isActive('postList.php') ? 'class="active"' : '' ?>>
-               Tous les posts
-            </a>
-            <a href="addpost.php"
-               <?= isActive('addpost.php') ? 'class="active"' : '' ?>>
-               Ajouter un post
-            </a>
-            <a href="dashboard.php"
-               <?= isActive('dashboard.php') ? 'class="active"' : '' ?>>
-               Gestion des posts
-            </a>
-        </div>
+     <div class="nav-item has-sub">
+    <a onclick="toggleSubMenu(this)">
+        <i class="fas fa-comments nav-icon"></i>
+        <span>Forum</span>
+        <i class="fas fa-chevron-right nav-arrow"></i>
+    </a>
+    <div class="sub-menu">
+        <a href="../Backoffice/dashboardf.php">📊 Dashboard Forum</a>
+        <a href="../Frontoffice/postlist.php">📝 Tous les posts</a>
     </div>
+</div>
 
     <div class="nav-section-label">Configuration</div>
 
++
     <div class="nav-item">
         <a href="../front/indexp.php" <?= isActive('indexp.php') ? 'class="active"' : '' ?>>
             <i class="fas fa-globe nav-icon"></i>

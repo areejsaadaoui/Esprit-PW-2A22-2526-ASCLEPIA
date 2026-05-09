@@ -31,8 +31,20 @@ if ($isLoggedIn && $userId) {
 ?>
 <?php
 require_once '../../Controller/ContratController.php';
+require_once '../../Controller/PharmacieC.php';
+require_once '../../Controller/MedicamentC.php';
+
 $controller = new ContratController();
 $topAssurances = $controller->getTopAssurances();
+
+$pc = new pharmacieC();
+$mc = new medicamentC();
+$listePharmacies = $pc->listepharmacie()->fetchAll();
+$listeMedicaments = $mc->afficherMedicaments()->fetchAll();
+
+// Limiter l'affichage à 3 éléments pour l'aperçu
+$pharmaciesApercu = array_slice($listePharmacies, 0, 3);
+$medicamentsApercu = array_slice($listeMedicaments, 0, 3);
 ?>
 
 <!DOCTYPE html>
@@ -52,6 +64,63 @@ $topAssurances = $controller->getTopAssurances();
   <link rel="stylesheet" href="../assets/css/frontoffice.css">
   <link rel="stylesheet" href="../assets/css/avatar.css">
   <style>
+
+    /* CSS pour les Notifications */
+    .notification-container {
+      position: relative;
+    }
+    .notif-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      width: 280px;
+      background: var(--bg-card, white);
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      z-index: 1100;
+      margin-top: 15px;
+      overflow: hidden;
+      display: none;
+      border: 1px solid var(--border);
+    }
+    [data-theme="dark"] .notif-dropdown {
+      background: #1e293b;
+      border-color: rgba(255,255,255,0.1);
+    }
+    .notif-header {
+      padding: 12px 16px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+    .notif-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: background 0.2s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .notif-item:hover {
+      background: rgba(0,0,0,0.02);
+    }
+    [data-theme="dark"] .notif-item:hover {
+      background: rgba(255,255,255,0.05);
+    }
+    .notif-title {
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+    .notif-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
     #avisList .avis-card {
   background: white;
   border-radius: 18px;
@@ -97,6 +166,7 @@ $topAssurances = $controller->getTopAssurances();
   color: #fbbf24;
   transform: translateY(-1px);
 }
+
   </style>
 </head>
 
@@ -122,6 +192,7 @@ var sessionIsLoggedIn = <?= json_encode($isLoggedIn) ?>;
     <a href="#accueil" class="nav-link active">Accueil</a>
     <a href="#services" class="nav-link">Services</a>
     <a href="#pharmacies" class="nav-link">Pharmacies</a>
+    <a href="#produits" class="nav-link">Médicaments</a>
     <a href="#assurances" class="nav-link">Assurances</a>
     <a href="#forum" class="nav-link">Post&Reponse</a>
     <a href="#avis" class="nav-link">Avis</a>
@@ -129,6 +200,52 @@ var sessionIsLoggedIn = <?= json_encode($isLoggedIn) ?>;
   </div>
 
   <div class="nav-actions">
+    <div style="display:flex; align-items:center; gap:10px; margin-right:15px;">
+        <!-- Theme Toggle -->
+        <button id="themeToggle" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--white);" title="Mode Sombre/Clair">
+            <i class="fa-solid fa-moon"></i>
+        </button>
+
+        <!-- Notification Bell -->
+        <div class="notification-container">
+            <?php 
+              // Alerte stock critique (<= 5)
+              $alertesStock = array_filter($listeMedicaments, function($m) {
+                  return $m['stock'] > 0 && $m['stock'] <= 5;
+              });
+              $countAlertes = count($alertesStock);
+            ?>
+            <button id="notifToggle" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--white); position: relative;" title="Alertes Stocks">
+                <i class="fa-solid fa-bell"></i>
+                <?php if($countAlertes > 0): ?>
+                    <span style="position: absolute; top: -5px; right: -5px; background: var(--primary); color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                        <?= $countAlertes ?>
+                    </span>
+                <?php endif; ?>
+            </button>
+            
+            <div id="notifDropdown" class="notif-dropdown">
+                <div class="notif-header" style="background: var(--bg-alt); color: var(--text);">Alertes Stocks</div>
+                <div style="max-height: 300px; overflow-y: auto;">
+                    <?php if($countAlertes > 0): ?>
+                        <?php foreach($alertesStock as $alerte): ?>
+                            <a href="#produits" class="notif-item">
+                                <div class="notif-title"><?= htmlspecialchars($alerte['nom']) ?></div>
+                                <div class="notif-desc" style="color: #f59e0b;">
+                                    <i class="fa-solid fa-triangle-exclamation"></i> Stock faible: <?= $alerte['stock'] ?> restants
+                                </div>
+                            </a>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+                            Aucune alerte.
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <?php if ($isLoggedIn): ?>
       <div style="display: flex; align-items: center; gap: 12px;">
         <div class="avatar-css avatar-<?php echo $userAvatar; ?> small"></div>
@@ -332,7 +449,7 @@ var sessionIsLoggedIn = <?= json_encode($isLoggedIn) ?>;
           </div>
           <h3>Pharmacies & Médicamentos</h3>
           <p>Trouvez les médicaments disponibles dans les pharmacies partenaires. Vérifiez les stocks en temps réel.</p>
-          <a href="pharmacie.php" class="btn btn-outline btn-sm mt-3">
+          <a href="../Frontoffice/pharmacies.php" class="btn btn-outline btn-sm mt-3">
             Explorer <i class="fa-solid fa-arrow-right"></i>
           </a>
         </div>
@@ -401,7 +518,7 @@ var sessionIsLoggedIn = <?= json_encode($isLoggedIn) ?>;
 <!-- ================================================
      PHARMACIES SECTION
      ================================================ -->
-<section class="section-padding" id="pharmacies" style="background: white;">
+<section class="section-padding" id="pharmacies" style="background: var(--white);">
   <div class="container">
     <div class="section-header">
       <div class="section-tag">
@@ -419,98 +536,106 @@ var sessionIsLoggedIn = <?= json_encode($isLoggedIn) ?>;
         onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
     </div>
 
+    <!-- Carte Interactive -->
+    <div id="pharmacyMap" style="height: 400px; border-radius: 20px; margin-bottom: 48px; border: 2px solid var(--border); box-shadow: var(--shadow-sm); z-index: 1;"></div>
+    
+    <!-- Leaflet CSS/JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <div class="row" id="pharmaciesGrid">
-      <div class="col-4">
-        <div class="card pharmacie-card" style="gap: 16px; flex-direction: column; padding: 24px;">
-          <div class="d-flex align-center" style="gap: 16px;">
-            <div class="icon-box" style="background: linear-gradient(135deg,#10b981,#059669);">
-              <i class="fa-solid fa-mortar-pestle"></i>
-            </div>
-            <div>
-              <h3 style="font-size: 1rem; margin-bottom: 2px;">Pharmacie Al Amal</h3>
-              <span class="badge badge-success">Ouverte</span>
+      <?php if (!empty($pharmaciesApercu)): ?>
+        <?php foreach ($pharmaciesApercu as $p): ?>
+          <div class="col-4 pharm-item" data-nom="<?= strtolower(htmlspecialchars($p['nom'])) ?>">
+            <div class="card pharmacie-card" style="gap: 16px; flex-direction: column; padding: 24px; height: 100%;">
+              <div class="d-flex align-center" style="gap: 16px;">
+                <div class="icon-box" style="background: linear-gradient(135deg,#10b981,#059669);">
+                  <i class="fa-solid fa-mortar-pestle"></i>
+                </div>
+                <div>
+                  <h3 style="font-size: 1rem; margin-bottom: 2px;"><?= htmlspecialchars($p['nom']) ?></h3>
+                  <span class="badge badge-success">Ouverte</span>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
+                  <i class="fa-solid fa-location-dot" style="color: var(--primary); width: 16px;"></i>
+                  <?= htmlspecialchars($p['adresse']) ?>
+                </div>
+                <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
+                  <i class="fa-solid fa-phone" style="color: var(--primary); width: 16px;"></i>
+                  <?= htmlspecialchars($p['telephone']) ?>
+                </div>
+              </div>
+              <a href="../Frontoffice/medicaments.php?id_pharmacie=<?= $p['id_pharmacie'] ?>" class="btn btn-outline btn-sm" style="align-self: flex-start; margin-top: auto;">
+                Voir médicaments
+              </a>
             </div>
           </div>
-          <div style="display: flex; flex-direction: column; gap: 6px;">
-            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
-              <i class="fa-solid fa-location-dot" style="color: var(--primary); width: 16px;"></i>
-              Rue Habib Bourguiba, Tunis
-            </div>
-            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
-              <i class="fa-solid fa-phone" style="color: var(--primary); width: 16px;"></i>
-              +216 71 123 456
-            </div>
-            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
-              <i class="fa-solid fa-envelope" style="color: var(--primary); width: 16px;"></i>
-              alalampharmacy@email.tn
-            </div>
-          </div>
-          <a href="pharmacie.php" class="btn btn-outline btn-sm" style="align-self: flex-start;">
-            Voir médicaments
-          </a>
-        </div>
-      </div>
+        <?php endforeach; ?>
+      <?php else: ?>
+        <p style="text-align: center; width: 100%; color: var(--text-muted);">Aucune pharmacie disponible.</p>
+      <?php endif; ?>
 
-      <div class="col-4">
-        <div class="card pharmacie-card" style="gap: 16px; flex-direction: column; padding: 24px;">
-          <div class="d-flex align-center" style="gap: 16px;">
-            <div class="icon-box" style="background: linear-gradient(135deg,#10b981,#059669);">
-              <i class="fa-solid fa-mortar-pestle"></i>
-            </div>
-            <div>
-              <h3 style="font-size: 1rem; margin-bottom: 2px;">Pharmacie Centrale</h3>
-              <span class="badge badge-success">Ouverte</span>
-            </div>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 6px;">
-            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
-              <i class="fa-solid fa-location-dot" style="color: var(--primary); width: 16px;"></i>
-              Avenue de la Liberté, Sfax
-            </div>
-            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
-              <i class="fa-solid fa-phone" style="color: var(--primary); width: 16px;"></i>
-              +216 74 234 567
-            </div>
-            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
-              <i class="fa-solid fa-envelope" style="color: var(--primary); width: 16px;"></i>
-              centrale.pharm@email.tn
-            </div>
-          </div>
-          <a href="pharmacie.php" class="btn btn-outline btn-sm" style="align-self: flex-start;">
-            Voir médicaments
-          </a>
-        </div>
+      <div class="col-12 text-center" style="margin-top: 32px; width: 100%;">
+        <a href="../Frontoffice/pharmacies.php" class="btn btn-primary btn-lg">
+          <i class="fa-solid fa-eye"></i> Voir toutes les pharmacies
+        </a>
       </div>
+    </div>
+  </div>
+</section>
 
-      <div class="col-4">
-        <div class="card pharmacie-card" style="gap: 16px; flex-direction: column; padding: 24px;">
-          <div class="d-flex align-center" style="gap: 16px;">
-            <div class="icon-box" style="background: linear-gradient(135deg,#10b981,#059669);">
-              <i class="fa-solid fa-mortar-pestle"></i>
-            </div>
-            <div>
-              <h3 style="font-size: 1rem; margin-bottom: 2px;">Pharmacie du Lac</h3>
-              <span class="badge badge-warning">Garde</span>
+<!-- ================================================
+     MEDICAMENTS SECTION (Nouveau)
+     ================================================ -->
+<section class="section-padding" id="produits" style="background: var(--bg);">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">
+        <i class="fa-solid fa-pills"></i>
+        Médicaments
+      </div>
+      <h2 class="section-title">Produits Disponibles</h2>
+      <p class="section-desc">Découvrez notre sélection de médicaments essentiels.</p>
+    </div>
+
+    <div class="row">
+      <?php if (!empty($medicamentsApercu)): ?>
+        <?php foreach ($medicamentsApercu as $m): ?>
+          <div class="col-4 med-item" data-nom="<?= strtolower(htmlspecialchars($m['nom'])) ?>">
+            <div class="card product-card" style="padding: 0; overflow: hidden; height: 100%; display: flex; flex-direction: column;">
+              <div style="height: 180px; overflow: hidden; background: #eee; display: flex; align-items: center; justify-content: center;">
+                <?php 
+                  $imgPath = htmlspecialchars($m['images']);
+                  if(empty($m['images'])) {
+                    $imgPath = "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=400";
+                  }
+                ?>
+                <img src="<?= $imgPath ?>" alt="<?= htmlspecialchars($m['nom']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
+              </div>
+              <div style="padding: 20px; flex-grow: 1; display: flex; flex-direction: column; gap: 10px;">
+                <h3 style="font-size: 1.1rem; margin: 0;"><?= htmlspecialchars($m['nom']) ?></h3>
+                <div style="color: var(--primary); font-weight: 700; font-size: 1.2rem;"><?= number_format($m['prix'], 3) ?> DT</div>
+                <div style="font-size: 0.85rem; color: <?= $m['stock'] > 0 ? 'var(--accent)' : 'var(--danger)' ?>;">
+                  <i class="fa-solid <?= $m['stock'] > 0 ? 'fa-circle-check' : 'fa-circle-xmark' ?>"></i>
+                  <?= $m['stock'] > 0 ? 'En Stock' : 'Rupture' ?>
+                </div>
+                <a href="../Frontoffice/medicaments.php" class="btn btn-outline btn-sm" style="margin-top: auto;">
+                  Détails
+                </a>
+              </div>
             </div>
           </div>
-          <div style="display: flex; flex-direction: column; gap: 6px;">
-            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
-              <i class="fa-solid fa-location-dot" style="color: var(--primary); width: 16px;"></i>
-              Les Berges du Lac, Tunis
-            </div>
-            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
-              <i class="fa-solid fa-phone" style="color: var(--primary); width: 16px;"></i>
-              +216 71 345 678
-            </div>
-            <div class="d-flex align-center gap-1" style="font-size: 0.84rem; color: var(--text-muted);">
-              <i class="fa-solid fa-envelope" style="color: var(--primary); width: 16px;"></i>
-              phlac@email.tn
-            </div>
-          </div>
-          <a href="pharmacie.php" class="btn btn-outline btn-sm" style="align-self: flex-start;">
-            Voir médicaments
-          </a>
-        </div>
+        <?php endforeach; ?>
+      <?php else: ?>
+        <p style="text-align: center; width: 100%; color: var(--text-muted);">Aucun médicament disponible.</p>
+      <?php endif; ?>
+
+      <div class="col-12 text-center" style="margin-top: 32px; width: 100%;">
+        <a href="../Frontoffice/medicaments.php" class="btn btn-primary btn-lg">
+          <i class="fa-solid fa-plus-circle"></i> En savoir plus / Voir tout
+        </a>
       </div>
     </div>
   </div>
@@ -563,12 +688,25 @@ var sessionIsLoggedIn = <?= json_encode($isLoggedIn) ?>;
 <!-- ================================================
      FORUM SECTION - 3 DERNIERS POSTS DE LA BD
      ================================================ -->
-<section class="section-padding" id="forum" style="background: white;">
-    <div class="container">
-        <div class="section-header">
-            <div class="section-tag">
-                <i class="fa-solid fa-comments"></i>
-                Communauté
+<section class="section-padding" id="forum" style="background: var(--white);">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">
+        <i class="fa-solid fa-comments"></i>
+        Communauté
+      </div>
+      <h2 class="section-title">Forum Santé</h2>
+      <p class="section-desc">Échangez avec la communauté. Posez vos questions et partagez votre expérience.</p>
+    </div>
+
+    <div class="row">
+      <div class="col-4">
+        <div class="card post-card">
+          <div class="post-meta">
+            <div class="post-avatar">MA</div>
+            <div>
+              <div class="post-author">Mohamed Amri</div>
+              <div class="post-date">Il y a 2 heures</div>
             </div>
             <h2 class="section-title">Forum Santé</h2>
             <p class="section-desc">Échangez avec la communauté. Posez vos questions et partagez votre expérience.</p>
@@ -593,7 +731,73 @@ var sessionIsLoggedIn = <?= json_encode($isLoggedIn) ?>;
 <!-- ================================================
      AVIS SECTION
      ================================================ -->
-<section class="section-padding" id="avis" style="background: var(--bg);">
+<section class="section-padding avis-section" id="avis">
+  <div class="container" style="position: relative; z-index: 1;">
+    <div class="section-header">
+      <div class="section-tag">⭐ Témoignages</div>
+      <h2 class="section-title">Ce que disent nos patients</h2>
+      <p class="section-desc" style="color: rgba(255,255,255,0.6);">Des milliers de patients font confiance à ASCLEPIA pour leur santé.</p>
+    </div>
+
+    <div class="row">
+      <div class="col-4">
+        <div class="avis-card">
+          <div class="avis-quote">"</div>
+          <p class="avis-text">
+            ASCLEPIA a complètement changé ma façon de gérer ma santé. Je peux voir mes ordonnances, trouver des pharmacies et suivre mes remboursements depuis une seule application.
+          </p>
+          <div class="stars">★★★★★</div>
+          <div class="avis-author mt-2">
+            <div class="avis-avatar">LB</div>
+            <div class="avis-author-info">
+              <div class="name">Leila Bchir</div>
+              <div class="role">Patiente · Tunis</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-4">
+        <div class="avis-card">
+          <div class="avis-quote">"</div>
+          <p class="avis-text">
+            En tant que médecin, ASCLEPIA simplifie énormément mon travail. Je peux émettre des ordonnances numériques et suivre mes patients efficacement.
+          </p>
+          <div class="stars">★★★★★</div>
+          <div class="avis-author mt-2">
+            <div class="avis-avatar" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);">AM</div>
+            <div class="avis-author-info">
+              <div class="name">Dr. Ahmed Mrad</div>
+              <div class="role">Cardiologue · Sfax</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-4">
+        <div class="avis-card">
+          <div class="avis-quote">"</div>
+          <p class="avis-text">
+            Le forum est très utile ! J'ai trouvé des réponses à mes questions rapidement. La communauté est bienveillante et les informations sont fiables.
+          </p>
+          <div class="stars">★★★★☆</div>
+          <div class="avis-author mt-2">
+            <div class="avis-avatar" style="background: linear-gradient(135deg,#10b981,#059669);">FZ</div>
+            <div class="avis-author-info">
+              <div class="name">Fatma Zouari</div>
+              <div class="role">Patiente · Sousse</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================
+     MEDECINS SECTION
+     ================================================ -->
+<section class="section-padding" id="medecins" style="background: var(--white);">
   <div class="container">
     <div class="section-header">
       <div class="section-tag">
@@ -806,107 +1010,195 @@ var sessionIsLoggedIn = <?= json_encode($isLoggedIn) ?>;
 </footer>
 
 <script>
-  // Navbar scroll effect
-  const navbar = document.getElementById('navbar');
-  window.addEventListener('scroll', () => {
-    navbar.classList.toggle('scrolled', window.scrollY > 30);
-  });
+  document.addEventListener('DOMContentLoaded', () => {
+    // ---- Navbar & Navigation ----
+    const navbar = document.getElementById('navbar');
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('section[id], div[id]');
 
-  // Mobile menu
-  function toggleMenu() {
-    document.getElementById('navLinks').classList.toggle('open');
-  }
-
-  // Smooth scroll for nav links
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-      e.preventDefault();
-      const target = document.querySelector(this.getAttribute('href'));
-      if (target) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        document.getElementById('navLinks').classList.remove('open');
-      }
+    window.addEventListener('scroll', () => {
+      if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 30);
+      
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop - 100;
+        if (window.scrollY >= sectionTop) current = section.getAttribute('id');
+      });
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${current}`) link.classList.add('active');
+      });
     });
-  });
 
-  // Active nav link on scroll
-  const sections = document.querySelectorAll('section[id], div[id]');
-  const navLinks = document.querySelectorAll('.nav-link');
-
-  window.addEventListener('scroll', () => {
-    let current = '';
-    sections.forEach(section => {
-      const sectionTop = section.offsetTop - 100;
-      if (window.scrollY >= sectionTop) current = section.getAttribute('id');
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          const navLinksContainer = document.getElementById('navLinks');
+          if (navLinksContainer) navLinksContainer.classList.remove('open');
+        }
+      });
     });
-    navLinks.forEach(link => {
-      link.classList.remove('active');
-      if (link.getAttribute('href') === `#${current}`) link.classList.add('active');
-    });
-  });
 
-  // Animate progress bars on scroll
-  const progressBars = document.querySelectorAll('.progress-bar');
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.style.width = entry.target.getAttribute('data-width') || entry.target.style.width;
-      }
-    });
-  }, { threshold: 0.5 });
-  progressBars.forEach(bar => observer.observe(bar));
+    // ---- Theme Toggle ----
+    const themeToggle = document.getElementById('themeToggle');
+    const root = document.documentElement;
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    root.setAttribute('data-theme', savedTheme);
+    
+    if (themeToggle) {
+      const icon = themeToggle.querySelector('i');
+      if (savedTheme === 'dark' && icon) icon.classList.replace('fa-moon', 'fa-sun');
+      
+      themeToggle.addEventListener('click', () => {
+        const currentTheme = root.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        root.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        
+        const newIcon = themeToggle.querySelector('i');
+        if (newTheme === 'dark') {
+          newIcon.classList.replace('fa-moon', 'fa-sun');
+        } else {
+          newIcon.classList.replace('fa-sun', 'fa-moon');
+        }
+      });
+    }
 
-  // Cards entrance animation
-  const cards = document.querySelectorAll('.card, .avis-card');
-  const cardObserver = new IntersectionObserver(entries => {
-    entries.forEach((entry, i) => {
-      if (entry.isIntersecting) {
-        setTimeout(() => {
-          entry.target.style.opacity = '1';
-          entry.target.style.transform = 'translateY(0)';
-        }, i * 80);
-        cardObserver.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.1 });
+    // ---- Notifications ----
+    const notifToggle = document.getElementById('notifToggle');
+    const notifDropdown = document.getElementById('notifDropdown');
+    if (notifToggle && notifDropdown) {
+      notifToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        notifDropdown.style.display = notifDropdown.style.display === 'block' ? 'none' : 'block';
+      });
+      document.addEventListener('click', () => {
+        notifDropdown.style.display = 'none';
+      });
+    }
 
-  cards.forEach(card => {
-    card.style.opacity = '0';
-    card.style.transform = 'translateY(20px)';
-    card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-    cardObserver.observe(card);
-  });
+    // ---- Carte Interactive (Leaflet) ----
+    if (document.getElementById('pharmacyMap')) {
+      try {
+        const map = L.map('pharmacyMap').setView([36.8065, 10.1815], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
 
-  // Charger les médecins depuis la BD
-  fetch('index.php')
-    .then(response => response.json())
-    .then(data => {
-        const grid = document.getElementById('medecinsGrid');
-        if (data.success && data.medecins && data.medecins.length > 0) {
-            grid.innerHTML = data.medecins.map(medecin => `
-                <div class="col-4">
-                    <div class="card" style="text-align:center; padding:28px;">
-                        <div style="width:80px;height:80px;background:var(--gradient-primary);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.5rem;font-weight:700;color:white;">
-                            ${(medecin.nom ? medecin.nom.substring(0,2).toUpperCase() : 'DR')}
-                        </div>
-                        <h3 style="margin-bottom:8px;">Dr. ${medecin.nom || 'Médecin'}</h3>
-                        ${medecin.adresse ? `<p style="color:var(--text-muted);"><i class="fa-solid fa-location-dot"></i> ${medecin.adresse}</p>` : ''}
-                        ${medecin.telephone ? `<p style="color:var(--text-muted);"><i class="fa-solid fa-phone"></i> ${medecin.telephone}</p>` : ''}
-                        ${medecin.description ? `<p style="color:var(--text-muted); margin-top:8px;">${medecin.description}</p>` : ''}
-                        <a href="consultation.php" class="btn btn-outline btn-sm mt-3" style="margin-top:16px;">
-                            Prendre rendez-vous <i class="fa-solid fa-arrow-right"></i>
-                        </a>
+        const pharmacyIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/883/883356.png',
+            iconSize: [38, 38],
+            iconAnchor: [19, 38],
+            popupAnchor: [0, -38]
+        });
+
+        <?php foreach ($listePharmacies as $p): 
+            $lat = 36.8065 + (rand(-100, 100) / 2000); 
+            $lng = 10.1815 + (rand(-100, 100) / 2000);
+        ?>
+        L.marker([<?= $lat ?>, <?= $lng ?>], {icon: pharmacyIcon})
+            .addTo(map)
+            .bindPopup(`
+                <div style="font-family: 'Inter', sans-serif; padding: 5px;">
+                    <h4 style="margin: 0 0 5px; color: #10b981;"><?= htmlspecialchars($p['nom']) ?></h4>
+                    <p style="margin: 0; font-size: 0.8rem; color: #666;"><?= htmlspecialchars($p['adresse']) ?></p>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <a href="../Frontoffice/medicaments.php?id_pharmacie=<?= $p['id_pharmacie'] ?>" style="font-size: 0.75rem; color: #0ea5e9; font-weight: bold; text-decoration: none;">Voir médicaments</a>
+                        <a href="https://www.google.com/maps/search/<?= urlencode($p['nom'] . ' ' . $p['adresse']) ?>" target="_blank" style="font-size: 0.75rem; color: #666; text-decoration: none;">Google Maps</a>
                     </div>
                 </div>
+            `);
+        <?php endforeach; ?>
+        
+        // Force refresh pour corriger les problèmes d'affichage
+        setTimeout(() => map.invalidateSize(), 500);
+      } catch (e) {
+        console.error("Erreur Leaflet:", e);
+      }
+    }
+
+    // ---- Recherche Temps Réel ----
+    const pharmSearch = document.getElementById('pharmSearch');
+    if (pharmSearch) {
+      pharmSearch.addEventListener('input', function () {
+        const query = this.value.trim().toLowerCase();
+        const items = document.querySelectorAll('.pharm-item, .med-item');
+        items.forEach(item => {
+          const nom = item.getAttribute('data-nom') || '';
+          item.style.display = nom.includes(query) ? '' : 'none';
+        });
+      });
+    }
+
+    // ---- Chargement Médecins ----
+    const medGrid = document.getElementById('medecinsGrid');
+    if (medGrid) {
+      fetch('index.php')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.medecins && data.medecins.length > 0) {
+            medGrid.innerHTML = data.medecins.map(m => `
+              <div class="col-4">
+                <div class="card" style="text-align:center; padding:28px;">
+                  <div style="width:80px;height:80px;background:var(--gradient-primary);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.5rem;font-weight:700;color:white;">
+                    ${(m.nom ? m.nom.substring(0,2).toUpperCase() : 'DR')}
+                  </div>
+                  <h3 style="margin-bottom:8px;">Dr. ${m.nom || 'Médecin'}</h3>
+                  <p style="color:var(--text-muted);"><i class="fa-solid fa-location-dot"></i> ${m.adresse || ''}</p>
+                  <a href="consultation.php" class="btn btn-outline btn-sm mt-3">Prendre rendez-vous</a>
+                </div>
+              </div>
             `).join('');
-        } else {
-            grid.innerHTML = '<p style="text-align:center;color:var(--text-muted);width:100%;">Aucun médecin disponible pour le moment.</p>';
+          } else {
+            medGrid.innerHTML = '<p style="text-align:center;width:100%;">Aucun médecin disponible.</p>';
+          }
+        })
+        .catch(err => {
+          console.error("Erreur médecins:", err);
+          medGrid.innerHTML = '<p style="text-align:center;color:var(--danger);width:100%;">Erreur de chargement.</p>';
+        });
+    }
+
+    // ---- Animations ----
+    const progressBars = document.querySelectorAll('.progress-bar');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.width = entry.target.getAttribute('data-width') || entry.target.style.width;
         }
-    })
-    .catch(error => {
-        console.error('Erreur:', error);
-        document.getElementById('medecinsGrid').innerHTML = '<p style="text-align:center;color:var(--danger);width:100%;">Erreur de chargement des médecins.</p>';
+      });
+    }, { threshold: 0.5 });
+    progressBars.forEach(bar => observer.observe(bar));
+
+    const cards = document.querySelectorAll('.card, .avis-card');
+    const cardObserver = new IntersectionObserver(entries => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+          }, i * 80);
+          cardObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    cards.forEach(card => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(20px)';
+      card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+      cardObserver.observe(card);
     });
+
+  });
+
+  function toggleMenu() {
+    const navLinks = document.getElementById('navLinks');
+    if (navLinks) navLinks.classList.toggle('open');
+  }
+
 
    // zeineb 
 function checkForumAccess() {
@@ -1199,6 +1491,7 @@ document.addEventListener('DOMContentLoaded', function() {
         nextBtn.addEventListener('click', function() { const total = Math.ceil(totalAvis / itemsPerPage); if (currentPage < total) loadAvisPage(currentPage + 1); });
     }
 });
+
 </script>
 
 </body>
