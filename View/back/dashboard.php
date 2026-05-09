@@ -700,19 +700,17 @@ $adminEmail = $_SESSION['user_email'] ?? '';
 
         </div>
 
-        <div class="nav-item has-sub">
-            <a onclick="toggleSubMenu(this)">
-                <i class="fas fa-comments nav-icon"></i>
-                <span>Forum</span>
-                <i class="fas fa-chevron-right nav-arrow"></i>
-            </a>
-            <div class="sub-menu">
-                <a href="../Frontoffice/postList.php">Tous les posts</a>
-                <a href="addpost.php">Ajouter un post</a>
-                <a href="dashboard.php">Gestion des posts</a>
-            </div>
-        </div>
-        
+         <div class="nav-item has-sub">
+    <a onclick="toggleSubMenu(this)">
+        <i class="fas fa-comments nav-icon"></i>
+        <span>Forum</span>
+        <i class="fas fa-chevron-right nav-arrow"></i>
+    </a>
+    <div class="sub-menu">
+        <a href="../Backoffice/dashboardf.php">📊 Dashboard Forum</a>
+        <a href="../Frontoffice/postlist.php">📝 Tous les posts</a>
+    </div>
+</div>
 
         <div class="nav-section-label">Configuration</div>
 
