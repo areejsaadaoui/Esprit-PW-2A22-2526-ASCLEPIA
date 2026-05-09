@@ -1,16 +1,28 @@
 <?php
+session_start();
 require_once '../../config.php';
 require_once '../../Controller/ConsultationController.php';
 
-$controller = new ConsultationController(config::getConnexion());
+$pdo        = config::getConnexion();
+$controller = new ConsultationController($pdo);
+
+// ✅ id_medecin comes from session automatically
+$id_medecin = $_SESSION['user_id'] ?? null;
+
 $success = '';
-$errors = [];
+$errors  = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $date = trim($_POST['date_consultation'] ?? '');
+    $date         = trim($_POST['date_consultation'] ?? '');
     $diagnostique = trim($_POST['diagnostique'] ?? '');
-    $notes = trim($_POST['notes'] ?? '');
-    $statut = trim($_POST['statut'] ?? '');
+    $notes        = trim($_POST['notes'] ?? '');
+    $statut       = trim($_POST['statut'] ?? '');
+    $id_patient   = intval($_POST['id_patient'] ?? 0);
+
+    // Validate patient selection
+    if ($id_patient === 0) {
+        $errors[] = "Veuillez sélectionner un patient.";
+    }
 
     if (empty($date)) {
         $errors[] = "La date est obligatoire.";
@@ -42,6 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'diagnostique'      => $diagnostique,
             'notes'             => $notes,
             'statut'            => $statut,
+            'id_patient'        => $id_patient,
+            'id_medecin'        => $id_medecin,
         ]);
 
         if ($controller->createConsultation($consultation)) {
@@ -51,17 +65,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ajouter Consultation - ASCLEPIA Admin</title>
+    <title>Ajouter Consultation - ASCLEPIA</title>
     <link rel="stylesheet" href="../../assets/css/style.css">
     <link rel="stylesheet" href="../../assets/css/backoffice.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="../../assets/css/dark.css">
+    <style>
+        /* ── Searchable patient picker ── */
+        .patient-search-wrap { position: relative; }
+        .patient-search-wrap .search-icon {
+            position: absolute; left: 13px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted); pointer-events: none;
+        }
+        .patient-search-input {
+            width: 100%; padding: 10px 14px 10px 38px;
+            border: 1px solid var(--border); border-radius: var(--radius);
+            font-size: 0.92rem; background: var(--card); color: var(--text);
+            outline: none; transition: border-color .2s; box-sizing: border-box;
+        }
+        .patient-search-input:focus { border-color: var(--primary); }
+        .patient-search-input.is-invalid { border-color: var(--danger); }
+
+        .patient-dropdown {
+            position: absolute; top: 100%; left: 0; right: 0; z-index: 100;
+            background: var(--card); border: 1px solid var(--border);
+            border-top: none; border-radius: 0 0 var(--radius) var(--radius);
+            max-height: 220px; overflow-y: auto;
+            display: none;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+        .patient-dropdown.open { display: block; }
+        .p-opt {
+            padding: 10px 14px; cursor: pointer;
+            display: flex; align-items: center; gap: 10px;
+            border-bottom: 1px solid var(--border); font-size: 0.9rem;
+            transition: background .15s;
+        }
+        .p-opt:last-child { border-bottom: none; }
+        .p-opt:hover, .p-opt.focused { background: rgba(14,165,233,0.08); }
+        .p-opt .p-name { flex: 1; }
+        .p-opt .p-id-badge {
+            font-size: 0.72rem; color: var(--text-muted);
+            background: var(--bg); padding: 2px 7px; border-radius: 20px;
+        }
+        .no-result {
+            padding: 12px 14px; font-size: 0.88rem;
+            color: var(--text-muted); text-align: center;
+        }
+
+        /* Selected badge shown below search */
+        .selected-badge {
+            display: none; align-items: center; gap: 8px;
+            margin-top: 8px; padding: 8px 12px;
+            background: rgba(14,165,233,0.08);
+            border: 1px solid rgba(14,165,233,0.3);
+            border-radius: var(--radius);
+            font-size: 0.88rem; color: var(--primary);
+        }
+        .selected-badge.show { display: flex; }
+        .selected-badge .clear-btn {
+            margin-left: auto; background: none; border: none;
+            color: var(--text-muted); cursor: pointer; font-size: 0.85rem;
+            padding: 0 4px; transition: color .15s;
+        }
+        .selected-badge .clear-btn:hover { color: var(--danger); }
+    </style>
 </head>
 <body>
 <div class="admin-wrapper">
@@ -72,9 +148,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="sidebar-title">ASCL<span>EPIA</span></div>
         </a>
         <div class="sidebar-user">
-            <div class="user-avatar">A</div>
+            <div class="user-avatar"><?= strtoupper(substr($_SESSION['user_nom'] ?? 'M', 0, 1)) ?></div>
             <div class="user-info">
-                <div class="name">Ala</div>
+                <div class="name"><?= htmlspecialchars($_SESSION['user_nom'] ?? 'Médecin') ?></div>
                 <div class="role">Médecin</div>
             </div>
         </div>
@@ -129,16 +205,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
             <div class="topbar-right">
-    <button class="dark-toggle" onclick="toggleDark()" id="darkBtn" title="Mode sombre">
-        <i class="fa-solid fa-moon"></i>
-    </button>
-</div>
+                <button class="dark-toggle" onclick="toggleDark()" id="darkBtn" title="Mode sombre">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+            </div>
         </div>
 
         <div class="page-content">
 
             <?php if ($success): ?>
-                <div class="alert alert-success"><i class="fa-solid fa-circle-check"></i> <?= $success ?></div>
+                <div class="alert alert-success"><i class="fa-solid fa-circle-check"></i> <?= htmlspecialchars($success) ?></div>
             <?php endif; ?>
 
             <?php if (!empty($errors)): ?>
@@ -146,7 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <i class="fa-solid fa-circle-exclamation"></i>
                     <ul style="margin:0;padding-left:16px">
                         <?php foreach ($errors as $e): ?>
-                            <li><?= $e ?></li>
+                            <li><?= htmlspecialchars($e) ?></li>
                         <?php endforeach; ?>
                     </ul>
                 </div>
@@ -162,12 +238,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <form action="" method="POST" id="formAdd" onsubmit="return validerFormulaire()">
 
+                    <!-- ✅ PATIENT SEARCHABLE PICKER -->
+                    <div class="form-group">
+                        <label class="form-label">Patient *</label>
+
+                        <!-- Hidden field submitted with the form -->
+                        <input type="hidden" name="id_patient" id="id_patient"
+                               value="<?= intval($_POST['id_patient'] ?? 0) ?>">
+
+                        <div class="patient-search-wrap">
+                            <i class="fa-solid fa-user-injured search-icon"></i>
+                            <input type="text"
+                                   id="patientSearch"
+                                   class="patient-search-input"
+                                   placeholder="Rechercher un patient par nom..."
+                                   autocomplete="off">
+                            <div class="patient-dropdown" id="patientDropdown"></div>
+                        </div>
+
+                        <!-- Shown once a patient is selected -->
+                        <div class="selected-badge" id="selectedBadge">
+                            <i class="fa-solid fa-user-check"></i>
+                            <span id="selectedName"></span>
+                            <button type="button" class="clear-btn" onclick="clearPatient()" title="Changer de patient">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <span class="form-error" id="err_patient" style="display:none; color:var(--danger); font-size:0.8rem; margin-top:4px;">
+                            Veuillez sélectionner un patient.
+                        </span>
+                    </div>
+
+                    <!-- DATE -->
                     <div class="form-group">
                         <label class="form-label">Date de consultation *</label>
-                        <input type="datetime-local" name="date_consultation" id="date_consultation" class="form-control" onchange="verifierDate()">
+                        <input type="datetime-local" name="date_consultation" id="date_consultation"
+                               class="form-control" onchange="verifierDate()">
                         <span class="form-error" id="err_date">La date de consultation doit être dans le futur.</span>
                     </div>
 
+                    <!-- STATUT -->
                     <div class="form-group">
                         <label class="form-label">Statut *</label>
                         <select name="statut" id="statut" class="form-control">
@@ -179,6 +290,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <span class="form-error" id="err_statut">Veuillez choisir un statut.</span>
                     </div>
 
+                    <!-- DIAGNOSTIQUE -->
                     <div class="form-group" style="position:relative;">
                         <label class="form-label">
                             Diagnostique
@@ -190,22 +302,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <textarea name="diagnostique" id="diagnostique" class="form-control"
                             placeholder="Disponible après la date de consultation..."
                             disabled
-                            oninput="compter('diagnostique', 'count_diag', 10); suggererDiagnostique();"></textarea>
+                            oninput="compter('diagnostique', 'count_diag', 10); suggererDiagnostique()"></textarea>
+                        <div id="suggestions_diag" style="display:none; position:absolute; left:0; right:0; background:var(--card); border:1px solid var(--border); border-top:none; border-radius:0 0 var(--radius) var(--radius); z-index:50; max-height:180px; overflow-y:auto;"></div>
                         <span class="form-hint"><span id="count_diag">0</span> caractères</span>
                         <span class="form-error" id="err_diag">Le diagnostique doit contenir au moins 10 caractères.</span>
-                        <div id="suggestions_diag" style="
-                            position:absolute;
-                            background:white;
-                            border:1px solid var(--border);
-                            border-radius:var(--radius);
-                            box-shadow:var(--shadow);
-                            z-index:1000;
-                            width:100%;
-                            display:none;
-                            margin-top:4px;">
-                        </div>
                     </div>
 
+                    <!-- NOTES -->
                     <div class="form-group">
                         <label class="form-label">
                             Notes
@@ -233,167 +336,225 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <script>
-    document.querySelector('.sidebar-toggle').addEventListener('click', function() {
-        document.querySelector('.sidebar').classList.toggle('open');
-    });
+// ── AJAX Patient Search ──
+const searchInput  = document.getElementById('patientSearch');
+const dropdown     = document.getElementById('patientDropdown');
+const hiddenInput  = document.getElementById('id_patient');
+const badge        = document.getElementById('selectedBadge');
+const selectedName = document.getElementById('selectedName');
+let searchTimeout  = null;
 
-    function compter(champId, compteurId, minimum) {
-        const nb = document.getElementById(champId).value.length;
-        const el = document.getElementById(compteurId);
-        el.textContent = nb;
-        el.style.color = nb >= minimum ? 'green' : 'red';
-    }
-
-    function verifierDate() {
-        const dateVal = document.getElementById('date_consultation').value;
-        const diag = document.getElementById('diagnostique');
-        const notes = document.getElementById('notes');
-        const hintDiag = document.getElementById('hint_diag');
-        const hintNotes = document.getElementById('hint_notes');
-        const optTerminee = document.getElementById('opt_terminee');
-        const selectStatut = document.getElementById('statut');
-
-        if (!dateVal) {
-            diag.disabled = true;
-            notes.disabled = true;
-            optTerminee.disabled = true;
-            return;
-        }
-
-        const dateChoisie = new Date(dateVal);
-        const maintenant = new Date();
-
-        if (dateChoisie <= maintenant) {
-            diag.disabled = false;
-            notes.disabled = false;
-            diag.placeholder = "Entrez le diagnostique...";
-            notes.placeholder = "Entrez les notes...";
-            hintDiag.textContent = "(min. 10 caractères)";
-            hintNotes.textContent = "(min. 5 caractères)";
-            optTerminee.disabled = false;
-        } else {
-            diag.disabled = true;
-            diag.value = '';
-            notes.disabled = true;
-            notes.value = '';
-            diag.placeholder = "Disponible après la date de consultation...";
-            notes.placeholder = "Disponible après la date de consultation...";
-            hintDiag.textContent = "(disponible après la consultation)";
-            hintNotes.textContent = "(disponible après la consultation)";
-            document.getElementById('count_diag').textContent = '0';
-            document.getElementById('count_notes').textContent = '0';
-            optTerminee.disabled = true;
-            if (selectStatut.value === 'terminée') selectStatut.value = '';
-            document.getElementById('suggestions_diag').style.display = 'none';
-        }
-    }
-
-    // MODE SOMBRE
-function toggleDark() {
-    document.body.classList.toggle('dark-mode');
-    const btn = document.getElementById('darkBtn');
-    const isDark = document.body.classList.contains('dark-mode');
-    btn.innerHTML = isDark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
-    localStorage.setItem('darkMode', isDark);
+// Pre-select if returning after a validation error
+const preselectedId = parseInt(hiddenInput.value) || 0;
+if (preselectedId) {
+    fetch('search_patients.php?q=id:' + preselectedId)
+        .then(r => r.json())
+        .then(data => { if (data.length) selectPatient(data[0].id_user, data[0].nom); })
+        .catch(() => {});
 }
 
+searchInput.addEventListener('input', function() {
+    const q = this.value.trim();
+    if (q.length < 2) {
+        dropdown.classList.remove('open');
+        dropdown.innerHTML = '';
+        return;
+    }
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        dropdown.innerHTML = '<div class="no-result"><i class="fa-solid fa-spinner fa-spin"></i> Recherche...</div>';
+        dropdown.classList.add('open');
+        fetch('search_patients.php?q=' + encodeURIComponent(q))
+            .then(r => r.json())
+            .then(data => {
+                dropdown.innerHTML = data.length
+                    ? data.map(p =>
+                        `<div class="p-opt" onclick="selectPatient(${p.id_user}, '${p.nom.replace(/'/g, "\\'")}')">
+                            <i class="fa-solid fa-user" style="color:var(--primary);font-size:0.85rem;"></i>
+                            <span class="p-name">${p.nom}</span>
+                            <span class="p-id-badge">ID ${p.id_user}</span>
+                        </div>`).join('')
+                    : '<div class="no-result"><i class="fa-solid fa-face-sad-tear"></i> Aucun patient trouvé</div>';
+                dropdown.classList.add('open');
+            })
+            .catch(() => { dropdown.innerHTML = '<div class="no-result">Erreur de recherche.</div>'; });
+    }, 300);
+});
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.patient-search-wrap')) dropdown.classList.remove('open');
+});
+
+function selectPatient(id, nom) {
+    hiddenInput.value = id;
+    selectedName.textContent = nom;
+    badge.classList.add('show');
+    searchInput.style.display = 'none';
+    dropdown.classList.remove('open');
+    document.getElementById('err_patient').style.display = 'none';
+}
+
+function clearPatient() {
+    hiddenInput.value = 0;
+    searchInput.value = '';
+    searchInput.style.display = '';
+    badge.classList.remove('show');
+    dropdown.innerHTML = '';
+    searchInput.focus();
+}
+
+// ── Sidebar toggle ──
+document.querySelector('.sidebar-toggle').addEventListener('click', function() {
+    document.querySelector('.sidebar').classList.toggle('open');
+});
+
+// ── Character counter ──
+function compter(champId, compteurId, minimum) {
+    const nb = document.getElementById(champId).value.length;
+    const el = document.getElementById(compteurId);
+    el.textContent = nb;
+    el.style.color = nb >= minimum ? 'green' : 'red';
+}
+
+// ── Date logic: enables/disables diagnostique & notes ──
+function verifierDate() {
+    const dateVal     = document.getElementById('date_consultation').value;
+    const diag        = document.getElementById('diagnostique');
+    const notes       = document.getElementById('notes');
+    const hintDiag    = document.getElementById('hint_diag');
+    const hintNotes   = document.getElementById('hint_notes');
+    const optTerminee = document.getElementById('opt_terminee');
+    const selectStatut = document.getElementById('statut');
+
+    if (!dateVal) {
+        diag.disabled = notes.disabled = optTerminee.disabled = true;
+        return;
+    }
+
+    const isPast = new Date(dateVal) <= new Date();
+
+    if (isPast) {
+        diag.disabled = notes.disabled = false;
+        optTerminee.disabled = false;
+        diag.placeholder  = "Entrez le diagnostique...";
+        notes.placeholder = "Entrez les notes...";
+        hintDiag.textContent  = "(min. 10 caractères)";
+        hintNotes.textContent = "(min. 5 caractères)";
+    } else {
+        diag.disabled = notes.disabled = true;
+        diag.value = notes.value = '';
+        optTerminee.disabled = true;
+        diag.placeholder  = "Disponible après la date de consultation...";
+        notes.placeholder = "Disponible après la date de consultation...";
+        hintDiag.textContent  = "(disponible après la consultation)";
+        hintNotes.textContent = "(disponible après la consultation)";
+        document.getElementById('count_diag').textContent  = '0';
+        document.getElementById('count_notes').textContent = '0';
+        document.getElementById('suggestions_diag').style.display = 'none';
+        if (selectStatut.value === 'terminée') selectStatut.value = '';
+    }
+}
+
+// ── Dark mode ──
+function toggleDark() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    document.getElementById('darkBtn').innerHTML = isDark
+        ? '<i class="fa-solid fa-sun"></i>'
+        : '<i class="fa-solid fa-moon"></i>';
+    localStorage.setItem('darkMode', isDark);
+}
 if (localStorage.getItem('darkMode') === 'true') {
     document.body.classList.add('dark-mode');
     document.getElementById('darkBtn').innerHTML = '<i class="fa-solid fa-sun"></i>';
 }
 
-
-    
-
-    // SUGGESTION IA
-    function suggererDiagnostique() {
-        const q = document.getElementById('diagnostique').value.trim();
-        const box = document.getElementById('suggestions_diag');
-
-        if (q.length < 2) {
-            box.style.display = 'none';
-            return;
-        }
-
-        fetch('suggest_diagnostic.php?q=' + encodeURIComponent(q))
-            .then(r => r.json())
-            .then(data => {
-                if (data.length === 0) {
-                    box.style.display = 'none';
-                    return;
-                }
-                box.innerHTML = data.map(s =>
-                    `<div onclick="choisirSuggestion('${s.replace(/'/g, "\\'").replace(/\n/g, ' ')}')"
-                    style="padding:10px 16px; cursor:pointer; font-size:0.9rem; border-bottom:1px solid var(--border);"
+// ── AI Diagnostic suggestions ──
+function suggererDiagnostique() {
+    const q   = document.getElementById('diagnostique').value.trim();
+    const box = document.getElementById('suggestions_diag');
+    if (q.length < 2) { box.style.display = 'none'; return; }
+    fetch('suggest_diagnostic.php?q=' + encodeURIComponent(q))
+        .then(r => r.json())
+        .then(data => {
+            if (!data.length) { box.style.display = 'none'; return; }
+            box.innerHTML = data.map(s =>
+                `<div onclick="choisirSuggestion('${s.replace(/'/g, "\\'").replace(/\n/g, ' ')}')"
+                    style="padding:10px 16px;cursor:pointer;font-size:0.9rem;border-bottom:1px solid var(--border);"
                     onmouseover="this.style.background='var(--bg)'"
-                    onmouseout="this.style.background='white'">
-                    <i class="fa-solid fa-robot" style="color:var(--primary); margin-right:8px;"></i>
-                    ${s}
-                    </div>`
-                ).join('');
-                box.style.display = 'block';
-            })
-            .catch(() => box.style.display = 'none');
-    }
+                    onmouseout="this.style.background=''">
+                    <i class="fa-solid fa-robot" style="color:var(--primary);margin-right:8px;"></i>${s}
+                </div>`
+            ).join('');
+            box.style.display = 'block';
+        })
+        .catch(() => box.style.display = 'none');
+}
 
-    function choisirSuggestion(texte) {
-        const diag = document.getElementById('diagnostique');
-        diag.value = texte;
+function choisirSuggestion(texte) {
+    document.getElementById('diagnostique').value = texte;
+    document.getElementById('suggestions_diag').style.display = 'none';
+    compter('diagnostique', 'count_diag', 10);
+}
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('#diagnostique') && !e.target.closest('#suggestions_diag')) {
         document.getElementById('suggestions_diag').style.display = 'none';
-        compter('diagnostique', 'count_diag', 10);
+    }
+});
+
+// ── Form validation ──
+function validerFormulaire() {
+    let valide = true;
+    document.querySelectorAll('.form-error').forEach(e => e.style.display = 'none');
+    document.querySelectorAll('.form-control').forEach(e => e.classList.remove('is-invalid'));
+
+    // Patient
+    if (!hiddenInput.value || parseInt(hiddenInput.value) === 0) {
+        document.getElementById('err_patient').style.display = 'block';
+        searchInput.classList.add('is-invalid');
+        valide = false;
     }
 
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('#diagnostique') && !e.target.closest('#suggestions_diag')) {
-            document.getElementById('suggestions_diag').style.display = 'none';
-        }
-    });
-
-    function validerFormulaire() {
-        let valide = true;
-        document.querySelectorAll('.form-error').forEach(e => e.style.display = 'none');
-        document.querySelectorAll('.form-control').forEach(e => e.classList.remove('is-invalid'));
-
-        const date = document.getElementById('date_consultation').value;
-        if (!date || new Date(date) <= new Date()) {
-            document.getElementById('date_consultation').classList.add('is-invalid');
-            document.getElementById('err_date').style.display = 'block';
-            valide = false;
-        }
-
-        const statut = document.getElementById('statut').value;
-        if (!statut) {
-            document.getElementById('statut').classList.add('is-invalid');
-            document.getElementById('err_statut').style.display = 'block';
-            valide = false;
-        }
-
-        const dateChoisie = new Date(date);
-        const maintenant = new Date();
-        if (date && dateChoisie <= maintenant) {
-            const diag = document.getElementById('diagnostique').value.trim();
-            if (diag.length < 10) {
-                document.getElementById('diagnostique').classList.add('is-invalid');
-                document.getElementById('err_diag').style.display = 'block';
-                valide = false;
-            }
-            const notes = document.getElementById('notes').value.trim();
-            if (notes.length < 5) {
-                document.getElementById('notes').classList.add('is-invalid');
-                document.getElementById('err_notes').style.display = 'block';
-                valide = false;
-            }
-        }
-
-        return valide;
+    // Date
+    const date = document.getElementById('date_consultation').value;
+    if (!date || new Date(date) <= new Date()) {
+        document.getElementById('date_consultation').classList.add('is-invalid');
+        document.getElementById('err_date').style.display = 'block';
+        valide = false;
     }
 
-    const maintenant = new Date();
-    const offset = maintenant.getTimezoneOffset() * 60000;
-    document.getElementById('date_consultation').min = new Date(maintenant - offset).toISOString().slice(0, 16);
+    // Statut
+    if (!document.getElementById('statut').value) {
+        document.getElementById('statut').classList.add('is-invalid');
+        document.getElementById('err_statut').style.display = 'block';
+        valide = false;
+    }
 
-    verifierDate();
+    // Diag & notes only if date is in the past
+    if (date && new Date(date) <= new Date()) {
+        if (document.getElementById('diagnostique').value.trim().length < 10) {
+            document.getElementById('diagnostique').classList.add('is-invalid');
+            document.getElementById('err_diag').style.display = 'block';
+            valide = false;
+        }
+        if (document.getElementById('notes').value.trim().length < 5) {
+            document.getElementById('notes').classList.add('is-invalid');
+            document.getElementById('err_notes').style.display = 'block';
+            valide = false;
+        }
+    }
+
+    return valide;
+}
+
+// Set min date to now
+const now = new Date();
+document.getElementById('date_consultation').min =
+    new Date(now - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+
+verifierDate();
 </script>
-</body>
 <script src="../../assets/js/language-switcher.js"></script>
+</body>
 </html>

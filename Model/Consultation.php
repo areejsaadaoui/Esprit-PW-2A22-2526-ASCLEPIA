@@ -3,18 +3,20 @@
 class Consultation {
     private ?int $id_consultation;
     private string $date_consultation;
-    private string $diagnostique;
-    private string $notes;
+    private ?string $diagnostique;
+    private ?string $notes;
     private string $statut;
     private ?int $id_patient;
+    private ?int $id_medecin;
 
     public function __construct(
         ?int $id_consultation = null,
         string $date_consultation = '',
-        string $diagnostique = '',
-        string $notes = '',
+        ?string $diagnostique = null,
+        ?string $notes = null,
         string $statut = 'planifiée',
-        ?int $id_patient = null
+        ?int $id_patient = null,
+        ?int $id_medecin = null
     ) {
         $this->id_consultation   = $id_consultation;
         $this->date_consultation = $date_consultation;
@@ -22,16 +24,18 @@ class Consultation {
         $this->notes             = $notes;
         $this->statut            = $statut;
         $this->id_patient        = $id_patient;
+        $this->id_medecin        = $id_medecin;
     }
 
     public static function fromArray(array $data): self {
         return new self(
             isset($data['id_consultation']) ? intval($data['id_consultation']) : null,
             $data['date_consultation'] ?? '',
-            $data['diagnostique']      ?? '',
-            $data['notes']             ?? '',
+            $data['diagnostique']      ?? null,
+            $data['notes']             ?? null,
             $data['statut']            ?? 'planifiée',
-            isset($data['id_patient']) ? intval($data['id_patient']) : null
+            isset($data['id_patient'])  ? intval($data['id_patient'])  : null,
+            isset($data['id_medecin'])  ? intval($data['id_medecin'])  : null
         );
     }
 
@@ -43,8 +47,11 @@ class Consultation {
             'notes'             => $this->notes,
             'statut'            => $this->statut,
             'id_patient'        => $this->id_patient,
+            'id_medecin'        => $this->id_medecin,
         ];
     }
+
+    // --- Getters & Setters ---
 
     public function getIdConsultation(): ?int {
         return $this->id_consultation;
@@ -62,19 +69,19 @@ class Consultation {
         $this->date_consultation = $date_consultation;
     }
 
-    public function getDiagnostique(): string {
+    public function getDiagnostique(): ?string {
         return $this->diagnostique;
     }
 
-    public function setDiagnostique(string $diagnostique): void {
+    public function setDiagnostique(?string $diagnostique): void {
         $this->diagnostique = $diagnostique;
     }
 
-    public function getNotes(): string {
+    public function getNotes(): ?string {
         return $this->notes;
     }
 
-    public function setNotes(string $notes): void {
+    public function setNotes(?string $notes): void {
         $this->notes = $notes;
     }
 
@@ -93,6 +100,12 @@ class Consultation {
     public function setIdPatient(?int $id_patient): void {
         $this->id_patient = $id_patient;
     }
-}
 
-?>
+    public function getIdMedecin(): ?int {
+        return $this->id_medecin;
+    }
+
+    public function setIdMedecin(?int $id_medecin): void {
+        $this->id_medecin = $id_medecin;
+    }
+}

@@ -664,73 +664,116 @@ $adminEmail = $_SESSION['user_email'] ?? '';
 
     <nav class="sidebar-nav">
 
-        <div class="nav-section-label">Menu Principal</div>
+    <?php
+        $current = basename($_SERVER['PHP_SELF']);
+        $current_path = $_SERVER['PHP_SELF'];
 
-        <div class="nav-item">
-            <a href="dashboard.php" <?php echo basename($_SERVER['PHP_SELF']) === 'dashboard.php' ? 'class="active"' : ''; ?>>
-                <i class="fas fa-tachometer-alt nav-icon"></i>
-                <span>Tableau de bord</span>
+        // Helper to check if current page matches any of the given filenames
+        function isActive(...$pages) {
+            global $current;
+            return in_array($current, $pages);
+        }
+
+        // Helper to check if sub-menu should be open (any child is active)
+        function isSubActive(...$pages) {
+            global $current;
+            return in_array($current, $pages) ? 'open' : '';
+        }
+    ?>
+
+    <div class="nav-section-label">Menu Principal</div>
+
+    <div class="nav-item">
+        <a href="dashboard.php" <?= isActive('dashboard.php') ? 'class="active"' : '' ?>>
+            <i class="fas fa-tachometer-alt nav-icon"></i>
+            <span>Tableau de bord</span>
+        </a>
+    </div>
+
+    <div class="nav-section-label">Gestion</div>
+
+    <!-- Assurances & Contrats -->
+    <div class="nav-item has-sub <?= isSubActive('assurancelist.php', 'contratList.php') ?>">
+        <a onclick="toggleSubMenu(this)" <?= isActive('assurancelist.php', 'contratList.php') ? 'class="active"' : '' ?>>
+            <i class="fa-solid fa-shield-halved nav-icon"></i>
+            <span>Assurances &amp; Contrats</span>
+            <i class="fas fa-chevron-right nav-arrow"></i>
+        </a>
+        <div class="sub-menu">
+            <a href="../backoffice/assurancelist.php"
+               <?= isActive('assurancelist.php') ? 'class="active"' : '' ?>>
+               Les assurances
+            </a>
+            <a href="../backoffice/contrat/contratList.php"
+               <?= isActive('contratList.php') ? 'class="active"' : '' ?>>
+               Les contrats
             </a>
         </div>
+    </div>
 
-        <div class="nav-section-label">Gestion</div>
-
-        <div class="nav-item">
-            <a href="../backoffice/assurancelist.php" <?php echo basename($_SERVER['PHP_SELF']) === 'assurancelist.php' ? 'class="active"' : ''; ?>>
-                <i class="fa-solid fa-shield-halved nav-icon"></i>
-                <span>Assurances</span>
+    <!-- Ordonnances & Consultations -->
+    <div class="nav-item has-sub <?= isSubActive('dashboard.php', 'list_consultation.php', 'list_ordonnance.php') ?>">
+        <a onclick="toggleSubMenu(this)" <?= isActive('list_consultation.php', 'list_ordonnance.php') ? 'class="active"' : '' ?>>
+            <i class="fa-solid fa-file-contract nav-icon"></i>
+            <span>Ordonnances &amp; Consultations</span>
+            <i class="fas fa-chevron-right nav-arrow"></i>
+        </a>
+        <div class="sub-menu">
+            <a href="../backoffice/dashboard.php"
+               <?= isActive('dashboard.php') ? 'class="active"' : '' ?>>
+               Toutes les consultations
+            </a>
+            <a href="../backoffice/list_consultation.php"
+               <?= isActive('list_consultation.php') ? 'class="active"' : '' ?>>
+               Les consultations
+            </a>
+            <a href="../backoffice/list_ordonnance.php"
+               <?= isActive('list_ordonnance.php') ? 'class="active"' : '' ?>>
+               Les ordonnances
             </a>
         </div>
+    </div>
 
-        <div class="nav-item">
-            <a href="../backoffice/contrat/contratList.php" <?php echo basename($_SERVER['PHP_SELF']) === 'contratList.php' ? 'class="active"' : ''; ?>>
-                <i class="fa-solid fa-file-contract nav-icon"></i>
-                <span>Contrats</span>
+    <!-- Forum -->
+    <div class="nav-item has-sub <?= isSubActive('postList.php', 'addpost.php', 'dashboard.php') ?>">
+        <a onclick="toggleSubMenu(this)" <?= isActive('postList.php', 'addpost.php') ? 'class="active"' : '' ?>>
+            <i class="fas fa-comments nav-icon"></i>
+            <span>Forum</span>
+            <i class="fas fa-chevron-right nav-arrow"></i>
+        </a>
+        <div class="sub-menu">
+            <a href="../Frontoffice/postList.php"
+               <?= isActive('postList.php') ? 'class="active"' : '' ?>>
+               Tous les posts
+            </a>
+            <a href="addpost.php"
+               <?= isActive('addpost.php') ? 'class="active"' : '' ?>>
+               Ajouter un post
+            </a>
+            <a href="dashboard.php"
+               <?= isActive('dashboard.php') ? 'class="active"' : '' ?>>
+               Gestion des posts
             </a>
         </div>
-         <div class="nav-item">
-            <a href="../backoffice/list_consultation.php" <?php echo basename($_SERVER['PHP_SELF']) === 'list_consultation.php' ? 'class="active"' : ''; ?>>
-                <i class="fa-solid fa-file-contract nav-icon"></i>
-                <span>consultations</span>
-            </a>
-             <a href="../backoffice/list_ordonnance.php" <?php echo basename($_SERVER['PHP_SELF']) === 'list_ordonnance.php' ? 'class="active"' : ''; ?>>
-                <i class="fa-solid fa-file-contract nav-icon"></i>
-                <span>ordonnances</span>
-            </a>
+    </div>
 
-        </div>
+    <div class="nav-section-label">Configuration</div>
 
-        <div class="nav-item has-sub">
-            <a onclick="toggleSubMenu(this)">
-                <i class="fas fa-comments nav-icon"></i>
-                <span>Forum</span>
-                <i class="fas fa-chevron-right nav-arrow"></i>
-            </a>
-            <div class="sub-menu">
-                <a href="../Frontoffice/postList.php">Tous les posts</a>
-                <a href="addpost.php">Ajouter un post</a>
-                <a href="dashboard.php">Gestion des posts</a>
-            </div>
-        </div>
-        
+    <div class="nav-item">
+        <a href="../front/indexp.php" <?= isActive('indexp.php') ? 'class="active"' : '' ?>>
+            <i class="fas fa-globe nav-icon"></i>
+            <span>Voir le site</span>
+        </a>
+    </div>
 
-        <div class="nav-section-label">Configuration</div>
+    <div class="nav-item">
+        <a href="loginadmin.html" <?= isActive('loginadmin.html') ? 'class="active"' : '' ?>>
+            <i class="fas fa-sign-out-alt nav-icon"></i>
+            <span>Déconnexion</span>
+        </a>
+    </div>
 
-        <div class="nav-item">
-            <a href="../front/indexp.php">
-                <i class="fas fa-globe nav-icon"></i>
-                <span>Voir le site</span>
-            </a>
-        </div>
-
-        <div class="nav-item">
-            <a href="loginadmin.html">
-                <i class="fas fa-sign-out-alt nav-icon"></i>
-                <span>Déconnexion</span>
-            </a>
-        </div>
-
-    </nav>
+</nav>
 
     <div class="sidebar-footer">
         <div class="sidebar-version">Version 1.0</div>

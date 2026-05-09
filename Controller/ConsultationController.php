@@ -13,7 +13,6 @@ class ConsultationController {
         $stmt = $this->pdo->query(
             "SELECT * FROM consultation ORDER BY date_consultation DESC"
         );
-
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         return array_map([self::class, 'rowToConsultation'], $rows);
     }
@@ -23,7 +22,6 @@ class ConsultationController {
             "SELECT * FROM consultation WHERE id_patient = ? ORDER BY date_consultation DESC"
         );
         $stmt->execute([$idPatient]);
-
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         return array_map([self::class, 'rowToConsultation'], $rows);
     }
@@ -34,7 +32,6 @@ class ConsultationController {
         );
         $stmt->execute([$id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
         return $row ? self::rowToConsultation($row) : null;
     }
 
@@ -50,22 +47,29 @@ class ConsultationController {
             );
             $stmt->execute([$date_consultation]);
         }
-
         return $stmt->fetchColumn() > 0;
+    }
+
+    // ✅ Fetch all patients (role = 'patient') for the dropdown
+    public function getAllPatients(): array {
+        $stmt = $this->pdo->query(
+            "SELECT id_user, nom FROM utilisateur WHERE role = 'patient' ORDER BY nom ASC"
+        );
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function createConsultation(Consultation $consultation): bool {
         $stmt = $this->pdo->prepare(
-            "INSERT INTO consultation (date_consultation, diagnostique, notes, statut, id_patient)
-             VALUES (?, ?, ?, ?, ?)"
+            "INSERT INTO consultation (date_consultation, diagnostique, notes, statut, id_patient, id_medecin)
+             VALUES (?, ?, ?, ?, ?, ?)"
         );
-
         return $stmt->execute([
             $consultation->getDateConsultation(),
             $consultation->getDiagnostique(),
             $consultation->getNotes(),
             $consultation->getStatut(),
             $consultation->getIdPatient(),
+            $consultation->getIdMedecin(),
         ]);
     }
 
@@ -73,18 +77,18 @@ class ConsultationController {
         if ($consultation->getIdConsultation() === null) {
             return false;
         }
-
         $stmt = $this->pdo->prepare(
-            "UPDATE consultation SET date_consultation = ?, diagnostique = ?, notes = ?, statut = ?, id_patient = ?
+            "UPDATE consultation
+             SET date_consultation = ?, diagnostique = ?, notes = ?, statut = ?, id_patient = ?, id_medecin = ?
              WHERE id_consultation = ?"
         );
-
         return $stmt->execute([
             $consultation->getDateConsultation(),
             $consultation->getDiagnostique(),
             $consultation->getNotes(),
             $consultation->getStatut(),
             $consultation->getIdPatient(),
+            $consultation->getIdMedecin(),
             $consultation->getIdConsultation(),
         ]);
     }
@@ -93,7 +97,6 @@ class ConsultationController {
         $stmt = $this->pdo->prepare(
             "DELETE FROM consultation WHERE id_consultation = ?"
         );
-
         return $stmt->execute([$id]);
     }
 

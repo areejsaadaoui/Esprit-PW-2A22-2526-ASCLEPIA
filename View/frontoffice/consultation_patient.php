@@ -57,7 +57,7 @@ $consultations = $controller->getConsultationsByPatient($userId);
             <a href="../front/indexp.php" class="nav-link">Accueil</a>
             <a href="consultation_patient.php" class="nav-link active">Mes Consultations</a>
             <a href="ordonnance_patient.php" class="nav-link">Mes Ordonnances</a>
-            <a href="#" class="nav-link">Contact</a>
+            <a href="../backoffice/calendrier.php" class="nav-link">Calendrier</a>
         </div>
         <div class="nav-actions">
 

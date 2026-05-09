@@ -85,40 +85,117 @@ $topMots = array_slice($mots, 0, 8, true);
             </div>
         </div>
         <nav class="sidebar-nav">
-            <div class="nav-section-label">Navigation</div>
-            <div class="nav-item">
-                <a href="dashboard.php" class="active">
-                    <span class="nav-icon"><i class="fa-solid fa-gauge"></i></span>
-                    Dashboard
-                </a>
-            </div>
-            <div class="nav-section-label">Consultation</div>
-            <div class="nav-item">
-                <a href="list_consultation.php">
-                    <span class="nav-icon"><i class="fa-solid fa-calendar-check"></i></span>
-                    Consultations
-                </a>
-            </div>
-            <div class="nav-item">
-                <a href="add_consultation.php">
-                    <span class="nav-icon"><i class="fa-solid fa-plus"></i></span>
-                    Ajouter
-                </a>
-            </div>
-            <div class="nav-section-label">Ordonnance</div>
-            <div class="nav-item">
-                <a href="list_ordonnance.php">
-                    <span class="nav-icon"><i class="fa-solid fa-file-prescription"></i></span>
-                    Ordonnances
-                </a>
-            </div>
-            <div class="nav-item">
-                <a href="add_ordonnance.php">
-                    <span class="nav-icon"><i class="fa-solid fa-plus"></i></span>
-                    Ajouter
-                </a>
-            </div>
-        </nav>
+
+    <?php
+        $current = basename($_SERVER['PHP_SELF']);
+        $current_path = $_SERVER['PHP_SELF'];
+
+        // Helper to check if current page matches any of the given filenames
+        function isActive(...$pages) {
+            global $current;
+            return in_array($current, $pages);
+        }
+
+        // Helper to check if sub-menu should be open (any child is active)
+        function isSubActive(...$pages) {
+            global $current;
+            return in_array($current, $pages) ? 'open' : '';
+        }
+    ?>
+
+    <div class="nav-section-label">Menu Principal</div>
+
+    <div class="nav-item">
+        <a href="../back/dashboard.php" <?= isActive('dashboard.php') ? 'class="active"' : '' ?>>
+            <i class="fas fa-tachometer-alt nav-icon"></i>
+            <span>Tableau de bord</span>
+        </a>
+    </div>
+
+    <div class="nav-section-label">Gestion</div>
+
+    <!-- Assurances & Contrats -->
+    <div class="nav-item has-sub <?= isSubActive('assurancelist.php', 'contratList.php') ?>">
+        <a onclick="toggleSubMenu(this)" <?= isActive('assurancelist.php', 'contratList.php') ? 'class="active"' : '' ?>>
+            <i class="fa-solid fa-shield-halved nav-icon"></i>
+            <span>Assurances &amp; Contrats</span>
+            <i class="fas fa-chevron-right nav-arrow"></i>
+        </a>
+        <div class="sub-menu">
+            <a href="../backoffice/assurancelist.php"
+               <?= isActive('assurancelist.php') ? 'class="active"' : '' ?>>
+               Les assurances
+            </a>
+            <a href="contrat/contratList.php"
+               <?= isActive('contratList.php') ? 'class="active"' : '' ?>>
+               Les contrats
+            </a>
+        </div>
+    </div>
+
+    <!-- Ordonnances & Consultations -->
+    <div class="nav-item has-sub <?= isSubActive('dashboard.php', 'list_consultation.php', 'list_ordonnance.php') ?>">
+        <a onclick="toggleSubMenu(this)" <?= isActive('list_consultation.php', 'list_ordonnance.php') ? 'class="active"' : '' ?>>
+            <i class="fa-solid fa-file-contract nav-icon"></i>
+            <span>Ordonnances &amp; Consultations</span>
+            <i class="fas fa-chevron-right nav-arrow"></i>
+        </a>
+        <div class="sub-menu">
+            <a href="../backoffice/dashboard.php"
+               <?= isActive('dashboard.php') ? 'class="active"' : '' ?>>
+               Toutes les consultations
+            </a>
+            <a href="../backoffice/list_consultation.php"
+               <?= isActive('list_consultation.php') ? 'class="active"' : '' ?>>
+               Les consultations
+            </a>
+            <a href="../backoffice/list_ordonnance.php"
+               <?= isActive('list_ordonnance.php') ? 'class="active"' : '' ?>>
+               Les ordonnances
+            </a>
+        </div>
+    </div>
+
+    <!-- Forum -->
+    <div class="nav-item has-sub <?= isSubActive('postList.php', 'addpost.php', 'dashboard.php') ?>">
+        <a onclick="toggleSubMenu(this)" <?= isActive('postList.php', 'addpost.php') ? 'class="active"' : '' ?>>
+            <i class="fas fa-comments nav-icon"></i>
+            <span>Forum</span>
+            <i class="fas fa-chevron-right nav-arrow"></i>
+        </a>
+        <div class="sub-menu">
+            <a href="../Frontoffice/postList.php"
+               <?= isActive('postList.php') ? 'class="active"' : '' ?>>
+               Tous les posts
+            </a>
+            <a href="../backoffice/addpost.php"
+               <?= isActive('addpost.php') ? 'class="active"' : '' ?>>
+               Ajouter un post
+            </a>
+            <a href="../backoffice/dashboard.php"
+               <?= isActive('dashboard.php') ? 'class="active"' : '' ?>>
+               Gestion des posts
+            </a>
+        </div>
+    </div>
+
+    <div class="nav-section-label">Configuration</div>
+
+    <div class="nav-item">
+        <a href="../front/indexp.php" <?= isActive('indexp.php') ? 'class="active"' : '' ?>>
+            <i class="fas fa-globe nav-icon"></i>
+            <span>Voir le site</span>
+        </a>
+    </div>
+
+    <div class="nav-item">
+        <a href="../back/loginadmin.html" <?= isActive('loginadmin.html') ? 'class="active"' : '' ?>>
+            <i class="fas fa-sign-out-alt nav-icon"></i>
+            <span>Déconnexion</span>
+        </a>
+    </div>
+
+</nav>
     </aside>
 
     <div class="main-content">
@@ -368,6 +445,32 @@ if (localStorage.getItem('darkMode') === 'true') {
     document.body.classList.add('dark-mode');
     document.getElementById('darkBtn').innerHTML = '<i class="fa-solid fa-sun"></i>';
 }
+function toggleSubMenu(el) {
+    var navItem = el.closest('.nav-item');
+    var isOpen  = navItem.classList.contains('open');
+
+    // Close all open sub-menus first
+    document.querySelectorAll('.nav-item.has-sub.open').forEach(function(item) {
+        item.classList.remove('open');
+        var sub = item.querySelector('.sub-menu');
+        if (sub) sub.classList.remove('open');
+    });
+
+    // If it wasn't open, open it now
+    if (!isOpen) {
+        navItem.classList.add('open');
+        var sub = navItem.querySelector('.sub-menu');
+        if (sub) sub.classList.add('open');
+    }
+}
+
+// Auto-open on page load — directly add classes, DO NOT simulate a click
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.nav-item.has-sub.open').forEach(function (item) {
+        var sub = item.querySelector('.sub-menu');
+        if (sub) sub.classList.add('open');
+    });
+});
 </script>
 </body>
 <script src="../../assets/js/language-switcher.js"></script>

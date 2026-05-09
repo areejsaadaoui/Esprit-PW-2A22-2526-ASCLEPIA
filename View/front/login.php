@@ -113,11 +113,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // === REDIRECTION SELON LE RÔLE ===
-    if ($user['role'] === 'admin') {
-        header('Location: ../back/dashboard.php');
-    } else {
-        header('Location: indexp.php');
-    }
+    // === REDIRECTION SELON LE RÔLE ===
+if ($user['role'] === 'admin') {
+    header('Location: ../back/dashboard.php');
+} elseif ($user['role'] === 'medecin') {
+    header('Location: indexd.php');
+} else {
+    header('Location: indexp.php');
+}
     exit();
 } else {
     header('Location: login.html');
